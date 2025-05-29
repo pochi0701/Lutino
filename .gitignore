@@ -34,3 +34,6 @@
 /.vs/Lutino/FileContentIndex
 /.vs/Lutino/v17
 /.vs
+/Lutino/x64/Release
+/Lutino.pdb
+/Lutino/x64/Debug
