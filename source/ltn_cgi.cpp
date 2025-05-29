@@ -271,7 +271,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 			}
 
 			// multipart
-			if (strlen(boundary) > 0) {
+			if (boundary.length() > 0) {
 				// boundary
 				char* start = script3.c_str();
 				script4.clear();
@@ -280,7 +280,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 				// 一覧の先頭と個数を取得
 				while (true)
 				{
-					start = static_cast<char*>(memmem(start, (script3.c_str() - start)+ script3.length(), boundary, strlen(boundary)));
+					start = static_cast<char*>(memmem(start, (script3.c_str() - start)+ script3.length(), boundary.c_str(), boundary.length()));
 					if (start == NULL)
 					{
 						break;
@@ -292,7 +292,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 					//start++;
 					// boundaryの終わり
 					*start = 0;
-					start += strlen(boundary) + 2;
+					start += boundary.length() + 2;
 					multipart* multip = new multipart();
 					multip->content = start;
 					mp.push_back(multip);
@@ -312,7 +312,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 					wString text(st);
 					wString st2 = text.strsplit("\"");
 					mp[i]->content = ptr;
-					mp[i]->length = static_cast<int>(ed - ptr) - static_cast<int>(strlen(boundary)) - 6;
+						mp[i]->length = static_cast<int>(ed - ptr) - static_cast<int>(boundary.length()) - 6;
 					tmp.set_binary(mp[i]->content, mp[i]->length);
 					//wString ttmp = tmp.dump();
 					if (st2.get_list_string(0).starts_with(CONTENT_DISPOSITION))

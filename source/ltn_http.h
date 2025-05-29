@@ -48,7 +48,7 @@ private:
     char   recv_range[256];          // 受信した Range
     char   content_length[32];	     // Content-Length
     char   content_type[128];	     // PUTのためのContent_type
-    char   cookie[2048];             // cookie;
+    wString cookie;                  // cookie;
 public:
     char   recv_uri[QUERY_MAX];      // 受信したURI(decoded)
     char   user_agent[256];          // 受信したUser-Agent
@@ -59,26 +59,27 @@ public:
     char   send_filename[QUERY_MAX]; // フルパス
     char   action[256];              // ?action=  の内容
     char   request_uri[QUERY_MAX];   // 受信した生のURI
-    char   boundary[128];            // multipart/fomr-dataの時のboundary
+    wString boundary;                // multipart/form-dataの時のboundary
     QUERY_METHOD    method;		     // GETなら1HEADなら2POSTなら3
 
 	HTTP_RECV_INFO()
 	{
-		*recv_range = 0;
-		*content_length = 0;
-		*content_type = 0;
-		*cookie = 0;
-		*recv_uri = 0;
-		*user_agent = 0;
-		*recv_host = 0;
-		range_start_pos = 0;
-		range_end_pos = 0;
-		*mime_type = 0;
-		*send_filename = 0;
-		*action = 0;
-		*request_uri = 0;
-		*boundary = 0;
-		method = QUERY_METHOD::NONE;
+        clear();
+		//*recv_range = 0;
+		//*content_length = 0;
+		//*content_type = 0;
+		//cookie.clear();
+		//*recv_uri = 0;
+		//*user_agent = 0;
+		//*recv_host = 0;
+		//range_start_pos = 0;
+		//range_end_pos = 0;
+		//*mime_type = 0;
+		//*send_filename = 0;
+		//*action = 0;
+		//*request_uri = 0;
+		//boundary.clear();
+		//method = QUERY_METHOD::NONE;
 	};
     // JavaScript実行
     void jss(SOCKET accpet_socket, char* script_filename, char* query_string);
@@ -105,8 +106,23 @@ public:
     //クリア
     void clear(void)
     {
-        memset(this, 0, sizeof(HTTP_RECV_INFO));
+        //memset(this, 0, sizeof(HTTP_RECV_INFO));
         //memset(&http_recv_info, 0, sizeof(http_recv_info));
+        *recv_range = 0;
+        *content_length = 0;
+        *content_type = 0;
+        cookie.clear();
+        *recv_uri = 0;
+        *user_agent = 0;
+        *recv_host = 0;
+        range_start_pos = 0;
+        range_end_pos = 0;
+        *mime_type = 0;
+        *send_filename = 0;
+        *action = 0;
+        *request_uri = 0;
+        boundary.clear();
+        method = QUERY_METHOD::NONE;
     }
 };
 #endif

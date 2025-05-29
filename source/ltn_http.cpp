@@ -480,7 +480,8 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			// ':' より前を切る。
 			line.cut_before_character (':');
 			line.ltrim ();
-			strncpy (cookie, line.c_str (), sizeof (cookie) - 1);
+			cookie = line;
+			//strncpy (cookie, line.c_str (), sizeof (cookie) - 1);
 			//debug_log_output("%s Detect. %s '%s'", HTTP_COOKIE, HTTP_COOKIE, cookie);
 			continue;
 		}
@@ -502,7 +503,8 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			if (strncasecmp (line.c_str (), "multipart/form-data", strlen ("multipart/form-data")) == 0) {
 				wString bnd = line;
 				bnd.cut_before_character ('=');
-				strncpy (boundary, bnd.c_str (), sizeof (boundary) - 1);
+				boundary = bnd;
+				//strncpy (boundary, bnd.c_str (), sizeof (boundary) - 1);
 				strncpy (content_type, "multipart/form-data", sizeof ("multipart/form-data") - 1);
 				//debug_log_output("%s Detect. %s '%s'", "multipart/form-data", "multipart/form-data", boundary);
 			}

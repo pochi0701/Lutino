@@ -3513,7 +3513,8 @@ bool wString::cut_before_character (const char cut_char)
 		clear ();
 		return false;
 	}
-	memmove (String, String + ptr + 1, len - ptr);
+	memmove(String, String + ptr + 1, len - ptr);
+	len -= (ptr + 1);
 	return true;
 }
 /// <summary>
