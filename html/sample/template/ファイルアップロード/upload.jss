@@ -27,13 +27,12 @@
            root += "/";
        }
        if( _POST.upload !== undefined){
-           print( "<br>\nファイル名：" );
-           print( _POST.upload.filename);
-           print( "<br>\nファイル長さ：" );
-           print( _POST.upload.length);
-           print( "<br>\nファイル内容：" );
-           print( btoa(_POST.upload.filebody));
-           saveToFile(root+_POST.upload.filename,btoa(_POST.upload.filebody).nkfcnv("W"));
+           var file = root+_POST.upload.filename;
+           var body = btoa(_POST.upload.filebody);
+           print( "<br>\nファイル名："+file );
+           print( "<br>\nファイル長さ："+_POST.upload.length );
+           print( "<br>\nファイル内容："+body.nkfconv("W") );
+           saveToFile(file,body.nkfconv("W"));
        }
    }
 ?>
