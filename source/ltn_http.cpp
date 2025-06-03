@@ -139,11 +139,11 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		http_recv_info.http_redirect_response (accept_socket, buffer);
 	}
 	// file?action=/skin_root/skin_name/action.jss
-	else if (*http_recv_info.action) {
+	else if (http_recv_info.action.length()>0) {
 		// ----------------------------------------
 		// jss実行
 		// ----------------------------------------
-		debug_log_output ("%s start!\n", http_recv_info.action);
+		debug_log_output ("%s start!\n", http_recv_info.action.c_str());
 		// send_filename = skin_root/skin_name/action 
 		wString skin_filename;
 		skin_filename += global_param.skin_root;
@@ -160,7 +160,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 				break;
 			}
 		}
-		skin_filename.sprintf ("%s?url=%s", http_recv_info.action, http_recv_info.request_uri);
+		skin_filename.sprintf ("%s?url=%s", http_recv_info.action.c_str(), http_recv_info.request_uri);
 		strcpy (http_recv_info.request_uri, skin_filename.c_str ());
 		http_recv_info.http_cgi_response (accept_socket);
 		//debug_log_output ("%s end!\n", http_recv_info.action);
@@ -412,7 +412,8 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 							// = より前を削除
 							wb2.cut_before_character ('=');
 							// 構造体に値を保存。
-							strncpy (action, wb2.c_str (), sizeof (action) - 1);
+							action = wb2;
+							//strncpy (action, wb2.c_str (), sizeof (action) - 1);
 							continue;
 						}
 					}

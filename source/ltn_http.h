@@ -57,7 +57,7 @@ public:
     off_t  range_end_pos;            // Rangeデータ 終了位置
     char   mime_type[128];           //
     char   send_filename[QUERY_MAX]; // フルパス
-    char   action[256];              // ?action=  の内容
+    wString action;                  // ?action=  の内容
     char   request_uri[QUERY_MAX];   // 受信した生のURI
     wString boundary;                // multipart/form-dataの時のboundary
     QUERY_METHOD    method;		     // GETなら1HEADなら2POSTなら3
@@ -119,7 +119,7 @@ public:
         range_end_pos = 0;
         *mime_type = 0;
         *send_filename = 0;
-        *action = 0;
+        action.clear();
         *request_uri = 0;
         boundary.clear();
         method = QUERY_METHOD::NONE;
