@@ -80,7 +80,6 @@ if( sf == ""){
         </div>
     </div>
     <!-- EDITOR -->
-    <a href="/" target="_top" title="Home"><i class="fa fa-home fa-lg"></i></a>
     <a href="#" onclick="saveCode();" title="Save File(AltS)" accesskey="S"><i class="fa fa-cloud-upload fa-lg"></i></a>
     <a href="#" onclick="viewCode(filepath);" title="View File(AltV)" accesskey="V"><i class="fa fa-television fa-lg"></i></a>
     <a href="#" onclick="myClose();" title="close(AltC)" accesskey="C"><i class="fa fa-times fa-lg"></i></a>
@@ -452,7 +451,7 @@ if( sf == ""){
                 fileType = "ace/mode/jss";
             } else if (ext == ".css") {
                 fileType = "ace/mode/css";
-            } else if (ext == ".htm" || ext == ".html") {
+            } else if (ext == ".htm" || ext == ".html" || ext == ".jss") {
                 fileType = "ace/mode/html";
             } else if (ext == ".rb") {
                 fileType = "ace/mode/ruby";

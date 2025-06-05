@@ -266,6 +266,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			POINT pt;
 			GetCursorPos(&pt);
 			HMENU hMenu = CreatePopupMenu();
+			AppendMenu(hMenu, MF_STRING, IDM_BROWSE, TEXT("表示"));
 			AppendMenu(hMenu, MF_STRING, IDM_ABOUT, TEXT("バージョン情報"));
 			AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
 			AppendMenu(hMenu, MF_STRING, IDM_EXIT, TEXT("終了"));
@@ -284,6 +285,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// 選択されたメニューの解析:
 		switch (wmId)
 		{
+		case IDM_BROWSE:
+            char work[256];
+			snprintf(work, 256, "start http://127.0.0.1:%d/", global_param.server_port);
+			system(work);
+			break;
 		case IDM_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;

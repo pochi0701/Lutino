@@ -1323,14 +1323,19 @@ void set_nonblocking_mode(int fd, int flag)
 	}
 }
 #endif
-//linux/windows共用オープン
-//追加: O_CREAT | O_APPEND | O_WRONLY(またはO_RDWR) | (O_BINARY) , S_IREAD | S_IWRITE
-//新規: O_CREAT | O_TRUNC  | O_WRONLY(またはO_RDWR) | (O_BINARY) , S_IREAD | S_IWRITE
-//読込: O_RDONLY                                    | (O_BINARY)
+
+/// <summary>
+/// linux/windows共用オープン
+/// 追加: O_CREAT | O_APPEND | O_WRONLY(またはO_RDWR) | (O_BINARY) , S_IREAD | S_IWRITE
+/// 新規: O_CREAT | O_TRUNC  | O_WRONLY(またはO_RDWR) | (O_BINARY) , S_IREAD | S_IWRITE
+/// 読込: O_RDONLY   
+/// </summary>
+/// <param name="filename">オープンするファイル名</param>
+/// <param name="amode">アクセスモード</param>
+/// <param name="option"></param>
+/// <returns></returns>
 int myopen(const wString& filename, int amode, int option)
 {
-	//毎回オープンしないようにする
-	//static int hd = -1;
 #ifdef linux
 	if (option != 0) {
 		return open(filename.c_str(), amode, option);
@@ -1340,31 +1345,14 @@ int myopen(const wString& filename, int amode, int option)
 	}
 #else
 	wString FileNamew = filename;
-	//FileNamew = FileNamew.nkfcnv ("Ws");
-	//char work[FILENAME_MAX];
-	//strcpy(work, FileNamew.c_str());
-	////int ptr = 0;
-	//wString::windows_file_name(work);
-	//while (work[ptr]) {
-	//	if (work[ptr] == '/') {
-	//		work[ptr] = '\\';
-	//	}
-	//	ptr++;
-	//}
 	if (option != 0) {
-		//if (hd < 0) {
 		auto ret =  open(FileNamew.nkfcnv("Ws").windows_file_name().c_str(), amode, option);
 		return ret;
-
-		//}
 	}
 	else {
-		//if (hd < 0) {
 		auto ret =  open(FileNamew.nkfcnv("Ws").windows_file_name().c_str(), amode);
 		return ret;
-		//}
 	}
-	//return hd;
 #endif
 }
 //汎用ソケットクローズ

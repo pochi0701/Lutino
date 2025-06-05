@@ -16,10 +16,10 @@
         msg    += '$Shortcut.IconLocation = "'+root+'\\system\\common\\execute.ico"\r\n';
         msg    += '$Shortcut.Save()\r\n';
         var target = base+'/shortcut.ps1';
-        saveToFile(target,msg);
+        saveToFile(target,msg.nkfconv("Ws"));
         command('powershell -NoProfile -ExecutionPolicy Bypass -File '+target);
         print("デスクトップにショートカットアイコンを作成しました。");
-    unlink(target);
+        unlink(target);
     }else{
         print("linuxではアイコン作成をサポートしていません。");
     }
