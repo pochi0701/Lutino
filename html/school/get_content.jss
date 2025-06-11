@@ -17,7 +17,7 @@
         var dat = loadFromFile("http://neon.cx/market/download2.php?version="+version+"&contid="+contid+"&termid="+termid);
         if( dat != "none" ){
           saveToFile(base+"lesson.tgz",dat);
-          command("tar zxvf "+base+"lesson.tgz");
+          command("cd \""+base+"\" && tar zxvf \""+base+"lesson.tgz\"");
           unlink( base+"lesson.tgz");
           header("Location: /school/");
         }else{
