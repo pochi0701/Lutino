@@ -42,7 +42,7 @@ url = _GET.url;
 <body>
     <div class="container">
         <input type="button" class="btn btn-primary" value="編集" accesskey="/" onClick="location.href='/system/view.jss?root=<?print(url);?>';">
-        <input type="button" class="btn btn-primary" value="戻る" onClick="history.back();">
+        <input type="button" class="btn btn-primary" value="戻る" onClick="(window.history.length>1)?history.back():window.close();">
         <div id="md"></div>
         <script>
             let codes = [];

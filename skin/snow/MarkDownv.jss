@@ -41,7 +41,7 @@ url = _GET.url;
 </head>
 <body>
     <div class="container">
-        <input type="button" class="btn btn-primary" value="戻る" onClick="history.back();">
+        <input type="button" class="btn btn-primary" value="戻る" onClick="(window.history.length>1)?history.back():window.close();">
         <div id="md"></div>
         <script>
             let codes = [];

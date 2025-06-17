@@ -20,7 +20,7 @@ if( url !== undefined ){
 </head>
 <body>
     <div class="container">
-        <button class="btn btn-primary" type="button" onClick="history.back()">戻る</button><br>
+        <button class="btn btn-primary" type="button" onClick="(window.history.length>1)?history.back():window.close();">戻る</button><br>
         <?
         //UserAgentCheck
         ua      = _SERVER.HTTP_USER_AGENT;

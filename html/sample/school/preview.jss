@@ -126,7 +126,7 @@ if( url !== undefined ){
 <br/>If you can't see the movie, click <a href="<?print(target2);?>">[here]</a>.<br/>
 <form>
 <a href="lesson.jss" class="btn btn-primary btn-large">return</a>
-<!-- <input type="button" class="btn btn-primary btn-large" value="return" onClick="history.back()"> -->
+<!-- <input type="button" class="btn btn-primary btn-large" value="return" onClick="(window.history.length>1)?history.back():window.close();"> -->
 </form>
 </div>
 </div>

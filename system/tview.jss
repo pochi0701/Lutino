@@ -74,8 +74,10 @@ if( sf == ""){
 </head>
 <body onload="init();">
     <!-- EDITOR -->
+        <a href="/" target="_top" title="Home(AltH)" accesskey="H"><i class="fa fa-home fa-lg"></i></a>
         <a href="#" onclick="saveCode();" title="Save File(AltS)" accesskey="S"><i class="fa fa-cloud-upload fa-lg"></i></a>
         <a href="#" onclick="viewCode(filepath);" title="View File(AltV)" accesskey="V"><i class="fa fa-television fa-lg"></i></a>
+        <a href="#" onclick="(window.history.length>1)?history.back():window.close();" title="Return(AltR)" accesskey="R"><i class="fas fa-undo fa-lg"></i></a>
         <div id="editArea"></div>
 
     <!-- SCRIPTS //-->

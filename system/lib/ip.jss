@@ -9,7 +9,7 @@
 </head>
 <body>
     <div class="container">
-        <button type="button" class="btn btn-primary" onClick="history.back();">戻る</button><br/>
+        <button type="button" class="btn btn-primary" onClick="(window.history.length>1)?history.back():window.close();">戻る</button><br/>
         <?
         la = getLocalAddress();
         lp = getLocalPort();
