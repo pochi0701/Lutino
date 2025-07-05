@@ -136,6 +136,7 @@ typedef int socklen_t;
 #define HTTP_CONTENT_LENGTH1	    "Content-Length:"
 #define HTTP_CONTENT_TYPE1	        "Content-Type:"
 #define HTTP_COOKIE					"Cookie:"
+#define HTTP_REFERER				"Referer:"
 #define HTTP_DELIMITER				"\r\n\r\n"
 
 #define	HTTP_OK 	        		"HTTP/1.0 200 OK\r\n"

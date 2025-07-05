@@ -200,7 +200,8 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 		script1.cat_sprintf("var _SERVER.QUERY_STRING=\"%s\";", wString::escape(query_string).c_str());
 		script1.cat_sprintf("var _SERVER.REQUEST_URI=\"%s\";", wString::escape(request_uri).c_str());
 		script1.cat_sprintf("var _SERVER.SCRIPT_NAME=\"%s\";", wString::escape(request_uri).c_str());
-        //OS
+		script1.cat_sprintf("var _SERVER.REFERER=\"%s\";", wString::escape(referer).c_str());
+		//OS
 #ifdef linux
 		script1.cat_sprintf("var _SERVER.OS=\"LINUX\";");
 #else

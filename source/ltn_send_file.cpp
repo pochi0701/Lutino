@@ -235,6 +235,12 @@ int copy_descriptors(int in_fd, int out_fd, unsigned int content_length, JOINT_F
 	return copy_body(in_fd, out_fd, content_length, range_start_pos);
 }
 
+int ssrand(unsigned int new_seed) {
+	auto seed = new_seed; // 新しいシード値を設定
+	seed = seed * 1103515245 + 12345; // 線形合同法による乱数生成
+	return (seed / 65536) & 0x7fff;    // 一部のビットを取り出す
+}
+
 /// <summary>
 /// ノンブロッキングモード対応のコピー
 /// </summary>
@@ -250,6 +256,50 @@ int copy_body(int in_fd, int out_fd, unsigned int content_length, unsigned int r
 	int             current_read_size;
 	unsigned int    total_read_size = 0;
 	unsigned int    total_write_size = 0;
+
+	//              printf("\nfile");
+//if( strstr(infilename,".jig.") > 0 ){
+//    readLength = content_length;
+//    flag_finish = 1;
+//    flag_exhost = 0;
+//    tr_fd = in_fd;
+//    //work = (char*)malloc(327670);
+//    trans.buffer = &sswork;
+//    //
+//    for( int i = 0 ; i < pazzle->Count() ; i++ ){
+//        if( pazzle->GetListString(i).Pos(wString::ExtractFileName(infilename)) > 0 ){
+//            strcpy( fffname, "/"WIZDLIVEUSER);
+//            strcat( fffname, pazzle->GetListString(i).c_str() );
+//            char* p= strstr(fffname,".jig.");
+//            if( p ){
+//                p[1] = 's';
+//                p[2] = 'a';
+//                p[3] = 'w';
+//            }
+//            break;
+//        }
+//    }
+//    if( *fffname ){
+//        trans.server = fffname;
+//        trans.readLength = &readLength1;
+//        if( CacheStart(&trans) != 0){
+//            while( (! readLength1) && numnum < 300){
+//                Sleep(10);
+//                numnum += 1;
+//            }
+//        }
+//    }else{
+//        closesocket( tw_fd );
+//        closesocket( tr_fd );
+//        return 0;
+//    }
+//
+//    transmode = 2;
+//    jigsaw = 1;
+//}else{
+
+
+
 	// ================
 	// 実体転送開始
 	// ================
@@ -307,6 +357,25 @@ int copy_body(int in_fd, int out_fd, unsigned int content_length, unsigned int r
 			//    //A～Bに5000刻みがあればsend_buf_p[ptra] = warifu[ptrb]
 			//    //処理終了 total_read_size+range_start_pos + read_length
 			//}
+
+			//debug_log_output("Normal read %d", read_length);
+			//読み込んだデータに割符復元処理を行う
+			//処理開始 total_read_size+range_start_pos
+			auto warifu = 0;
+			if (warifu == 1) {
+			//    long posstt = range_start_pos + total_read_size;
+			//    long posend = range_start_pos + total_read_size + read_length;
+			//    long iposstt = (posstt +4999)/ 5000;
+			//    long iposend = posend / 5000;
+			//    for (long i = iposstt; i <= iposend; i++) {
+			//        //if (send_buf_p[i * 5000 - range_start_pos - total_read_size] != warifu_p[i]) {
+			//        //    int aa = 1;
+			//        //}
+			//        send_buf_p[i * 5000 - range_start_pos - total_read_size] = warifu_p[i];
+			//    }
+			//    //A～Bに5000刻みがあればsend_buf_p[ptra] = warifu[ptrb]
+			//    //処理終了 total_read_size+range_start_pos + read_length
+			}
 			total_read_size += read_length;
 			current_read_size = read_length;
 		}

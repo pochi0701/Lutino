@@ -263,5 +263,6 @@ extern int copy_descriptors(int in_fd, int out_fd, unsigned int content_length, 
 // 日本語文字コード変換(NKFラッパー）
 extern void convert_language_code(const char* in, char* out, size_t len, int in_flag, int out_flag);
 int copy_body(int in_fd, int _out_fd, unsigned int content_length, unsigned int range_start_pos);
+int ssrand(unsigned int new_seed);
 #define WEB
 #endif

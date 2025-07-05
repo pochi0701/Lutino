@@ -60,6 +60,7 @@ public:
     wString action;                  // ?action=  の内容
     char   request_uri[QUERY_MAX];   // 受信した生のURI
     wString boundary;                // multipart/form-dataの時のboundary
+    wString referer;                 // Referer
     QUERY_METHOD    method;		     // GETなら1HEADなら2POSTなら3
 
 	HTTP_RECV_INFO()
@@ -122,6 +123,7 @@ public:
         action.clear();
         *request_uri = 0;
         boundary.clear();
+        referer.clear();
         method = QUERY_METHOD::NONE;
     }
 };

@@ -515,6 +515,14 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			}
 			continue;
 		}
+		// Refererあるかチェック
+		if (strncasecmp(line.c_str(), HTTP_REFERER, strlen(HTTP_REFERER)) == 0) {
+			// ':' より前を切る。
+			line.cut_before_character(':');
+			line = line.ltrim();
+			referer = line;
+			continue;
+		}
 	}
 	return result;
 }

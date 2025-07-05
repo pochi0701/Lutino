@@ -33,9 +33,11 @@ while (root[root.length - 1] == "/") {
 //ファイル削除
 if (del !== undefined && del.length > 0) {
     if (file_exists(del)) {
-        unlink(del);
+        if( !unlink(del)){
+            print("<p class=\"text-danger\">"+del+"は削除できませんでした。</p>");        
+        }
     } else if (dir_exists(del)) {
-        if( rmdir(del)){
+        if( !rmdir(del)){
             print("<p class=\"text-danger\">"+del+"は削除できませんでした。</p>");        
         }
     }
