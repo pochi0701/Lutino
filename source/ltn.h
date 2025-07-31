@@ -259,10 +259,9 @@ extern void server_listen(void);
 // HTTP処理部
 extern void server_http_process(SOCKET accept_socket, char* access_host, char* client_addr_str);
 // バッファリングしながら in_fd から out_fd へ データを転送
-extern int copy_descriptors(int in_fd, int out_fd, unsigned int content_length, JOINT_FILE_INFO_T* joint_file_info_p, char* name, unsigned int range_start_pos);
+extern int copy_descriptors(int in_fd, int out_fd, unsigned int content_length, char* name, unsigned int range_start_pos,unsigned int seed);
 // 日本語文字コード変換(NKFラッパー）
 extern void convert_language_code(const char* in, char* out, size_t len, int in_flag, int out_flag);
-int copy_body(int in_fd, int _out_fd, unsigned int content_length, unsigned int range_start_pos);
-int ssrand(unsigned int new_seed);
+int copy_body(int in_fd, int _out_fd, unsigned int content_length, unsigned int range_start_pos,unsigned int seed);
 #define WEB
 #endif

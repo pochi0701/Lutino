@@ -137,6 +137,7 @@ typedef int socklen_t;
 #define HTTP_CONTENT_TYPE1	        "Content-Type:"
 #define HTTP_COOKIE					"Cookie:"
 #define HTTP_REFERER				"Referer:"
+#define HTTP_SEC_FETCH_DEST			"Sec-Fetch-Dest:"
 #define HTTP_DELIMITER				"\r\n\r\n"
 
 #define	HTTP_OK 	        		"HTTP/1.0 200 OK\r\n"
@@ -157,6 +158,9 @@ typedef int socklen_t;
 
 //MULTIPART
 #define CONTENT_DISPOSITION          "Content-Disposition: form-data;"
+
+//chashe
+#define CACHE_CONTROL			     "Cache-Control: no-store,no-cache,must-revalidate,max-age=0\r\nPragma: no-cache\r\nExpires: -1\r\nVary: *\r\n"
 
 // アクセスコントロール 登録可能数
 #define		ACCESS_ALLOW_LIST_MAX		(32)

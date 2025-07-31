@@ -225,7 +225,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 				// HTTPリクエストヘッダに従ってデータを返信。
 				// ----------------------------------------
 				//debug_log_output ("HTTP response start!\n");
-				http_recv_info.http_file_response (accept_socket);
+				http_recv_info.http_file_response(accept_socket);
 				//debug_log_output ("HTTP response end!\n");
 			}
 			else if (result == FILETYPES::_CGI) {
@@ -521,6 +521,14 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			line.cut_before_character(':');
 			line = line.ltrim();
 			referer = line;
+			continue;
+		}
+		// Sec-Fetch-Destあるかチェック
+		if (strncasecmp(line.c_str(), HTTP_SEC_FETCH_DEST, strlen(HTTP_SEC_FETCH_DEST)) == 0) {
+			// ':' より前を切る。
+			line.cut_before_character(':');
+			line = line.ltrim();
+			secFetchDest = line;
 			continue;
 		}
 	}

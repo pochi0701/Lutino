@@ -61,6 +61,7 @@ public:
     char   request_uri[QUERY_MAX];   // 受信した生のURI
     wString boundary;                // multipart/form-dataの時のboundary
     wString referer;                 // Referer
+    wString secFetchDest;            // Sec-Fetch-Dest
     QUERY_METHOD    method;		     // GETなら1HEADなら2POSTなら3
 
 	HTTP_RECV_INFO()
@@ -124,6 +125,7 @@ public:
         *request_uri = 0;
         boundary.clear();
         referer.clear();
+        secFetchDest.clear();
         method = QUERY_METHOD::NONE;
     }
 };

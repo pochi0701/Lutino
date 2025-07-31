@@ -1,6 +1,6 @@
 ﻿// Lutino.cpp : アプリケーションのエントリ ポイントを定義します。
 //
-
+#define _CRT_SECURE_NO_WARNINGS
 #include "framework.h"
 #include "Lutino.h"
 
@@ -168,6 +168,18 @@ BOOL AddSystemTrayIcon(HWND hWnd)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
+	// ここから日付チェックを追加
+	time_t now = time(NULL);
+	struct tm* tm_now = localtime(&now);
+
+	// 現在日付をYYYYMMDD形式の整数に変換
+	int today = (tm_now->tm_year + 1900) * 10000 + (tm_now->tm_mon + 1) * 100 + tm_now->tm_mday;
+
+	//if (today >= 20251001) {
+	//	MessageBox(NULL, _T("このアプリケーションは2025年10月01日以降は起動できません。"), _T("起動制限"), MB_OK | MB_ICONWARNING);
+	//	return FALSE;
+	//}
+	// ここまで日付チェック
 	//フルアクセス(「別のユーザーとして実行」に対応)
 	SECURITY_DESCRIPTOR sd;
 
@@ -194,6 +206,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 	// 起動していたらすぐに終了させる
 	if (::GetLastError() == ERROR_ALREADY_EXISTS) {
+		MessageBox(NULL, _T("既にこのアプリケーションを起動中です。複数起動はできません。"), _T("起動制限"), MB_OK | MB_ICONWARNING);
 		::CloseHandle(m_hMutex);
 		return FALSE;  // FALSEを返すと終了する。
 	}
