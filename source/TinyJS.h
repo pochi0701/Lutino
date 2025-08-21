@@ -117,8 +117,6 @@ enum class  LEX_TYPES
 	LEX_R_FUNCTION,
 	LEX_R_RETURN,
 	LEX_R_VAR,
-	LEX_R_LET,
-	LEX_R_CONST,
 	LEX_R_TRUE,
 	LEX_R_FALSE,
 	LEX_R_NULL,
@@ -164,10 +162,10 @@ enum class ExecuteModes
 	ON_SERVER = 1,
 };
 
-constexpr auto TINYJS_RETURN_VAR = "return";
-constexpr auto TINYJS_PROTOTYPE_CLASS = "prototype";
-constexpr auto TINYJS_TEMP_NAME = "";
-constexpr auto TINYJS_BLANK_DATA = "";
+#define TINYJS_RETURN_VAR "return"
+#define TINYJS_PROTOTYPE_CLASS "prototype"
+#define TINYJS_TEMP_NAME ""
+#define TINYJS_BLANK_DATA ""
 
 /// convert the given wString into a quoted string suitable for javascript
 wString getJSString (const wString& str);
