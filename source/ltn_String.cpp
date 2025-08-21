@@ -588,7 +588,7 @@ int wString::find (const wString& str, int index) const
 		return npos;
 	}
 	else {
-		return (int)((ptr - String));
+		return static_cast<int>((ptr - String));
 	}
 }
 ///---------------------------------------------------------------------------
@@ -607,7 +607,7 @@ int wString::find (const char* str, int index) const
 		return npos;
 	}
 	else {
-		return (int)(ptr - String);
+		return static_cast<int>((ptr - String));
 	}
 }
 /// <summary>
@@ -1666,7 +1666,8 @@ wString wString::enum_folder (const wString& Path)
 	if (n < 0) {
 		temp = "";
 	}
-	else {
+	else
+	{
 		temp = "[";
 		for (int i = 0; i < n; i++) {
 			if (first) {

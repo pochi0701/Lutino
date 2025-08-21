@@ -716,28 +716,6 @@ void scLoadFromFile (CScriptVar* c, void* userdata)
 	wString data;
 	data.load_from_file (path);
 	c->getReturnVar ()->setString (data);
-
-	// DO NOT USE path.file_exists()
-	//IGNORE_PARAMETER(userdata);
-	//wString path = c->getParameter("path")->getString();
-	//wString data;
-	//if (path.file_exists())
-	//{
-	//	data.load_from_file(path);
-	//	c->getReturnVar()->setString(data);
-	//}
-	//else {
-	//	//for (auto i = 0; i < mp.size() - 1; i++)
-	//	//{
-	//	//	if (path == mp[i]->name)
-	//	//	{
-	//	//		break;
-	//	//	}
-	//	//}
-	//	//data.load_from_file(path,)
-	//}
-
-	//c->getReturnVar()->setString(data);
 }
 //CSV内容取得
 void scLoadFromCSV (CScriptVar* c, void* userdata)
