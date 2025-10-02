@@ -642,6 +642,10 @@ public:
 							else {
 								sprintf(work, "%s%s", (cnt++ ? "\t" : ""), "");
 							}
+							}
+							else {
+								sprintf(work, "%s%s", (cnt++ ? "\t" : ""), "");
+							}
 							temp += work;
 						}
 						temp += "\n";
@@ -767,7 +771,7 @@ public:
 							sprintf(work, "%s\"%s\":%s", (j ? "," : ""), clm[j].c_str(), tbl->node[k]->getNode(no).c_str());
 						}
 						else {
-							sprintf(work, "%s\"%s\":%s", (j ? "," : ""), clm[j].c_str(), "");
+							sprintf(work, "%s\"%s\":%s", (j ? "," : ""), clm[j].c_str(), "\"\"");
 						}
 						temp += work;
 					}
@@ -874,7 +878,7 @@ CMDS getToken(unsigned char* sql, unsigned char* token)
 	//TRIM
 	while (*p == ' ')  p++;
 	//残りをコピー
-	while (*p)         *sql++ = *p++;
+	while (*p != 0 && *p != '\n')         *sql++ = *p++;
 	*sql = 0;
 	return ret;
 }
@@ -2824,9 +2828,3 @@ int main(int argc, char* argv[])
 	return 0;
 }
 #endif
-//---------------------------------------------------------------------------
-
-
-
-
-
