@@ -642,59 +642,59 @@ public:
 							else {
 								sprintf(work, "%s%s", (cnt++ ? "\t" : ""), "");
 							}
-							}
-							else {
-								sprintf(work, "%s%s", (cnt++ ? "\t" : ""), "");
-							}
-							temp += work;
 						}
-						temp += "\n";
+				else {
+					sprintf(work, "%s%s", (cnt++ ? "\t" : ""), "");
+				}
+				temp += work;
 					}
+					temp += "\n";
 				}
 			}
-			else {
-				alias = "count";
-				map<wString, wString>::iterator it;
-				for (it = cond.clmalias.begin(); it != cond.clmalias.end(); it++) {
-					wString select = it->second;
-					if (select == "count(*)") {
-						alias = it->first;
-						break;
-					}
-				}
-				temp.sprintf("%s\n%d\n", alias.c_str(), Node.size());
-			}
-			return temp;
-			//カラムだけ表示
 		}
+		else {
+			alias = "count";
+			map<wString, wString>::iterator it;
+			for (it = cond.clmalias.begin(); it != cond.clmalias.end(); it++) {
+				wString select = it->second;
+				if (select == "count(*)") {
+					alias = it->first;
+					break;
+				}
+			}
+			temp.sprintf("%s\n%d\n", alias.c_str(), Node.size());
+		}
+		return temp;
+		//カラムだけ表示
+	}
 		else if (row == -1) {
-			if (Tables.size() > 1) {
-				for (auto i = 0; i < Column.size(); i++) {
-					Table* tbl = Tables[Column[i].second];
-					auto j = Column[i].first;
-					if (tbl->column[j]->GetAlias(cond.clmalias, cond.tblalias, alias)) {
-						temp.cat_sprintf("%s%s", (i ? "|" : ""), alias.c_str());
-					}
-					else {
-						temp.cat_sprintf("%s%s.%s", (i ? "|" : ""), tbl->column[j]->table.c_str(), tbl->column[j]->name.c_str());
-					}
+		if (Tables.size() > 1) {
+			for (auto i = 0; i < Column.size(); i++) {
+				Table* tbl = Tables[Column[i].second];
+				auto j = Column[i].first;
+				if (tbl->column[j]->GetAlias(cond.clmalias, cond.tblalias, alias)) {
+					temp.cat_sprintf("%s%s", (i ? "|" : ""), alias.c_str());
+				}
+				else {
+					temp.cat_sprintf("%s%s.%s", (i ? "|" : ""), tbl->column[j]->table.c_str(), tbl->column[j]->name.c_str());
 				}
 			}
-			else {
-				for (auto i = 0; i < Column.size(); i++) {
-					Table* tbl = Tables[Column[i].second];
-					auto j = Column[i].first;
-					if (tbl->column[j]->GetAlias(cond.clmalias, cond.tblalias, alias)) {
-						temp.cat_sprintf("%s%s", (i ? "|" : ""), alias.c_str());
-					}
-					else {
-						temp.cat_sprintf("%s%s", (i ? "|" : ""), tbl->column[j]->name.c_str());
-					}
+		}
+		else {
+			for (auto i = 0; i < Column.size(); i++) {
+				Table* tbl = Tables[Column[i].second];
+				auto j = Column[i].first;
+				if (tbl->column[j]->GetAlias(cond.clmalias, cond.tblalias, alias)) {
+					temp.cat_sprintf("%s%s", (i ? "|" : ""), alias.c_str());
+				}
+				else {
+					temp.cat_sprintf("%s%s", (i ? "|" : ""), tbl->column[j]->name.c_str());
 				}
 			}
-			temp += "\n";
-			return temp;
-			//ノードだけ表示
+		}
+		temp += "\n";
+		return temp;
+		//ノードだけ表示
 		}
 		else if (row >= 0) {
 			if (Node.size() > (unsigned int)row) {
@@ -713,9 +713,9 @@ public:
 				temp += "\n";
 			}
 			return temp;
-		}
-		return temp;
-	}
+			}
+			return temp;
+}
 #else
 	wString toJSON(void)
 	{
