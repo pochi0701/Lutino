@@ -1,0 +1,30 @@
+<?
+print("Math.abs(-5) = " + Math.abs(-5) + "<br>\n");
+print("Math.round(3.7) = " + Math.round(3.7) + "<br>\n");
+print("Math.min(2, 8) = " + Math.min(2, 8) + "<br>\n");
+print("Math.max(2, 8) = " + Math.max(2, 8) + "<br>\n");
+print("Math.range(15, 0, 10) = " + Math.range(15, 0, 10) + "<br>\n");
+print("Math.sign(-123) = " + Math.sign(-123) + "<br>\n");
+print("Math.PI() = " + Math.PI() + "<br>\n");
+print("Math.E() = " + Math.E() + "<br>\n");
+print("Math.toDegrees(Math.PI()) = " + Math.toDegrees(Math.PI()) + "<br>\n");
+print("Math.toRadians(180) = " + Math.toRadians(180) + "<br>\n");
+print("Math.sin(Math.PI()/2) = " + Math.sin(Math.PI()/2) + "<br>\n");
+print("Math.asin(1) = " + Math.asin(1) + "<br>\n");
+print("Math.cos(0) = " + Math.cos(0) + "<br>\n");
+print("Math.acos(1) = " + Math.acos(1) + "<br>\n");
+print("Math.tan(Math.PI()/4) = " + Math.tan(Math.PI()/4) + "<br>\n");
+print("Math.atan(1) = " + Math.atan(1) + "<br>\n");
+print("Math.sinh(0) = " + Math.sinh(0) + "<br>\n");
+print("Math.asinh(1) = " + Math.asinh(1) + "<br>\n");
+print("Math.cosh(0) = " + Math.cosh(0) + "<br>\n");
+print("Math.acosh(1) = " + Math.acosh(1) + "<br>\n");
+print("Math.tanh(0) = " + Math.tanh(0) + "<br>\n");
+print("Math.atanh(0.5) = " + Math.atanh(0.5) + "<br>\n");
+print("Math.log(Math.E()) = " + Math.log(Math.E()) + "<br>\n");
+print("Math.log10(100) = " + Math.log10(100) + "<br>\n");
+print("Math.exp(1) = " + Math.exp(1) + "<br>\n");
+print("Math.pow(2, 8) = " + Math.pow(2, 8) + "<br>\n");
+print("Math.sqr(5) = " + Math.sqr(5) + "<br>\n");
+print("Math.sqrt(25) = " + Math.sqrt(25) + "<br>\n");
+?>

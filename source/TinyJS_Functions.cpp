@@ -710,7 +710,6 @@ void scFileDate(CScriptVar* c, void* userdata)
 //ファイル内容取得
 void scLoadFromFile(CScriptVar* c, void* userdata)
 {
-
 	IGNORE_PARAMETER(userdata);
 	wString path = c->getParameter("path")->getString();
 	wString data;
