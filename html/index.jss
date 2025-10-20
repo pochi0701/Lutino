@@ -32,9 +32,13 @@
     <div class="container d-flex align-items-center justify-content-center">
         <table>
             <tr id="icons0"></tr>
+            <tr id="icons0e"></tr>
             <tr id="icons1"></tr>
+            <tr id="icons1e"></tr>
             <tr id="icons2"></tr>
+            <tr id="icons2e"></tr>
             <tr id="icons3"></tr>
+            <tr id="icons3e"></tr>
         </table>
     </div>
     <div>
@@ -48,6 +52,7 @@
                     var repl  = "<?print (getLocalAddress() + ':' + getLocalPort());?>"
                     var setup = eval(response.data);
                     var contents = ["","","",""];
+                    var contentse = ["","","",""];
                     var line = 0;
                     for( i = 0 ; i < setup.length ; i++){
                         if( setup[i].url.length > 0 ){
@@ -55,14 +60,19 @@
                                 setup[i].url = setup[i].url.replace('%LOCALADDRESS%',repl);
                             }
                             contents[line] += '<td><a href="'+setup[i].url+'">'+setup[i].image+'</a></td>\n';
+                            contentse[line] += '<td class="text-center align-middle">'+setup[i].title+'</a></td>\n';
                         }else{
                             line += 1;
                         }
                     }
                     document.getElementById("icons0").innerHTML = contents[0];
+                    document.getElementById("icons0e").innerHTML = contentse[0];
                     document.getElementById("icons1").innerHTML = contents[1];
+                    document.getElementById("icons1e").innerHTML = contentse[1];
                     document.getElementById("icons2").innerHTML = contents[2];
+                    document.getElementById("icons2e").innerHTML = contentse[2];
                     document.getElementById("icons3").innerHTML = contents[3];
+                    document.getElementById("icons3e").innerHTML = contentse[3];
                     new QRCode(document.getElementById("qrcodeCanvas1"), { width: 96, height: 96, text: "http://<?print (getLocalAddress()+':'+getLocalPort()+'/');?>" });  
                     return false;
                 })

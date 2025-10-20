@@ -1,54 +1,67 @@
 [
   {
     "url": "#",
-    "image": "<img src=\"images/transparent.png\" width=\"96\" height=\"96\" border=\"0\">"
+    "image": "<img src=\"images/transparent.png\" width=\"96\" height=\"96\" border=\"0\">",
+    "title":"",
   },
   {
     "url": "#",
-    "image": "<img src=\"images/transparent.png\" width=\"96\" height=\"96\" border=\"0\">"
+    "image": "<img src=\"images/transparent.png\" width=\"96\" height=\"96\" border=\"0\">",
+    "title":"",
   },
   {
     "url": "#",
-    "image": "<img src=\"images/transparent.png\" width=\"96\" height=\"96\" border=\"0\">"
+    "image": "<img src=\"images/transparent.png\" width=\"96\" height=\"96\" border=\"0\">",
+    "title":"",
   },
   {
     "url": "#",
-    "image": "<img src=\"images/transparent.png\" width=\"96\" height=\"96\" border=\"0\">"
+    "image": "<img src=\"images/transparent.png\" width=\"96\" height=\"96\" border=\"0\">",
+    "title":"",
   },
   {
     "url": "/system/common/help.html",
-    "image": "<img src=\"images/help.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"programming manual.\" data-bs-placement=\"top\">"
+    "image": "<img src=\"images/help.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"programming manual.\" data-bs-placement=\"top\">",
+    "title":"help",
   },
   {
     "url": "http://%LOCALADDRESS%/",
-    "image": "<div id=\"qrcodeCanvas1\"></div>"
+    "image": "<div id=\"qrcodeCanvas1\"></div>",
+    "title":"QR",
   },
   {
     "url": "",
-    "image": ""
+    "image": "",
+    "title":"",
   },
   {
     "url": "/system/",
-    "image": "<img src=\"images/edit.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Edit server code.\" data-bs-placement=\"top\">"
+    "image": "<img src=\"images/edit.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Edit server code.\" data-bs-placement=\"top\">",
+    "title":"edit",
   },
   {
     "url": "/?",
-    "image": "<img src=\"images/menu.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"File explorer.\" data-bs-placement=\"top\">"
+    "image": "<img src=\"images/menu.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"File explorer.\" data-bs-placement=\"top\">",
+    "title":"help",
   },
   {
     "url": "/school/",
-    "image": "<img src=\"images/lesson.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Online Programming School.\" data-bs-placement=\"top\">"
+    "image": "<img src=\"images/lesson.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Online Programming School.\" data-bs-placement=\"top\">",
+    "title":"lesson",
   },
   {
     "url": "sample/multimedia/musicPlayer/?",
-    "image": "<img src=\"images/music.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Play wave file.\" data-bs-placement=\"top\">"
+    "image": "<img src=\"images/music.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Play wave file.\" data-bs-placement=\"top\">",
+    "title":"music",
   },
   {
     "url": "sample/game/?",
-    "image": "<img src=\"images/game.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Play games.\" data-bs-placement=\"top\">"
+    "image": "<img src=\"images/game.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Play games.\" data-bs-placement=\"top\">",
+    "title":"game",
   },
   {
     "url": "/tools.jss",
-    "image": "<img src=\"images/tools.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Miscerous tools.\" data-bs-placement=\"top\">"
+    "image": "<img src=\"images/tools.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Miscerous tools.\" data-bs-placement=\"top\">",
+    "title":"tools",
   }
 ]
