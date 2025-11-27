@@ -37,31 +37,31 @@
   {
     "url": "/system/",
     "image": "<img src=\"images/edit.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Edit server code.\" data-bs-placement=\"top\">",
-    "title":"edit",
+    "title":"Edit",
   },
   {
     "url": "/?",
     "image": "<img src=\"images/menu.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"File explorer.\" data-bs-placement=\"top\">",
-    "title":"help",
+    "title":"File",
   },
   {
     "url": "/school/",
     "image": "<img src=\"images/lesson.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Online Programming School.\" data-bs-placement=\"top\">",
-    "title":"lesson",
+    "title":"Lesson",
   },
   {
     "url": "sample/multimedia/musicPlayer/?",
     "image": "<img src=\"images/music.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Play wave file.\" data-bs-placement=\"top\">",
-    "title":"music",
+    "title":"Music",
   },
   {
     "url": "sample/game/?",
     "image": "<img src=\"images/game.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Play games.\" data-bs-placement=\"top\">",
-    "title":"game",
+    "title":"Game",
   },
   {
     "url": "/tools.jss",
     "image": "<img src=\"images/tools.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Miscerous tools.\" data-bs-placement=\"top\">",
-    "title":"tools",
+    "title":"Tools",
   }
 ]

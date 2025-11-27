@@ -30,8 +30,8 @@
     </div>
     <div class="container d-flex align-items-center justify-content-center">
         <table>
-            <tr id="icons">
-            </tr>
+            <tr id="icons"></tr>
+            <tr id="iconse"></tr>
         </table>
     </div>
 
@@ -46,13 +46,16 @@
                     var repl  = "<?print (getLocalAddress() + ':' + getLocalPort());?>"
                     var setup = eval(response.data);
                     var contents="";
+                    var contentse="";
                     for( i = 0 ; i < setup.length ; i++){
                         if( setup[i].url.indexOf('%LOCALADDRESS%') >= 0 ){
                             setup[i].url = setup[i].url.replace('%LOCALADDRESS%',repl);
                         }
                         contents += '<td><a href="'+setup[i].url+'">'+setup[i].image+'</a></td>\n';
+                        contentse += '<td class="text-center align-middle" style="color:white;">'+setup[i].title+'</a></td>\n';
                     }
                     document.getElementById("icons").innerHTML = contents;
+                    document.getElementById("iconse").innerHTML = contentse;
                     return false;
                 })
                 .catch(function (error) {

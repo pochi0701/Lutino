@@ -60,7 +60,7 @@
                                 setup[i].url = setup[i].url.replace('%LOCALADDRESS%',repl);
                             }
                             contents[line] += '<td><a href="'+setup[i].url+'">'+setup[i].image+'</a></td>\n';
-                            contentse[line] += '<td class="text-center align-middle">'+setup[i].title+'</a></td>\n';
+                            contentse[line] += '<td class="text-center align-middle" style="color:white;">'+setup[i].title+'</a></td>\n';
                         }else{
                             line += 1;
                         }
