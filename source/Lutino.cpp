@@ -1,4 +1,4 @@
-ï»¿// Lutino.cpp : ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®ã‚¨ãƒ³ãƒˆãƒª ãƒã‚¤ãƒ³ãƒˆã‚’å®šç¾©ã—ã¾ã™ã€‚
+// Lutino.cpp : ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÌƒGƒ“ƒgƒŠ ƒ|ƒCƒ“ƒg‚ğ’è‹`‚µ‚Ü‚·B
 //
 #define _CRT_SECURE_NO_WARNINGS
 #include "framework.h"
@@ -7,13 +7,13 @@
 #include "shellapi.h"
 #include "ltn.h"
 
-// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã®ã‚¢ã‚¤ã‚³ãƒ³ã«å¯¾ã—ã¦ã‚¯ãƒªãƒƒã‚¯ãªã©ã‚’ã™ã‚‹ã¨å®Ÿè¡Œã•ã‚Œã‚‹ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å®šæ•°è¿½åŠ 
+// ƒ^ƒXƒNƒgƒŒƒC‚ÌƒAƒCƒRƒ“‚É‘Î‚µ‚ÄƒNƒŠƒbƒN‚È‚Ç‚ğ‚·‚é‚ÆÀs‚³‚ê‚éƒƒbƒZ[ƒW’è”’Ç‰Á
 #define WM_TASKTRAY (WM_APP + 1)
 
-// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+// ƒOƒ[ƒoƒ‹•Ï”
 HICON hIcon;
 
-// Mutexã®ãƒãƒ³ãƒ‰ãƒ«
+// Mutex‚Ìƒnƒ“ƒhƒ‹
 HANDLE m_hMutex = NULL;
 
 HANDLE  threadHandle;
@@ -23,12 +23,12 @@ HWND g_hMainWnd = NULL;
 
 #define MAX_LOADSTRING 100
 
-// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°:
-HINSTANCE hInst;                                // ç¾åœ¨ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ã‚¤ã‚¹
-WCHAR szTitle[MAX_LOADSTRING];                  // ã‚¿ã‚¤ãƒˆãƒ« ãƒãƒ¼ã®ãƒ†ã‚­ã‚¹ãƒˆ
-WCHAR szWindowClass[MAX_LOADSTRING];            // ãƒ¡ã‚¤ãƒ³ ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ ã‚¯ãƒ©ã‚¹å
+// ƒOƒ[ƒoƒ‹•Ï”:
+HINSTANCE hInst;                                // Œ»İ‚ÌƒCƒ“ƒ^[ƒtƒFƒCƒX
+WCHAR szTitle[MAX_LOADSTRING];                  // ƒ^ƒCƒgƒ‹ ƒo[‚ÌƒeƒLƒXƒg
+WCHAR szWindowClass[MAX_LOADSTRING];            // ƒƒCƒ“ ƒEƒBƒ“ƒhƒE ƒNƒ‰ƒX–¼
 
-// ã“ã®ã‚³ãƒ¼ãƒ‰ ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã«å«ã¾ã‚Œã‚‹é–¢æ•°ã®å®£è¨€ã‚’è»¢é€ã—ã¾ã™:
+// ‚±‚ÌƒR[ƒh ƒ‚ƒWƒ…[ƒ‹‚ÉŠÜ‚Ü‚ê‚éŠÖ”‚ÌéŒ¾‚ğ“]‘—‚µ‚Ü‚·:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -40,7 +40,7 @@ extern int Lutinomain(void* argv);
 void LtnStart()
 {
 	threadHandle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)Lutinomain, NULL, 0, &id);
-	//ltn_run_flag = true;   // Lutinoèµ·å‹•ãƒ•ãƒ©ã‚°ON
+	//ltn_run_flag = true;   // Lutino‹N“®ƒtƒ‰ƒOON
 	char work[256];
 	while (global_param.server_port == 0) {
 		Sleep(100);
@@ -73,7 +73,7 @@ void LtnStop(void)
 	}
 	CloseHandle(threadHandle);
 	threadHandle = (HANDLE)NULL;
-	//ltn_run_flag = false;   //Lutinoèµ·å‹•ãƒ•ãƒ©ã‚°OFF
+	//ltn_run_flag = false;   //Lutino‹N“®ƒtƒ‰ƒOOFF
 }
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -83,18 +83,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
-	// TODO: ã“ã“ã«ã‚³ãƒ¼ãƒ‰ã‚’æŒ¿å…¥ã—ã¦ãã ã•ã„ã€‚
+	// TODO: ‚±‚±‚ÉƒR[ƒh‚ğ‘}“ü‚µ‚Ä‚­‚¾‚³‚¢B
 
-	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã«é–¢é€£ä»˜ã„ãŸã‚¢ã‚¤ã‚³ãƒ³èª­ã¿è¾¼ã¿
-	//  (AddSystemTrayIcon()ã§ä½¿ç”¨ã™ã‚‹ãŸã‚)
+	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ÉŠÖ˜A•t‚¢‚½ƒAƒCƒRƒ““Ç‚İ‚İ
+	//  (AddSystemTrayIcon()‚Åg—p‚·‚é‚½‚ß)
 	hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_LUTINO));
 
-	// ã‚°ãƒ­ãƒ¼ãƒãƒ«æ–‡å­—åˆ—ã‚’åˆæœŸåŒ–ã™ã‚‹
+	// ƒOƒ[ƒoƒ‹•¶š—ñ‚ğ‰Šú‰»‚·‚é
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadStringW(hInstance, IDC_LUTINO, szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(hInstance);
 
-	// ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³åˆæœŸåŒ–ã®å®Ÿè¡Œ:
+	// ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‰Šú‰»‚ÌÀs:
 	if (!InitInstance(hInstance, nCmdShow))
 	{
 		return FALSE;
@@ -104,7 +104,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	MSG msg;
 
-	// ãƒ¡ã‚¤ãƒ³ ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒ«ãƒ¼ãƒ—:
+	// ƒƒCƒ“ ƒƒbƒZ[ƒW ƒ‹[ƒv:
 	while (GetMessage(&msg, nullptr, 0, 0))
 	{
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -118,9 +118,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 }
 
 //
-//  é–¢æ•°: MyRegisterClass()
+//  ŠÖ”: MyRegisterClass()
 //
-//  ç›®çš„: ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ ã‚¯ãƒ©ã‚¹ã‚’ç™»éŒ²ã—ã¾ã™ã€‚
+//  –Ú“I: ƒEƒBƒ“ƒhƒE ƒNƒ‰ƒX‚ğ“o˜^‚µ‚Ü‚·B
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
@@ -152,44 +152,45 @@ BOOL AddSystemTrayIcon(HWND hWnd)
 	nid.hIcon = hIcon;
 	nid.uCallbackMessage = WM_TASKTRAY;
 	lstrcpy(nid.szTip, TEXT("Lutino"));
-	nid.uID = 1;  // ã‚¢ã‚¤ã‚³ãƒ³IDã‚’è¿½åŠ 
+	nid.uID = 1;  // ƒAƒCƒRƒ“ID‚ğ’Ç‰Á
 	return Shell_NotifyIcon(NIM_ADD, &nid);
 }
 
 //
-//   é–¢æ•°: InitInstance(HINSTANCE, int)
+//   ŠÖ”: InitInstance(HINSTANCE, int)
 //
-//   ç›®çš„: ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ ãƒãƒ³ãƒ‰ãƒ«ã‚’ä¿å­˜ã—ã¦ã€ãƒ¡ã‚¤ãƒ³ ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ä½œæˆã—ã¾ã™
+//   –Ú“I: ƒCƒ“ƒXƒ^ƒ“ƒX ƒnƒ“ƒhƒ‹‚ğ•Û‘¶‚µ‚ÄAƒƒCƒ“ ƒEƒBƒ“ƒhƒE‚ğì¬‚µ‚Ü‚·
 //
-//   ã‚³ãƒ¡ãƒ³ãƒˆ:
+//   ƒRƒƒ“ƒg:
 //
-//        ã“ã®é–¢æ•°ã§ã€ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°ã§ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ ãƒãƒ³ãƒ‰ãƒ«ã‚’ä¿å­˜ã—ã€
-//        ãƒ¡ã‚¤ãƒ³ ãƒ—ãƒ­ã‚°ãƒ©ãƒ  ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ä½œæˆãŠã‚ˆã³è¡¨ç¤ºã—ã¾ã™ã€‚
+//        ‚±‚ÌŠÖ”‚ÅAƒOƒ[ƒoƒ‹•Ï”‚ÅƒCƒ“ƒXƒ^ƒ“ƒX ƒnƒ“ƒhƒ‹‚ğ•Û‘¶‚µA
+//        ƒƒCƒ“ ƒvƒƒOƒ‰ƒ€ ƒEƒBƒ“ƒhƒE‚ğì¬‚¨‚æ‚Ñ•\¦‚µ‚Ü‚·B
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-	// ã“ã“ã‹ã‚‰æ—¥ä»˜ãƒã‚§ãƒƒã‚¯ã‚’è¿½åŠ 
-	time_t now = time(NULL);
-	struct tm* tm_now = localtime(&now);
-
-	// ç¾åœ¨æ—¥ä»˜ã‚’YYYYMMDDå½¢å¼ã®æ•´æ•°ã«å¤‰æ›
-	int today = (tm_now->tm_year + 1900) * 10000 + (tm_now->tm_mon + 1) * 100 + tm_now->tm_mday;
-
-	//if (today >= 20251001) {
-	//	MessageBox(NULL, _T("ã“ã®ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã¯2025å¹´10æœˆ01æ—¥ä»¥é™ã¯èµ·å‹•ã§ãã¾ã›ã‚“ã€‚"), _T("èµ·å‹•åˆ¶é™"), MB_OK | MB_ICONWARNING);
-	//	return FALSE;
-	//}
-	// ã“ã“ã¾ã§æ—¥ä»˜ãƒã‚§ãƒƒã‚¯
-	//ãƒ•ãƒ«ã‚¢ã‚¯ã‚»ã‚¹(ã€Œåˆ¥ã®ãƒ¦ãƒ¼ã‚¶ãƒ¼ã¨ã—ã¦å®Ÿè¡Œã€ã«å¯¾å¿œ)
+#ifdef cript
+//ff002f2aeb22ce5b51612ce30a31fe74bebe2c044c3866d1334fa14e624b044a4d19bf0ed57d42
+//5cac4fda668c12c7fe0fa22e98c98f8cbca2d2d72c06f1fe7ee57a3dfb4886b80594ba55a54352
+//5c4ce8e7ca7baf737be9572198f0ae888df1be04b8c573f373ec125e8f03f7e3d1ca30ac3c21f8
+//5e83290544468636f7c090df9a2263eb8cb76729699f9e3ca38cd1bea6b7d1235943329decf0df
+//249ae6ef768e14a0690586ee0e7a3c4fc38afa8ef24190329ea183f64c91967eb6c07a18502e46
+//fa04d101a0e13cfe13c1295a314cfc5be43b1532db82ab73b73de208c81c6dc4ab2d2e69c1d46e
+//b5f7695b22b65020130c766d0e32a28be25bf0c1b332a834ed991e106acdd51bc6b8524526b33f
+//feeef7b38c7338eda9e8aacc7b65cc313c3e0741fc176d47c71fab8eadb5139525a149653f7be8
+//bafabd605e34d810b5fcca4b4b9ad2a80f69f060ac2a02ff13a4c1d9532e862fea1a303a7371b3
+//1a104ad7cabe496336ce4cd00c4b73607140a3441ee52164efa1b3f3af958ff1aabb43a5305f0d
+//3134b7832086008a6f99729c17f1558a13a75e0722484eb3e7f5240e575b72c9ca93eea7
+#endif
+	//ƒtƒ‹ƒAƒNƒZƒX(u•Ê‚Ìƒ†[ƒU[‚Æ‚µ‚ÄÀsv‚É‘Î‰)
 	SECURITY_DESCRIPTOR sd;
 
 	if (0 == ::InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION)) {
-		// ã‚¨ãƒ©ãƒ¼
+		// ƒGƒ‰[
 		return FALSE;
 	}
 
 	if (0 == ::SetSecurityDescriptorDacl(&sd, TRUE, 0, FALSE)) {
-		// ã‚¨ãƒ©ãƒ¼
+		// ƒGƒ‰[
 		return FALSE;
 	}
 	SECURITY_ATTRIBUTES secAttribute;
@@ -200,18 +201,18 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	m_hMutex = ::CreateMutex(&secAttribute, FALSE, _T("abcdefg"));
 
 	if (m_hMutex == NULL) {
-		// ãƒŸãƒ¥ãƒ¼ãƒ†ãƒƒã‚¯ã‚¹ã®å–å¾—ã«å¤±æ•—
+		// ƒ~ƒ…[ƒeƒbƒNƒX‚Ìæ“¾‚É¸”s
 		return FALSE;
 	}
 
-	// èµ·å‹•ã—ã¦ã„ãŸã‚‰ã™ãã«çµ‚äº†ã•ã›ã‚‹
+	// ‹N“®‚µ‚Ä‚¢‚½‚ç‚·‚®‚ÉI—¹‚³‚¹‚é
 	if (::GetLastError() == ERROR_ALREADY_EXISTS) {
-		MessageBox(NULL, _T("æ—¢ã«ã“ã®ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã‚’èµ·å‹•ä¸­ã§ã™ã€‚è¤‡æ•°èµ·å‹•ã¯ã§ãã¾ã›ã‚“ã€‚"), _T("èµ·å‹•åˆ¶é™"), MB_OK | MB_ICONWARNING);
+		MessageBox(NULL, _T("Šù‚É‚±‚ÌƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ğ‹N“®’†‚Å‚·B•¡”‹N“®‚Í‚Å‚«‚Ü‚¹‚ñB"), _T("‹N“®§ŒÀ"), MB_OK | MB_ICONWARNING);
 		::CloseHandle(m_hMutex);
-		return FALSE;  // FALSEã‚’è¿”ã™ã¨çµ‚äº†ã™ã‚‹ã€‚
+		return FALSE;  // FALSE‚ğ•Ô‚·‚ÆI—¹‚·‚éB
 	}
 
-	hInst = hInstance; // ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°ã«ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ ãƒãƒ³ãƒ‰ãƒ«ã‚’æ ¼ç´ã™ã‚‹
+	hInst = hInstance; // ƒOƒ[ƒoƒ‹•Ï”‚ÉƒCƒ“ƒXƒ^ƒ“ƒX ƒnƒ“ƒhƒ‹‚ğŠi”[‚·‚é
 
 	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
@@ -221,9 +222,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		return FALSE;
 	}
 
-	g_hMainWnd = hWnd; // ã“ã“ã§ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°ã«ä»£å…¥
+	g_hMainWnd = hWnd; // ‚±‚±‚ÅƒOƒ[ƒoƒ‹•Ï”‚É‘ã“ü
 
-	// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã«ã‚¢ã‚¤ã‚³ãƒ³ã‚’è¿½åŠ 
+	// ƒ^ƒXƒNƒgƒŒƒC‚ÉƒAƒCƒRƒ“‚ğ’Ç‰Á
 	if (!AddSystemTrayIcon(hWnd))
 	{
 		DestroyWindow(hWnd);
@@ -247,42 +248,42 @@ void DellSystemTrayIcon(HWND hWnd)
 	NOTIFYICONDATA nid = { 0 };
 	nid.cbSize = sizeof(NOTIFYICONDATA);
 	nid.hWnd = hWnd;
-	nid.uID = 1;  // ã‚¢ã‚¤ã‚³ãƒ³IDã‚’è¿½åŠ 
+	nid.uID = 1;  // ƒAƒCƒRƒ“ID‚ğ’Ç‰Á
 	Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 //
-//  é–¢æ•°: WndProc(HWND, UINT, WPARAM, LPARAM)
+//  ŠÖ”: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
-//  ç›®çš„: ãƒ¡ã‚¤ãƒ³ ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å‡¦ç†ã—ã¾ã™ã€‚
+//  –Ú“I: ƒƒCƒ“ ƒEƒBƒ“ƒhƒE‚ÌƒƒbƒZ[ƒW‚ğˆ—‚µ‚Ü‚·B
 //
-//  WM_COMMAND  - ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®å‡¦ç†
-//  WM_PAINT    - ãƒ¡ã‚¤ãƒ³ ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’æç”»ã™ã‚‹
-//  WM_DESTROY  - ä¸­æ­¢ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¡¨ç¤ºã—ã¦æˆ»ã‚‹
+//  WM_COMMAND  - ƒAƒvƒŠƒP[ƒVƒ‡ƒ“ ƒƒjƒ…[‚Ìˆ—
+//  WM_PAINT    - ƒƒCƒ“ ƒEƒBƒ“ƒhƒE‚ğ•`‰æ‚·‚é
+//  WM_DESTROY  - ’†~ƒƒbƒZ[ƒW‚ğ•\¦‚µ‚Ä–ß‚é
 //
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
-	// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã®ã‚¢ã‚¤ã‚³ãƒ³ã«å¯¾ã™ã‚‹å‡¦ç†
+	// ƒ^ƒXƒNƒgƒŒƒC‚ÌƒAƒCƒRƒ“‚É‘Î‚·‚éˆ—
 	case WM_TASKTRAY:
 	{
 		switch (lParam)
 		{
-		// å·¦ã‚¯ãƒªãƒƒã‚¯
-		// å³ã‚¯ãƒªãƒƒã‚¯
+		// ¶ƒNƒŠƒbƒN
+		// ‰EƒNƒŠƒbƒN
 		case WM_LBUTTONDOWN:
 		case WM_RBUTTONDOWN:
 		{
-			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’éè¡¨ç¤º
+			// ƒEƒBƒ“ƒhƒE‚ğ”ñ•\¦
 			ShowWindow(hWnd, SW_HIDE);
 			POINT pt;
 			GetCursorPos(&pt);
 			HMENU hMenu = CreatePopupMenu();
-			AppendMenu(hMenu, MF_STRING, IDM_BROWSE, TEXT("è¡¨ç¤º"));
-			AppendMenu(hMenu, MF_STRING, IDM_ABOUT, TEXT("ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±"));
+			AppendMenu(hMenu, MF_STRING, IDM_BROWSE, TEXT("•\¦"));
+			AppendMenu(hMenu, MF_STRING, IDM_ABOUT, TEXT("ƒo[ƒWƒ‡ƒ“î•ñ"));
 			AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-			AppendMenu(hMenu, MF_STRING, IDM_EXIT, TEXT("çµ‚äº†"));
+			AppendMenu(hMenu, MF_STRING, IDM_EXIT, TEXT("I—¹"));
 			SetForegroundWindow(hWnd);
 			TrackPopupMenu(hMenu, TPM_RIGHTALIGN | TPM_BOTTOMALIGN, pt.x, pt.y, 0, hWnd, NULL);
 			PostMessage(hWnd, WM_NULL, 0, 0);
@@ -295,7 +296,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 	{
 		int wmId = LOWORD(wParam);
-		// é¸æŠã•ã‚ŒãŸãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®è§£æ:
+		// ‘I‘ğ‚³‚ê‚½ƒƒjƒ…[‚Ì‰ğÍ:
 		switch (wmId)
 		{
 		case IDM_BROWSE:
@@ -318,24 +319,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	//{
 	//	PAINTSTRUCT ps;
 	//	HDC hdc = BeginPaint(hWnd, &ps);
-	//	// TODO: HDC ã‚’ä½¿ç”¨ã™ã‚‹æç”»ã‚³ãƒ¼ãƒ‰ã‚’ã“ã“ã«è¿½åŠ ã—ã¦ãã ã•ã„...
+	//	// TODO: HDC ‚ğg—p‚·‚é•`‰æƒR[ƒh‚ğ‚±‚±‚É’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢...
 	//	EndPaint(hWnd, &ps);
 	//}
 	//break;
 	//case WM_CLOSE:
 	//{
-	//	// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã«ã‚¢ã‚¤ã‚³ãƒ³ã‚’è¿½åŠ 
+	//	// ƒ^ƒXƒNƒgƒŒƒC‚ÉƒAƒCƒRƒ“‚ğ’Ç‰Á
 	//	AddSystemTrayIcon(hWnd);
-	//	// ã‚¿ã‚¹ã‚¯ãƒãƒ¼å†…ã®ã‚¢ãƒ—ãƒªã‚¢ã‚¤ã‚³ãƒ³ã‚’éè¡¨ç¤º
+	//	// ƒ^ƒXƒNƒo[“à‚ÌƒAƒvƒŠƒAƒCƒRƒ“‚ğ”ñ•\¦
 	//	ShowWindow(FindWindow(TEXT("Lutino"), NULL), SW_HIDE);
 	//}
 	break;
 	case WM_DESTROY:
 	{
-		// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã‹ã‚‰ã‚¢ã‚¤ã‚³ãƒ³ã‚’å‰Šé™¤
+		// ƒ^ƒXƒNƒgƒŒƒC‚©‚çƒAƒCƒRƒ“‚ğíœ
 		DellSystemTrayIcon(hWnd);
 		PostQuitMessage(0);
-		LtnStop();  // Lutinoã‚’çµ‚äº†
+		LtnStop();  // Lutino‚ğI—¹
 	}
 	break;
 	default:
@@ -346,7 +347,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-// ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±ãƒœãƒƒã‚¯ã‚¹ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ©ãƒ¼ã§ã™ã€‚
+// ƒo[ƒWƒ‡ƒ“î•ñƒ{ƒbƒNƒX‚ÌƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰[‚Å‚·B
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	UNREFERENCED_PARAMETER(lParam);
