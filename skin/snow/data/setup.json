@@ -42,7 +42,7 @@
   {
     "url": "/?",
     "image": "<img src=\"images/menu.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"File explorer.\" data-bs-placement=\"top\">",
-    "title":"File",
+    "title":"Explore",
   },
   {
     "url": "/school/",
@@ -63,5 +63,10 @@
     "url": "/tools.jss",
     "image": "<img src=\"images/tools.png\" width=\"96\" height=\"96\" border=\"0\" data-bs-toggle=\"tooltip\" title=\"Miscerous tools.\" data-bs-placement=\"top\">",
     "title":"Tools",
-  }
+  },
+  {
+    "url": "",
+    "image": "",
+    "title":"",
+  },
 ]

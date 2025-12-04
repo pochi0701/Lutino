@@ -63,7 +63,7 @@ url = _GET.url;
                     // 置換データの作成
                     let mid = "<div class=\"mermaid\">" + code.substring(stp + st_len, edp - stp - st_len) + "</div>";
                     codes.push({ "key": myId, "value": mid });
-                    code = code.substring(0, stp) + myId + code.substring(edp + 3,code.length-1);
+                    code = code.substring(0, stp) + myId + code.substring(edp + 3);
                 } while (true);
                 return code;
             }

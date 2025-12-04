@@ -49,30 +49,26 @@
         function setup(url) {
             axios.get(`/data/setup.json`)
                 .then(function (response) {
-                    var repl  = "<?print (getLocalAddress() + ':' + getLocalPort());?>"
-                    var setup = eval(response.data);
-                    var contents = ["","","",""];
-                    var contentse = ["","","",""];
-                    var line = 0;
-                    for( i = 0 ; i < setup.length ; i++){
+                    const repl  = "<?print (getLocalAddress() + ':' + getLocalPort());?>"
+                    let setup = eval(response.data);
+                    let contents = "";
+                    let contentse = "";
+                    let line = 0;
+                    for( let i = 0 ; i < setup.length ; i++){
                         if( setup[i].url.length > 0 ){
                             if( setup[i].url.indexOf('%LOCALADDRESS%') >= 0 ){
                                 setup[i].url = setup[i].url.replace('%LOCALADDRESS%',repl);
                             }
-                            contents[line] += '<td><a href="'+setup[i].url+'">'+setup[i].image+'</a></td>\n';
-                            contentse[line] += '<td class="text-center align-middle" style="color:white;">'+setup[i].title+'</a></td>\n';
+                            contents += '<td><a href="'+setup[i].url+'">'+setup[i].image+'</a></td>\n';
+                            contentse += '<td class="title-cell">'+setup[i].title+'</a></td>\n';
                         }else{
+                            document.getElementById('icons'+line).innerHTML = contents;
+                            document.getElementById('icons'+line+'e').innerHTML = contentse;
+                            contents = "";
+                            contentse = "";
                             line += 1;
                         }
                     }
-                    document.getElementById("icons0").innerHTML = contents[0];
-                    document.getElementById("icons0e").innerHTML = contentse[0];
-                    document.getElementById("icons1").innerHTML = contents[1];
-                    document.getElementById("icons1e").innerHTML = contentse[1];
-                    document.getElementById("icons2").innerHTML = contents[2];
-                    document.getElementById("icons2e").innerHTML = contentse[2];
-                    document.getElementById("icons3").innerHTML = contents[3];
-                    document.getElementById("icons3e").innerHTML = contentse[3];
                     new QRCode(document.getElementById("qrcodeCanvas1"), { width: 96, height: 96, text: "http://<?print (getLocalAddress()+':'+getLocalPort()+'/');?>" });  
                     return false;
                 })

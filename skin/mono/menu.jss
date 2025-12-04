@@ -132,7 +132,7 @@ me=_SERVER.SCRIPT_NAME;
                                 }else if( mime.fileType == "TYPE_DOCUMENT" ){
                                     if( ext == "md"){
                                         icon = "fa-brands fa-markdown fa-lg";
-                                        url1 = fl+basename(filePath)+"?action=MarkDownv.jss";
+                                        url1 = fl+basename(filePath)+"?action=MarkDown.jss";
                                     }else{
                                         icon = "fa fa-file fa-lg";
                                         url1 = fl+basename(filePath);
