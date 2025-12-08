@@ -151,7 +151,7 @@ inline void CREATE_LINK(CScriptVarLink*& LINK, CScriptVar* VAR)
 		LINK->replaceWith(VAR);
 	}
 }
-//#define CREATE_LINK(LINK, VAR) { if (!LINK || LINK->owned) LINK = new CScriptVarLink(VAR); else LINK->replaceWith(VAR); }
+
  // 論理オペレータOR
 SCRIPTVAR_FLAGS operator|(SCRIPTVAR_FLAGS L, SCRIPTVAR_FLAGS R)
 {
@@ -854,7 +854,7 @@ CScriptLex* CScriptLex::getSubLex(int lastPosition)
 		return new CScriptLex(socket, printed, headerBuf, this, lastPosition, dataEnd, prBuffer, prPos);
 	}
 }
-//指定位置を行数、列数に変換
+/// <summary>指定位置を行数、列数に変換</summary>
 wString CScriptLex::getPosition(int pos)
 {
 	if (pos < 0) pos = tokenLastEnd;
@@ -1993,6 +1993,11 @@ CScriptVarLink* CTinyJS::functionCall(bool& execute, CScriptVarLink* function, C
 	}
 }
 
+/// <summary>
+/// 与えられた条件に基づいてJavaScriptの変数やオブジェクトを解析し、対応するCScriptVarLinkを返すメソッド
+/// </summary>
+/// <param name="execute"></param>
+/// <returns></returns>
 CScriptVarLink* CTinyJS::factor(bool& execute)
 {
 	if (lex->tk == LEX_TYPES::LEX_L_PARENTHESIS) {
@@ -2038,16 +2043,14 @@ CScriptVarLink* CTinyJS::factor(bool& execute)
 			else if (lex->tk == LEX_TYPES::LEX_DOT) { // ------------------------------------- Record Access
 				lex->match(LEX_TYPES::LEX_DOT);
 				if (execute) {
-					int aa = 0;
 					const wString& name = lex->tkStr;
 					CScriptVarLink* child = a->var->findChild(name);
 					if (!child) child = findInParentClasses(a->var, name);
 					if (!child) {
 						/* if we haven't found this defined yet, use the built-in
-						'length' properly */
+						   'length' properly */
 						if (a->var->isArray() && name == "length") {
 							int ll = static_cast<int>(a->var->getArrayLength());
-							//aa = 1;
 							child = new CScriptVarLink(new CScriptVar(ll));
 						}
 						else if (a->var->isString() && name == "length") {
@@ -2065,10 +2068,6 @@ CScriptVarLink* CTinyJS::factor(bool& execute)
 						wString errorMsg = "Object variable not defined '";
 						errorMsg = errorMsg + a->name + "' must be defined";
 						throw new CScriptException(errorMsg.c_str());
-					}
-					//多分aをCLEANしないとメモリーリーク ひでえ実装
-					if (aa == 1) {
-						CLEAN(a);
 					}
 					a = child;
 				}
@@ -2874,17 +2873,6 @@ CScriptVar* CTinyJS::getScriptVariable(const wString& path)
 	}
 	return var;
 }
-
-/// Get the value of the given variable, or return 0
-//const wString *CTinyJS::getVariable(const wString &path) {
-//    CScriptVar *var = getScriptVariable(path);
-//    // return result
-//    if (var){
-//        return &var->getString();
-//    }else{
-//        return 0;
-//    }
-//}
 
 /// <summary>
 /// set the value of the given variable, return true if it exists and gets set
