@@ -28,7 +28,7 @@
        }
        if( _POST.upload !== undefined){
            var file = root+_POST.upload.filename;
-           var body = btoa(_POST.upload.filebody);
+           var body = atob(_POST.upload.filebody);
            print( "<br>\nファイル名："+file );
            print( "<br>\nファイル長さ："+_POST.upload.length );
            print( "<br>\nファイル内容："+body.nkfconv("W") );
