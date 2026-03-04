@@ -35,6 +35,18 @@
     <title>オンライン学習</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <style>
+        .subcontent-card-title{
+            font-weight: 600;
+        }
+        .subcontent-card{
+            height: 100%;
+        }
+        .subcontent-meta{
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
     <!-- 1.ナビゲーションバーの設定 -->
@@ -51,16 +63,22 @@
             </div>
         </div>
     </nav>
-    <div class="container">
-        <div class="row">
-            <div class="col">
-                <div class="btn bg-info btn-block">
-                    <a href="#" onclick="window.location.href='content.jss?no=<?print(course_no);?>';">コンテンツ一覧に戻る</a>
-                </div>
+    <div class="container py-3">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <a class="btn btn-info" href="content.jss?no=<?print(course_no);?>">コンテンツ一覧に戻る</a>
+        </div>
+        <h2>使い方</h2>
+        <div class="card border-info mb-3">
+            <div class="card-header bg-info text-white">無料コンテンツ</div>
+            <div class="card-body">
+                先頭のテキストが教科書となります。まず教科書を読んでください。<br>
+                途中のコンテンツは例題です。テキストから見ることができますが、完了にならないときはクリックしてください。<br>
+                最後に理解度テストがある教材はここから理解度テストを実施してください。
             </div>
         </div>
+        <br>
         <h2><?print(content_name);?></h2>
-        <div class="accordion" id="accordionPanelsStay">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
             <?
             for(var i = 0 ; i<elm.length ; i++){
                 connect_char = (elm[i].file.indexOf("?")>=0)?"&":"?";
@@ -69,47 +87,71 @@
                 }else{
                     path2 = path;
                 }
-            print('<div class="accordion-item">\r\n');
-            print('    <h2 class="accordion-header">\r\n');
-            print('        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapse'+i+'" aria-expanded="true" aria-controls="panelsStayOpen-collapse'+i+'">');
-                                   print( (i+1)+":");
-                               print(htmlspecialchars(elm[i].name));
-            print('        </button>\r\n');
-            print('    </h2>\r\n');
-            print('    <div id="panelsStayOpen-collapse'+i+'" class="accordion-collapse collapse show">\r\n');
-            print('        <div class="accordion-body">');
-                print('<a class="btn btn-outline-primary" href="'+path2+elm[i].file+connect_char+'no='+elm[i].no+'&contentno='+elm[i].content_no+'&subno='+elm[i].sub_no+'" target="_blank">閲覧</a>\r\n');
+
+                var badgeClass;
+                var badgeText;
+                var metaText = '';
                 if(elm[i].done == 100){
-                    print('<span class="badge text-bg-info">実施完了</span>\r\n');
-                    print('<span class="text-end">完了日：'+formatDateTime(elm[i].execution)+'</span>\r\n');
+                    badgeClass = 'text-bg-success';
+                    badgeText = '実施完了';
+                    metaText = '完了日：' + formatDateTime(elm[i].execution);
                 }else if(elm[i].done >= 1) {
-                    print('<span class="badge text-bg-warning">'+elm[i].done+'%完了</span>\r\n');
-                    print('<span class="text-end">実施日：'+formatDateTime(elm[i].execution)+'</span>\r\n');
+                    badgeClass = 'text-bg-warning';
+                    badgeText = elm[i].done + '%完了';
+                    metaText = '実施日：' + formatDateTime(elm[i].execution);
                 }else{
-                    print('<span class="badge text-bg-danger">未完了</span>\r\n');
+                    badgeClass = 'text-bg-danger';
+                    badgeText = '未完了';
                 }
-            print('        </div>\r\n');
-            print('    </div>\r\n');
-            print('</div>\r\n');
+
+                var viewHref = path2+elm[i].file+connect_char+'no='+elm[i].no+'&contentno='+elm[i].content_no+'&subno='+elm[i].sub_no;
+
+                print('<div class="col">\r\n');
+                print('  <div class="card shadow-sm subcontent-card">\r\n');
+                print('    <div class="card-body d-flex flex-column">\r\n');
+                print('      <div class="d-flex align-items-start gap-2 mb-2">\r\n');
+                print('        <div class="subcontent-card-title flex-grow-1">'+(i+1)+': '+htmlspecialchars(elm[i].name)+'</div>\r\n');
+                print('        <span class="badge '+badgeClass+' text-nowrap">'+badgeText+'</span>\r\n');
+                print('      </div>\r\n');
+                if(metaText.length > 0){
+                    print('      <div class="subcontent-meta mb-3">'+metaText+'</div>\r\n');
+                }else{
+                    print('      <div class="subcontent-meta mb-3">&nbsp;</div>\r\n');
+                }
+                print('      <div class="mt-auto d-flex justify-content-end">\r\n');
+                print('        <a class="btn btn-primary" href="'+viewHref+'" target="_blank">閲覧</a>\r\n');
+                print('      </div>\r\n');
+                print('    </div>\r\n');
+                print('  </div>\r\n');
+                print('</div>\r\n');
             }
             ?>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
     <script>
-      //document.querySelectorAll('.accordion-body').forEach(function(item) {
-      //  item.addEventListener('click', function() {
-      //    var uri = item.getAttribute('data-url');
-      //    if( uri != null ){
-      //      window.location.href = uri;
-      //    }
-      //  });
-      //});
-      //document.addEventListener('visibilitychange', function () {
-      //  if (document.visibilityState === 'visible') {
-      //     window.location.reload();
-      //  }
-      //});
+      (function () {
+        var reloadedKey = 'lutino:reloaded:' + location.pathname + location.search;
+
+        function isBackForwardNavigation() {
+          var nav = performance.getEntriesByType && performance.getEntriesByType('navigation');
+          if (nav && nav.length > 0) {
+            return nav[0].type === 'back_forward';
+          }
+          return false;
+        }
+
+        window.addEventListener('pageshow', function () {
+          if (!isBackForwardNavigation()) {
+            return;
+          }
+          if (sessionStorage.getItem(reloadedKey) === '1') {
+            return;
+          }
+          sessionStorage.setItem(reloadedKey, '1');
+          location.reload();
+        });
+      })();
     </script>
   </body>
 </html>

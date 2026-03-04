@@ -77,7 +77,7 @@ if( sf == ""){
         <a href="/" target="_top" title="Home(AltH)" accesskey="H"><i class="fa fa-home fa-lg"></i></a>
         <a href="#" onclick="saveCode();" title="Save File(AltS)" accesskey="S"><i class="fa fa-cloud-upload fa-lg"></i></a>
         <a href="#" onclick="viewCode(filepath);" title="View File(AltV)" accesskey="V"><i class="fa fa-television fa-lg"></i></a>
-        <a href="#" onclick="(window.history.length>1)?history.back():window.close();" title="Return(AltR)" accesskey="R"><i class="fas fa-undo fa-lg"></i></a>
+        <a href="#" onclick="closeOrReturn();" title="Return(AltR)" accesskey="R"><i class="fas fa-undo fa-lg"></i></a>
         <div id="editArea"></div>
 
     <!-- SCRIPTS //-->
@@ -101,6 +101,17 @@ if( sf == ""){
         function init() {
             loadFile(base + root);
             return false;
+        }
+        // close window or return to previous page.
+        function closeOrReturn() {
+            if (window.history.length <= 1) {
+                if (document.referrer && document.referrer.length > 0) {
+                    window.location.href = document.referrer;
+                    return;
+                }
+            }
+            window.close();
+            return;
         }
         // display result of rendering code.
         function viewCode(path) {

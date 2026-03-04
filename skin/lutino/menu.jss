@@ -181,8 +181,46 @@ me=_SERVER.SCRIPT_NAME;
     <script type="text/javascript">
     <!--
         var root = "<? print( root ); ?>";
+        function lutinoDownload(url){
+            var a = document.createElement('a');
+            a.href = url;
+            a.setAttribute('download', '');
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function lutinoCopy(text){
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-1000px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch(e) {}
+                ta.remove();
+            }
+        }
+
+        function lutinoShowMenu(ev, id){
+            ev.preventDefault();
+            ev.stopPropagation();
+            var el = document.getElementById(id);
+            if(!el) return;
+            var dd = bootstrap.Dropdown.getOrCreateInstance(el);
+            dd.show();
+        }
         // -->
     </script>
+    <style>
+        td.fileicon { width: 2.2rem; }
+        .icon-btn { color: inherit; text-decoration: none; cursor: pointer; display: inline-block; padding: 0.15rem 0.25rem; }
+        .dropdown-menu { min-width: 12rem; }
+    </style>
 </head>
 <body>
     <!-- ナビゲーションバー -->
