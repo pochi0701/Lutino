@@ -38,16 +38,19 @@ if( root.length>0){
             }
         }
     }
-    database.DBDisConnect();   
+    database.DBDisConnect();
+    //右端の/をなくす
+    while( root[root.length-1] == "/" ){
+        root = root.substring(0,root.length-1);
+    }
+    var sf = root.substring(base.length,root.length);
+    if( sf == ""){
+       sf = "/";
+    }
+}else{
+    die("Usage: tview.jss?root=file");
 }
-//右端の/をなくす
-while( root[root.length-1] == "/" ){
-    root = root.substring(0,root.length-1);
-}
-var sf = root.substring(base.length,root.length);
-if( sf == ""){
-   sf = "/";
-}
+
 ?>
 <!doctype html>
 <html lang="ja">

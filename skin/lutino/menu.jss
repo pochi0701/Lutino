@@ -338,7 +338,7 @@ me=_SERVER.SCRIPT_NAME;
                                 }else if( mime.fileType == "TYPE_IMAGE" ){
                                     icon = "fas fa-image";
                                     iconClass = "icon-image";
-                                    url1 = fl+basename(filePath)+"?action=ImageViewv.jss";
+                                    url1 = fl+basename(filePath)+"?action=ImageView.jss";
                                     url2 = "";
                                 }else if( mime.fileType == "TYPE_MOVIE" ){
                                     icon = "fas fa-film";

@@ -76,7 +76,6 @@ void js_print(CScriptVar* v, void* userdata)
 void scTrace(CScriptVar* c, void* userdata)
 {
 	IGNORE_PARAMETER(c);
-	IGNORE_PARAMETER(userdata);
 	CTinyJS* js = static_cast<CTinyJS*>(userdata);
 	//printする前にヘッダを出力
 	headerCheckPrint(js->socket, &(js->printed), js->headerBuf, 1);
@@ -1114,6 +1113,14 @@ void scArraySplice(CScriptVar* c, void*) {
 	}
 }
 
+//死亡
+void scDie(CScriptVar* c, void* userdata)
+{
+	IGNORE_PARAMETER(userdata);
+	wString msg = c->getParameter("msg")->getString();
+	throw new CScriptException(msg);
+}
+
 // ----------------------------------------------- Register Functions
 void registerFunctions(CTinyJS* tinyJS)
 {
@@ -1204,4 +1211,5 @@ void registerFunctions(CTinyJS* tinyJS)
 	tinyJS->addNative("function Array.unshift(val)", scArrayUnshift, 0);
 	tinyJS->addNative("function Array.indexOf(val)", scArrayIndexOf, 0);
 	tinyJS->addNative("function Array.slice(start,end)", scArraySlice, 0);
+	tinyJS->addNative("function die(msg)", scDie, 0);
 }
