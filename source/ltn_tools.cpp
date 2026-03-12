@@ -744,7 +744,7 @@ void debug_log_initialize()
 void debug_log_output(const char* fmt, ...)
 {
 //#ifdef _DEBUG
-	static int        fd = -1;
+	int        fd = -1;
 	if (!global_param.flag_debug_log_output) {
 		return;
 	}
@@ -810,9 +810,9 @@ void debug_log_output(const char* fmt, ...)
 		return;
 	}
 	// メッセージ実体を出力
-	//close(fd);
+	close(fd);
 	// ファイルクローズ
-	//fd = -1;
+	fd = -1;
 	return;
 	//DEBUGが定義されてない場合ログ出力しない
 //#else
@@ -1300,6 +1300,7 @@ void convert_language_code(const char* in, char* out, size_t len, int in_flag, i
 	*out = 0;
 	nkf_cnv* nkfcnv = new nkf_cnv ();
 	nkfcnv->nkf(static_cast<const char*>(in), out, len, static_cast<const char*>(nkf_option));
+	delete nkfcnv;
 	return;
 }
 #endif

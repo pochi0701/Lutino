@@ -235,6 +235,8 @@ int Lutinomain(void* arg)
 //アクセスできたら０、できなかったら-1
 int Initialize(void)
 {
+	// 乱数初期化は一回のみ
+	srand((unsigned int)time(NULL));
 	//wString::wStringInit();
 	wString     curdir;
 #ifdef linux

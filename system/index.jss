@@ -445,14 +445,17 @@ if( sf == ""){
         function getFileType(path) {
             //ファイルタイプ生成
             let ext = extractFileExt(path);
+            if (ext == ".jss") {
+                // jss-mode.jsで定義したカスタムモードのインスタンスを直接返す
+                var JssMode = ace.require("ace/mode/jss").Mode;
+                return new JssMode();
+            }
             fileType = "";
             if (ext == ".js") {
                 fileType = "ace/mode/javascript";
-            } else if (ext == ".jss") {
-                fileType = "ace/mode/jss";
             } else if (ext == ".css") {
                 fileType = "ace/mode/css";
-            } else if (ext == ".htm" || ext == ".html" || ext == ".jss") {
+            } else if (ext == ".htm" || ext == ".html") {
                 fileType = "ace/mode/html";
             } else if (ext == ".rb") {
                 fileType = "ace/mode/ruby";

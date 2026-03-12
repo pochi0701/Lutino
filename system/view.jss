@@ -86,6 +86,7 @@ if( root.length>0){
     <!-- SCRIPTS //-->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.37.5/ace.min.js" integrity="sha512-YjQHlQGNexP37C52f9apwLx+lnJXu8Nbk/812nUhqZkaHPIiOCC3Jg0Q8lL7cZpLpMvFlLIxV8fgQ9fZCjqaWQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
+    <script src="/system/jss-mode.js"></script>
     <script type="text/javascript">
         const extractFileExt = str => str.slice(str.lastIndexOf("."));
         const extractFileName = str => str.slice(str.lastIndexOf("/") + 1);
@@ -184,12 +185,16 @@ if( root.length>0){
         function getFileType(path) {
             //ファイルタイプ生成
             let ext = extractFileExt(path);
+            if (ext == ".jss") {
+                var JssMode = ace.require("ace/mode/jss").Mode;
+                return new JssMode();
+            }
             fileType = "";
             if (ext == ".js") {
                 fileType = "ace/mode/javascript";
             } else if (ext == ".css") {
                 fileType = "ace/mode/css";
-            } else if (ext == ".htm" || ext == ".html" || ext == ".jss") {
+            } else if (ext == ".htm" || ext == ".html") {
                 fileType = "ace/mode/html";
             } else if (ext == ".rb") {
                 fileType = "ace/mode/ruby";

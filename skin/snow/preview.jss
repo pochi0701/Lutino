@@ -40,7 +40,7 @@
           height=_GET.height;if( height.length==0) height=200;
 
           //set poster とりあえずカレント指定
-          poster2=path+"poster.jpg";
+          poster2=path+"images/poster.jpg";
           poster=encodeURI(poster2);
     
           //DIVセンタリング

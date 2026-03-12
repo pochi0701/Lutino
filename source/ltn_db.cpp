@@ -2630,8 +2630,8 @@ wString _DBConnect(const wString& database)
 	if (db == NULL) {
 		return "";
 	}
-	//乱数生成
-	srand((unsigned)time(NULL));
+	//乱数生成 initializeへ移動
+	//srand((unsigned)time(NULL));
 	unsigned char work[27] = {};
 	wString temp;
 	while (1) {

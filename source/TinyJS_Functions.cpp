@@ -488,7 +488,6 @@ void scJSONStringify(CScriptVar* c, void* userdata)
 
 void scExec(CScriptVar* c, void* userdata)
 {
-	IGNORE_PARAMETER(userdata);
 	CTinyJS* tinyJS = static_cast<CTinyJS*>(userdata);
 	wString str = c->getParameter("jsCode")->getString();
 	tinyJS->execute(str);
@@ -831,7 +830,8 @@ void scSessionStart(CScriptVar* c, void* userdata)
 		}
 	}
 	else {
-		srand((unsigned)time(NULL));
+		// initializeへ移動
+		//srand((unsigned)time(NULL));
 		char work[27] = {};
 		while (1) {
 			for (int i = 0; i < 26; i++) {
@@ -935,7 +935,8 @@ void scRestful(CScriptVar* c, void* userdata)
 	wString url = c->getParameter("url")->getString();
 	wString send = c->getParameter("send")->getString();
 	wString data;
-	data = wString::http_get(url, 0);
+	//実際にやってみると、http_getはGETしかできないから、http_restを作った？
+	//data = wString::http_get(url, 0);
 	data = wString::http_rest(method, url, send);
 	c->getReturnVar()->setString(data);
 }

@@ -251,6 +251,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 	//sClose(accept_socket);
 	debug_log_output ("HTTP Process done. From %s:%s\n", access_host, http_recv_info.recv_uri);
 	sClose(accept_socket);
+	accept_socket = -1;
 	return;
 }
 /////////////////////////////////////////////////////////////////////////////////

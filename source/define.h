@@ -21,5 +21,4 @@
 #define rmdir _rmdir
 #define strdup _strdup
 #endif
-#else
 #endif
