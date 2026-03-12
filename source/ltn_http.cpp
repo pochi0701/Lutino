@@ -151,9 +151,16 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		if (!skin_filename.ends_with (DELIMITER)) {
 			skin_filename += DELIMITER;
 		}
-		skin_filename += http_recv_info.action;
-		strcpy (http_recv_info.send_filename, skin_filename.c_str ());
-
+		// action=/system/xxx.jss等の場合
+		if (http_recv_info.action.find('/') >= 0)
+		{
+			strcpy(http_recv_info.send_filename, global_param.server_root);
+			strcat(http_recv_info.send_filename, http_recv_info.action.c_str());
+		}
+		else {
+			skin_filename += http_recv_info.action;
+			strcpy(http_recv_info.send_filename, skin_filename.c_str());
+		}
 		for (unsigned int i = 0; i < strlen (http_recv_info.request_uri); i++) {
 			if (http_recv_info.request_uri[i] == '?') {
 				http_recv_info.request_uri[i] = 0;

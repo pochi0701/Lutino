@@ -272,6 +272,7 @@ me=_SERVER.SCRIPT_NAME;
                     <th>Name</th>
                     <th style="width: 100px;">Size</th>
                     <th style="width: 180px;">Modified</th>
+                    <th style="width: 120px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -280,7 +281,7 @@ me=_SERVER.SCRIPT_NAME;
             filePath = dirname(root);
             if ( filePath != ""  && filePath.indexOf(base)>=0 ){
                 url = "?root="+encodeURI(filePath);
-                print( "<tr><td><a href=\""+url+"\" class=\"nav-back\"><i class=\"fas fa-level-up-alt\"></i></a></td><td><a href=\""+url+"\" class=\"folder-name\">..</a></td><td></td><td></td></tr>\n");
+                print( "<tr><td><a href=\""+url+"\" class=\"nav-back\"><i class=\"fas fa-level-up-alt\"></i></a></td><td><a href=\""+url+"\" class=\"folder-name\">..</a></td><td></td><td></td><td></td></tr>\n");
             }
             //ディレクトリの場合
             if (dir_exists(root)) {
@@ -294,6 +295,7 @@ me=_SERVER.SCRIPT_NAME;
                 if( files.length>0 ){
                     let url1 = "";//URL表示用
                     let url2 = "";//URL編集用
+                    let url3 = "";//URLダウンロード用
                     //check each folders
                     for( i = 0 ; i < files.length ; i++ ){
                         file = files[i];
@@ -302,7 +304,7 @@ me=_SERVER.SCRIPT_NAME;
                             //make link tag
                             stat = eval(file_stat(file));
                             url1 = "?root="+encodeURI(filePath);
-                            print( "<tr><td class=\"file-icon icon-folder\"><i class=\"fas fa-folder\"></i></td><td><a href=\""+url1+"\" class=\"folder-name\">"+basename(file)+"</a></td><td></td><td class=\"file-date\">"+stat.date+"</td></tr>\n");
+                            print( "<tr><td class=\"file-icon icon-folder\"><i class=\"fas fa-folder\"></i></td><td><a href=\""+url1+"\" class=\"folder-name\">"+basename(file)+"</a></td><td></td><td class=\"file-date\">"+stat.date+"</td><td></td></tr>\n");
                         }
                     }
                     //check each files.
@@ -324,6 +326,7 @@ me=_SERVER.SCRIPT_NAME;
                                 stat = eval(file_stat(filePath));
                                 mime = eval(mimeInfo(filePath));
                                 fileSize = size_num_read(stat.size);
+                                url3 = fl+basename(filePath);
                                 if( mime.fileType == "TYPE_MUSIC"){
                                     if( ext == "mp3" ){
                                         var mp3=eval(JSON.mp3id3tag(filePath));
@@ -344,7 +347,7 @@ me=_SERVER.SCRIPT_NAME;
                                     icon = "fas fa-film";
                                     iconClass = "icon-movie";
                                     url1 = fl+basename(filePath)+"?action=preview.jss";
-                                    url2 = fl+basename(filePath)+"?action=view.jss";
+                                    url2 = "";
                                 }else if( mime.fileType == "TYPE_DOCUMENT" ){
                                     if( ext == "md"){
                                         icon = "fab fa-markdown";
@@ -355,23 +358,30 @@ me=_SERVER.SCRIPT_NAME;
                                         icon = "fas fa-file";
                                         iconClass = "icon-document";
                                         url1 = fl+basename(filePath);
-                                        url2 = fl+basename(filePath)+"?action=MarkDown.jss";
+                                        url2 = fl+basename(filePath)+"?action=/system/edit.jss";
                                     }
                                 }else if( mime.fileType == "TYPE_SCRIPT" ){
                                     icon = "fas fa-code";
                                     iconClass = "icon-script";
                                     url1 = fl+basename(filePath);
+                                    url2 = fl+basename(filePath)+"?action=/system/edit.jss";
                                 }else{
                                     icon = "fas fa-question-circle";
                                     iconClass = "icon-unknown";
                                     url1 = fl+basename(filePath);
+                                    url2 = "";
                                 }
-                                print( "<tr><td class=\"file-icon "+iconClass+"\"><i class=\""+icon+"\"></i></td><td class=\"file-name\"><a href=\""+url1+"\">"+fname+"</a></td><td class=\"file-size\">"+fileSize+"</td><td class=\"file-date\">"+stat.date+"</td></tr>\n");
+                                let actions = "";
+                                if( url2.length > 0 ){
+                                    actions += "<a href=\""+url2+"\" class=\"icon-btn\" title=\"Edit\"><i class=\"fas fa-edit\"></i></a> ";
+                                }
+                                actions += "<a href=\"javascript:void(0)\" onclick=\"lutinoDownload('"+url3+"')\" class=\"icon-btn\" title=\"Download\"><i class=\"fas fa-download\"></i></a>";
+                                print( "<tr><td class=\"file-icon "+iconClass+"\"><i class=\""+icon+"\"></i></td><td class=\"file-name\"><a href=\""+url1+"\">"+fname+"</a></td><td class=\"file-size\">"+fileSize+"</td><td class=\"file-date\">"+stat.date+"</td><td>"+actions+"</td></tr>\n");
                             }
                         }
                     }
                     if(files.length == 0){
-                        print( "<tr><td colspan=\"4\" class=\"empty-state\"><i class=\"fas fa-inbox\"></i><p>No files in this directory</p></td></tr>\n");
+                        print( "<tr><td colspan=\"5\" class=\"empty-state\"><i class=\"fas fa-inbox\"></i><p>No files in this directory</p></td></tr>\n");
                     }
                 }
             }
