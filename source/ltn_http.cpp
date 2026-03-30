@@ -170,14 +170,14 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 			skin_filename += http_recv_info.action;
 			strcpy(http_recv_info.send_filename, skin_filename.c_str());
 		}
-		for (unsigned int i = 0; i < strlen (http_recv_info.request_uri); i++) {
-			if (http_recv_info.request_uri[i] == '?') {
-				http_recv_info.request_uri[i] = 0;
-				break;
+		{
+			int qpos = http_recv_info.request_uri.find('?');
+			if (qpos >= 0) {
+				http_recv_info.request_uri = http_recv_info.request_uri.substr(0, qpos);
 			}
 		}
-		skin_filename.sprintf ("%s?url=%s", http_recv_info.action.c_str(), http_recv_info.request_uri);
-		strcpy (http_recv_info.request_uri, skin_filename.c_str ());
+		skin_filename.sprintf ("%s?url=%s", http_recv_info.action.c_str(), http_recv_info.request_uri.c_str());
+		http_recv_info.request_uri = skin_filename;
 		http_recv_info.http_cgi_response (accept_socket);
 		//debug_log_output ("%s end!\n", http_recv_info.action);
 		debug_log_output ("HTTP Process action done. From %s:%s\n", access_host, http_recv_info.recv_uri);
@@ -221,10 +221,10 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 			strcpy (http_recv_info.recv_uri, "/menu.jss");
 			tmp = tmp.substr (pos + 1, tmp.length () - pos - 1);
 			if (tmp.length ()) {
-				sprintf (http_recv_info.request_uri, "/menu.jss?%s", tmp.c_str ());
+				http_recv_info.request_uri.sprintf ("/menu.jss?%s", tmp.c_str ());
 			}
 			else {
-				sprintf (http_recv_info.request_uri, "/menu.jss?root=%s", http_recv_info.send_filename);
+				http_recv_info.request_uri.sprintf ("/menu.jss?root=%s", http_recv_info.send_filename);
 			}
 			//send file nameの設定
 			sprintf (http_recv_info.send_filename, "%s%smenu.jss", global_param.skin_root, global_param.skin_name);
@@ -292,7 +292,7 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 	// ----------------------------------------------
 	read_filename.sprintf ("%sindex.html", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
-		strcat (request_uri, "index.html");
+		request_uri += "index.html";
 		strcpy (send_filename, read_filename.c_str ());
 		// ファイルの拡張子より、Content-type を決定
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
@@ -303,7 +303,7 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 	}
 	read_filename.sprintf ("%sindex.htm", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
-		strcat (request_uri, "index.htm");
+		request_uri += "index.htm";
 		strcpy (send_filename, read_filename.c_str ());
 		// ファイルの拡張子より、Content-type を決定
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
@@ -314,7 +314,7 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 	}
 	read_filename.sprintf ("%sindex.php", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
-		strcat (request_uri, "index.php");
+		request_uri += "index.php";
 		strcpy (send_filename, read_filename.c_str ());
 		// ファイルの拡張子より、Content-type を決定
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
@@ -325,7 +325,7 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 	}
 	read_filename.sprintf ("%sindex.jss", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
-		strcat (request_uri, "index.jss");
+		request_uri += "index.jss";
 		strcpy (send_filename, read_filename.c_str ());
 		// ファイルの拡張子より、Content-type を決定
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
@@ -408,7 +408,7 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			// GETオプション部解析
 			// ===========================
 			// REQUEST_URI用・Proxy用に値を保存
-			strncpy (request_uri, line.c_str (), sizeof (request_uri) - 1);
+			request_uri = line;
 			// '?'が存在するかチェック。
 			if (line.find ('?') != wString::npos) {
 				split2 = line;
@@ -781,7 +781,7 @@ int HTTP_RECV_INFO::http_not_found_response (SOCKET accept_socket)
 					, (size_t)9
 					, "Not Found");
 	send (accept_socket, buffer.c_str (), buffer.length (), 0);
-	debug_log_output ("Not Found %s", request_uri);
+	debug_log_output ("Not Found %s", request_uri.c_str());
 	sClose (accept_socket);
 	return 0;
 }

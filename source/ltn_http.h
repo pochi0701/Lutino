@@ -58,7 +58,7 @@ public:
     char   mime_type[128];           //
     char   send_filename[QUERY_MAX]; // フルパス
     wString action;                  // ?action=  の内容
-    char   request_uri[QUERY_MAX];   // 受信した生のURI
+    wString request_uri;             // 受信した生のURI
     wString boundary;                // multipart/form-dataの時のboundary
     wString referer;                 // Referer
     wString secFetchDest;            // Sec-Fetch-Dest
@@ -122,7 +122,7 @@ public:
         *mime_type = 0;
         *send_filename = 0;
         action.clear();
-        *request_uri = 0;
+        request_uri.clear();
         boundary.clear();
         referer.clear();
         secFetchDest.clear();

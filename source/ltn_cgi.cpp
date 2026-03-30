@@ -64,19 +64,22 @@ int HTTP_RECV_INFO::http_cgi_response(SOCKET accept_socket)
 	else {
 		strncpy(script_filename, send_filename, sizeof(script_filename));
 	}
-	query_string = strchr(request_uri, '?');
-	if (query_string == NULL) {
+	wString w_query_string;
+	int qpos = request_uri.find('?');
+	if (qpos == wString::npos) {
 		query_string = const_cast<char*>("");
 	}
 	else {
-		*query_string++ = '\0';
+		w_query_string = request_uri.substr(qpos + 1);
+		query_string = w_query_string.c_str();
+		request_uri = request_uri.substr(0, qpos);
 	}
-	script_exec_name = strrchr(request_uri, '/');
-	if (script_exec_name == NULL) {
-		script_exec_name = request_uri;
+	int spos = request_uri.rfind('/');
+	if (spos == wString::npos) {
+		script_exec_name = request_uri.c_str();
 	}
 	else {
-		script_exec_name++;
+		script_exec_name = request_uri.c_str() + spos + 1;
 	}
 	if (script_exec_name == NULL) {
 		debug_log_output("script_exec_name and script_name == NULL");
