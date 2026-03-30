@@ -154,8 +154,17 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		// action=/system/xxx.jss等の場合
 		if (http_recv_info.action.find('/') >= 0)
 		{
-			strcpy(http_recv_info.send_filename, global_param.server_root);
+			strcpy(http_recv_info.send_filename, global_param.document_root);
 			strcat(http_recv_info.send_filename, http_recv_info.action.c_str());
+			//(aliasを加味して）
+			for (int i = 0; i < MAX_COUNT_ALIAS; i++) {
+				if (*global_param.alias_key[i] && strstr(http_recv_info.send_filename, global_param.alias_key[i])) {
+					//aliasで置換する
+					//snprintf(work_buf, sizeof(work_buf), "%s%s", global_param.document_org, global_param.alias_key[i]);
+					//replace_character(send_filename, work_buf, global_param.alias_rep[i]);
+					replace_character(http_recv_info.send_filename, global_param.alias_key[i], global_param.alias_rep[i]);
+				}
+			}
 		}
 		else {
 			skin_filename += http_recv_info.action;
