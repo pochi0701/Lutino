@@ -469,7 +469,7 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			line.cut_before_character (':');
 			line = line.ltrim ();
 			// recv_range にRangeの中身保存
-			strncpy (recv_range, line.c_str (), sizeof (recv_range) - 1);
+			recv_range = line;
 			// '=' より前を切る
 			line.cut_before_character ('=');
 			// '-'で前後に分割。
@@ -508,8 +508,8 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			// ':' より前を切る。
 			line.cut_before_character (':');
 			line = line.ltrim ();
-			strncpy (content_length, line.c_str (), sizeof (content_length) - 1);
-			//debug_log_output("%s Detect. %s '%s'", HTTP_CONTENT_LENGTH1, HTTP_CONTENT_LENGTH1, content_length);
+			content_length = line;
+			//debug_log_output("%s Detect. %s '%s'", HTTP_CONTENT_LENGTH1, HTTP_CONTENT_LENGTH1, content_length.c_str());
 			continue;
 		}
 		// Content-TYPEあるかチェック
@@ -523,12 +523,12 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 				bnd.cut_before_character ('=');
 				boundary = bnd;
 				//strncpy (boundary, bnd.c_str (), sizeof (boundary) - 1);
-				strncpy (content_type, "multipart/form-data", sizeof ("multipart/form-data") - 1);
+				content_type = "multipart/form-data";
 				//debug_log_output("%s Detect. %s '%s'", "multipart/form-data", "multipart/form-data", boundary);
 			}
 			else {
-				strncpy (content_type, line.c_str (), sizeof (content_type) - 1);
-				//debug_log_output("%s Detect. %s '%s'", HTTP_CONTENT_TYPE1, HTTP_CONTENT_TYPE1, content_type);
+				content_type = line;
+				//debug_log_output("%s Detect. %s '%s'", HTTP_CONTENT_TYPE1, HTTP_CONTENT_TYPE1, content_type.c_str());
 			}
 			continue;
 		}

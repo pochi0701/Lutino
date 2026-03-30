@@ -45,9 +45,9 @@ enum class QUERY_METHOD
 // ==========================================================================
 class HTTP_RECV_INFO {
 private:
-    char   recv_range[256];          // 受信した Range
-    char   content_length[32];	     // Content-Length
-    char   content_type[128];	     // PUTのためのContent_type
+    wString recv_range;              // 受信した Range
+    wString content_length;	         // Content-Length
+    wString content_type;	         // PUTのためのContent_type
     wString cookie;                  // cookie;
 public:
     char   recv_uri[QUERY_MAX];      // 受信したURI(decoded)
@@ -110,9 +110,9 @@ public:
     {
         //memset(this, 0, sizeof(HTTP_RECV_INFO));
         //memset(&http_recv_info, 0, sizeof(http_recv_info));
-        *recv_range = 0;
-        *content_length = 0;
-        *content_type = 0;
+        recv_range.clear();
+        content_length.clear();
+        content_type.clear();
         cookie.clear();
         *recv_uri = 0;
         *user_agent = 0;

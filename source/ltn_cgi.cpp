@@ -169,8 +169,8 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 		//TODO:まとめて一回で評価する方がよさげ
 		//fastcgi_param  DOCUMENT_URI       $document_uri;
 		// "multipart/form-data; boundary=---------------------------382462320637558520782293981033"
-		if (*this->content_type)   script1.cat_sprintf("var _SERVER.CONTENT_TYPE=\"%s\";", wString::escape(content_type).c_str());
-		if (*this->content_length) script1.cat_sprintf("var _SERVER.CONTENT_LENGTH=\"%s\";", wString::escape(content_length).c_str());
+		if (this->content_type.length())   script1.cat_sprintf("var _SERVER.CONTENT_TYPE=\"%s\";", wString::escape(content_type).c_str());
+		if (this->content_length.length()) script1.cat_sprintf("var _SERVER.CONTENT_LENGTH=\"%s\";", wString::escape(content_length).c_str());
 		if (*this->recv_host)      script1.cat_sprintf("var _SERVER.HTTP_HOST=\"%s\";", wString::escape(recv_host).c_str());
 		if (*this->user_agent)     script1.cat_sprintf("var _SERVER.HTTP_USER_AGENT=\"%s\";", wString::escape(user_agent).c_str());
 		//SERVER SIGNATURE
@@ -243,7 +243,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 		//POSTの展開
 		if (method == QUERY_METHOD::POST) {
 			char buf[1025] = {};
-			int contentsize = atoi(content_length);
+			int contentsize = atoi(content_length.c_str());
 			int readsize;
 			script3.clear();
 			//指定されたサイズまで読む
