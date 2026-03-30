@@ -127,7 +127,7 @@ if( root.length>0){
                 }
             }
             if (path.endsWith('md')) {
-                path = "http://<?print(_SERVER.HTTP_HOST);?>" + path.substring(document_root.length, path.length) + "?action=MarkDown.jss";
+                path = "http://<?print(_SERVER.HTTP_HOST);?>" + path.substring(document_root.length, path.length) + "?action=/system/MarkDown.jss";
             } else {
                 path = "http://<?print(_SERVER.HTTP_HOST);?>" + path.substring(document_root.length, path.length);
             }
