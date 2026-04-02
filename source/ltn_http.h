@@ -51,11 +51,11 @@ private:
     wString cookie;                  // cookie;
 public:
     char   recv_uri[QUERY_MAX];      // 受信したURI(decoded)
-    char   user_agent[256];          // 受信したUser-Agent
-    char   recv_host[256];           // 受信したホスト名
+    wString user_agent;               // 受信したUser-Agent
+    wString recv_host;                // 受信したホスト名
     off_t  range_start_pos;          // Rangeデータ 開始位置
     off_t  range_end_pos;            // Rangeデータ 終了位置
-    char   mime_type[128];           //
+    wString mime_type;                //
     char   send_filename[QUERY_MAX]; // フルパス
     wString action;                  // ?action=  の内容
     wString request_uri;             // 受信した生のURI
@@ -115,11 +115,11 @@ public:
         content_type.clear();
         cookie.clear();
         *recv_uri = 0;
-        *user_agent = 0;
-        *recv_host = 0;
+        user_agent.clear();
+        recv_host.clear();
         range_start_pos = 0;
         range_end_pos = 0;
-        *mime_type = 0;
+        mime_type.clear();
         *send_filename = 0;
         action.clear();
         request_uri.clear();

@@ -174,8 +174,8 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 		// "multipart/form-data; boundary=---------------------------382462320637558520782293981033"
 		if (this->content_type.length())   script1.cat_sprintf("var _SERVER.CONTENT_TYPE=\"%s\";", wString::escape(content_type).c_str());
 		if (this->content_length.length()) script1.cat_sprintf("var _SERVER.CONTENT_LENGTH=\"%s\";", wString::escape(content_length).c_str());
-		if (*this->recv_host)      script1.cat_sprintf("var _SERVER.HTTP_HOST=\"%s\";", wString::escape(recv_host).c_str());
-		if (*this->user_agent)     script1.cat_sprintf("var _SERVER.HTTP_USER_AGENT=\"%s\";", wString::escape(user_agent).c_str());
+		if (this->recv_host.length())      script1.cat_sprintf("var _SERVER.HTTP_HOST=\"%s\";", wString::escape(recv_host).c_str());
+		if (this->user_agent.length())     script1.cat_sprintf("var _SERVER.HTTP_USER_AGENT=\"%s\";", wString::escape(user_agent).c_str());
 		//SERVER SIGNATURE
 		script1.cat_sprintf("var _SERVER.PATH=\"%s\";", wString::escape(DEFAULT_PATH).c_str());
 		script1.cat_sprintf("var _SERVER.SERVER_SOFTWARE=\"%s\";", wString::escape(SERVER_NAME).c_str());
