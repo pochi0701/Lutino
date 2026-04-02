@@ -298,11 +298,7 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
-		{
-			char tmp_mime[128];
-			MIME_LIST_T::check_file_extension_to_mime_type (file_extension, tmp_mime, sizeof (tmp_mime));
-			mime_type = tmp_mime;
-		}
+		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 		return FILETYPES::_FILE;
 	}
 	read_filename.sprintf ("%sindex.htm", document_path.c_str ());
@@ -313,11 +309,7 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
-		{
-			char tmp_mime[128];
-			MIME_LIST_T::check_file_extension_to_mime_type (file_extension, tmp_mime, sizeof (tmp_mime));
-			mime_type = tmp_mime;
-		}
+		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 		return FILETYPES::_FILE;
 	}
 	read_filename.sprintf ("%sindex.php", document_path.c_str ());
@@ -328,11 +320,7 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
-		{
-			char tmp_mime[128];
-			MIME_LIST_T::check_file_extension_to_mime_type (file_extension, tmp_mime, sizeof (tmp_mime));
-			mime_type = tmp_mime;
-		}
+		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 		return FILETYPES::_CGI;
 	}
 	read_filename.sprintf ("%sindex.jss", document_path.c_str ());
@@ -343,11 +331,7 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
-		{
-			char tmp_mime[128];
-			MIME_LIST_T::check_file_extension_to_mime_type (file_extension, tmp_mime, sizeof (tmp_mime));
-			mime_type = tmp_mime;
-		}
+		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 		return FILETYPES::_CGI;
 	}
 	return FILETYPES::_DIR;
@@ -623,11 +607,7 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
-		{
-			char tmp_mime[128];
-			MIME_LIST_T::check_file_extension_to_mime_type (file_extension, tmp_mime, sizeof (tmp_mime));
-			mime_type = tmp_mime;
-		}
+		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 		// 実体ファイルで分岐
 		if (strcasecmp (file_extension, "cgi") == 0 ||
 			strcasecmp (file_extension, "jss") == 0 ||
@@ -698,11 +678,7 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 			// -------------------------------------------
 			filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 			//debug_log_output("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
-			{
-				char tmp_mime[128];
-				MIME_LIST_T::check_file_extension_to_mime_type (file_extension, tmp_mime, sizeof (tmp_mime));
-				mime_type = tmp_mime;
-			}
+			mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 			if (strcasecmp (file_extension, "cgi") == 0 ||
 				strcasecmp (file_extension, "jss") == 0 ||
 				strcasecmp (file_extension, "exe") == 0) {

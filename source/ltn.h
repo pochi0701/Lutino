@@ -34,7 +34,7 @@ public:
 	/// <summary>返却用ファイルタイプ</summary>
 	MIME_TYPE menu_file_type;
 
-	static void check_file_extension_to_mime_type(const char* file_extension, char* mime_type, int mime_type_size);
+	static wString check_file_extension_to_mime_type(const char* file_extension);
 };
 
 // ==========================================================================
