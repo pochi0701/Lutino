@@ -436,11 +436,13 @@ void scStringDate(CScriptVar* c, void* userdata)
 }
 void scNKFConv(CScriptVar* c, void* userdata)
 {
+#ifdef WEB
 	IGNORE_PARAMETER(userdata);
 	wString str = c->getParameter("this")->getString();
 	wString format = c->getParameter("format")->getString();
 	wString temp = str.nkfcnv(format);
 	c->getReturnVar()->setString(temp);
+#endif
 }
 
 void scDBConnect(CScriptVar* c, void* userdata)
