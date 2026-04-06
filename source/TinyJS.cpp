@@ -103,7 +103,7 @@
  Fixed postfix increment operator
  Version 0.32 :  Fixed Math.randInt on 32 bit PCs, where it was broken
  Version 0.33 :  Fixed Memory leak + brokenness on === comparison
- version 0.34 :  Added const let variable type
+ Version 0.34 :  Added const let variable type
 
  NOTE:
  Constructing an array with an initial length 'Array(5)' doesn't work
@@ -319,7 +319,7 @@ bool isAlphaNum(const wString& str)
 	return true;
 }
 
-#ifdef web
+#ifdef WEB
 void JSTRACE(SOCKET socket, const char* format, ...)
 {
 	char work[1024];
@@ -438,7 +438,7 @@ void CScriptLex::match(LEX_TYPES expected_tk)
 	}
 	getNextToken();
 }
-#ifdef web
+#ifdef WEB
 //グローバルで申し訳ないが最初に文字を出力する際にheaderを先に出す
 void headerCheckPrint(SOCKET socket, int* printed, wString* headerBuf, int flag)
 {
@@ -517,7 +517,7 @@ wString CScriptLex::getTokenStr(LEX_TYPES token)
 }
 
 /// <summary>
-/// 次の１文字取得
+/// 次の１文字を取り込む。
 /// </summary>
 /// <returns>取り込み前の1文字</returns>
 LEX_TYPES CScriptLex::getNextCh()
@@ -2762,6 +2762,14 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
 		// for(statement condition; iterator)
 		lex->match(LEX_TYPES::LEX_R_FOR);
 		lex->match(LEX_TYPES::LEX_L_PARENTHESIS);
+
+		// Create a new block scope for `for` header variables declared with let/const
+		CScriptVar* forScope = nullptr;
+		if (execute) {
+			forScope = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_OBJECT);
+			scopes.push_back(forScope);
+		}
+
 		ret = statement(execute); // initialisation
 		if (ret > LEX_TYPES::LEX_EOF) {
 			wString errorString;
@@ -2831,6 +2839,8 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
         // Pop `for` scope so that header `let/const` do not leak outside
         if (execute) {
             scopes.pop_back();
+            delete forScope;
+            forScope = nullptr;
         }
 	}
 	else if (lex->tk == LEX_TYPES::LEX_R_RETURN) {
