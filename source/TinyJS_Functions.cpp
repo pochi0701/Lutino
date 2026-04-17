@@ -148,8 +148,7 @@ void scRTrim(CScriptVar* c, void*)
 void scLTrim(CScriptVar* c, void*)
 {
 	wString val = c->getParameter("this")->getString();
-	val = val.ltrim();
-	c->getReturnVar()->setString(val);
+	c->getReturnVar()->setString(val.ltrim());
 }
 /////////////////////////////////////////////////////////////////////////
 void scCharToInt(CScriptVar* c, void* userdata)
@@ -437,15 +436,18 @@ void scStringDate(CScriptVar* c, void* userdata)
 }
 void scNKFConv(CScriptVar* c, void* userdata)
 {
+#ifdef WEB
 	IGNORE_PARAMETER(userdata);
 	wString str = c->getParameter("this")->getString();
 	wString format = c->getParameter("format")->getString();
 	wString temp = str.nkfcnv(format);
 	c->getReturnVar()->setString(temp);
+#endif
 }
 
 void scDBConnect(CScriptVar* c, void* userdata)
 {
+#ifdef DB
 	IGNORE_PARAMETER(userdata);
 	//接続DB名
 	wString str = c->getParameter("dbn")->getString();
@@ -458,23 +460,28 @@ void scDBConnect(CScriptVar* c, void* userdata)
 	else {
 		c->getReturnVar()->setString("");
 	}
+#endif
 }
 
 void scDBDisConnect(CScriptVar* c, void* userdata)
 {
+#ifdef DB
 	IGNORE_PARAMETER(userdata);
 	wString str = c->getParameter("this")->getString();
 	int ret = _DBDisConnect(str);
 	c->getReturnVar()->setInt(ret);
+#endif
 }
 
 void scDBSQL(CScriptVar* c, void* userdata)
 {
+#ifdef DB
 	IGNORE_PARAMETER(userdata);
 	wString str = c->getParameter("this")->getString();
 	wString sql = c->getParameter("sqltext")->getString();
 	wString ret = _DBSQL(str, sql);
 	c->getReturnVar()->setString(ret);
+#endif
 }
 
 
@@ -815,6 +822,7 @@ void scHeader(CScriptVar* c, void* userdata)
 //SessionStart
 void scSessionStart(CScriptVar* c, void* userdata)
 {
+#ifdef WEB
 	const static char material[] = "abcdefghijklmnopqrstuvwxyz0123456789";
 	CTinyJS* js = static_cast<CTinyJS*>(userdata);
 	int ret = 0;
@@ -850,6 +858,7 @@ void scSessionStart(CScriptVar* c, void* userdata)
 		ret = (res == 0) ? true : false;
 	}
 	c->getReturnVar()->setInt(ret);
+#endif
 }
 
 /// <summary>

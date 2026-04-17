@@ -85,7 +85,7 @@ size_t HTTP_RECV_INFO::http_header_response(SOCKET accept_socket)
 			, range_start_pos
 			, range_end_pos
 			, content_size
-			, mime_type
+			, mime_type.c_str()
 		);
 		//start位置指定なし
 	}
@@ -102,7 +102,7 @@ size_t HTTP_RECV_INFO::http_header_response(SOCKET accept_socket)
 			HTTP_END
 			, SERVER_NAME
 			, content_size
-			, mime_type
+			, mime_type.c_str()
 		);
 		// end位置指定無し。
 	}
@@ -124,7 +124,7 @@ size_t HTTP_RECV_INFO::http_header_response(SOCKET accept_socket)
 			, range_start_pos
 			, content_size - 1
 			, content_size
-			, mime_type
+			, mime_type.c_str()
 		);
 	}
 	// todo:なくして大丈夫？

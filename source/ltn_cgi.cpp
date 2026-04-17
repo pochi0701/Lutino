@@ -64,19 +64,22 @@ int HTTP_RECV_INFO::http_cgi_response(SOCKET accept_socket)
 	else {
 		strncpy(script_filename, send_filename, sizeof(script_filename));
 	}
-	query_string = strchr(request_uri, '?');
-	if (query_string == NULL) {
+	wString w_query_string;
+	int qpos = request_uri.find('?');
+	if (qpos == wString::npos) {
 		query_string = const_cast<char*>("");
 	}
 	else {
-		*query_string++ = '\0';
+		w_query_string = request_uri.substr(qpos + 1);
+		query_string = w_query_string.c_str();
+		request_uri = request_uri.substr(0, qpos);
 	}
-	script_exec_name = strrchr(request_uri, '/');
-	if (script_exec_name == NULL) {
-		script_exec_name = request_uri;
+	int spos = request_uri.rfind('/');
+	if (spos == wString::npos) {
+		script_exec_name = request_uri.c_str();
 	}
 	else {
-		script_exec_name++;
+		script_exec_name = request_uri.c_str() + spos + 1;
 	}
 	if (script_exec_name == NULL) {
 		debug_log_output("script_exec_name and script_name == NULL");
@@ -169,10 +172,10 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 		//TODO:まとめて一回で評価する方がよさげ
 		//fastcgi_param  DOCUMENT_URI       $document_uri;
 		// "multipart/form-data; boundary=---------------------------382462320637558520782293981033"
-		if (*this->content_type)   script1.cat_sprintf("var _SERVER.CONTENT_TYPE=\"%s\";", wString::escape(content_type).c_str());
-		if (*this->content_length) script1.cat_sprintf("var _SERVER.CONTENT_LENGTH=\"%s\";", wString::escape(content_length).c_str());
-		if (*this->recv_host)      script1.cat_sprintf("var _SERVER.HTTP_HOST=\"%s\";", wString::escape(recv_host).c_str());
-		if (*this->user_agent)     script1.cat_sprintf("var _SERVER.HTTP_USER_AGENT=\"%s\";", wString::escape(user_agent).c_str());
+		if (this->content_type.length())   script1.cat_sprintf("var _SERVER.CONTENT_TYPE=\"%s\";", wString::escape(content_type).c_str());
+		if (this->content_length.length()) script1.cat_sprintf("var _SERVER.CONTENT_LENGTH=\"%s\";", wString::escape(content_length).c_str());
+		if (this->recv_host.length())      script1.cat_sprintf("var _SERVER.HTTP_HOST=\"%s\";", wString::escape(recv_host).c_str());
+		if (this->user_agent.length())     script1.cat_sprintf("var _SERVER.HTTP_USER_AGENT=\"%s\";", wString::escape(user_agent).c_str());
 		//SERVER SIGNATURE
 		script1.cat_sprintf("var _SERVER.PATH=\"%s\";", wString::escape(DEFAULT_PATH).c_str());
 		script1.cat_sprintf("var _SERVER.SERVER_SOFTWARE=\"%s\";", wString::escape(SERVER_NAME).c_str());
@@ -243,7 +246,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 		//POSTの展開
 		if (method == QUERY_METHOD::POST) {
 			char buf[1025] = {};
-			int contentsize = atoi(content_length);
+			int contentsize = atoi(content_length.c_str());
 			int readsize;
 			script3.clear();
 			//指定されたサイズまで読む

@@ -406,8 +406,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 	// アクセス不可の時
 	else
 	{
-		// neon.cx
-		strcpy(global_ip, "27.120.109.45");
+		strcpy(global_ip, "0");
 	}
 	return;
 }
@@ -507,11 +506,10 @@ void GLOBAL_PARAM_T::line_buffer_sanitize(char* line_buf)
 /// 拡張子を渡すと、Content-type と、file_typeを返す。
 /// </summary>
 /// <param name="file_extension">調べる拡張子</param>
-/// <param name="mime_type">格納先変数</param>
-/// <param name="mime_type_size">格納先サイズ</param>
-void MIME_LIST_T::check_file_extension_to_mime_type(const char* file_extension, char* mime_type, int mime_type_size)
+/// <returns>mime_type文字列</returns>
+wString MIME_LIST_T::check_file_extension_to_mime_type(const char* file_extension)
 {
-	strncpy(mime_type, DEFAULT_MIME_TYPE, mime_type_size-1);
+	wString result = DEFAULT_MIME_TYPE;
 	//debug_log_output("file_extension='%s'\n", file_extension);
 	// -------------------------------------------
 	// ファイルの拡張子比較。Content-type を決定
@@ -521,12 +519,12 @@ void MIME_LIST_T::check_file_extension_to_mime_type(const char* file_extension, 
 			break;
 		}
 		if (strcasecmp(mime_list[i].file_extension, file_extension) == 0) {
-			strncpy(mime_type, mime_list[i].mime_type, mime_type_size-1);
+			result = mime_list[i].mime_type;
 			break;
 		}
 	}
-	//debug_log_output("mime_type='%s'\n", mime_type);
-	return;
+	//debug_log_output("mime_type='%s'\n", result.c_str());
+	return result;
 }
 
 /// <summary>

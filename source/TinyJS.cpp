@@ -103,7 +103,7 @@
  Fixed postfix increment operator
  Version 0.32 :  Fixed Math.randInt on 32 bit PCs, where it was broken
  Version 0.33 :  Fixed Memory leak + brokenness on === comparison
- Version 0.34 :  Modify for cgi.
+ Version 0.34 :  Added const let variable type
 
  NOTE:
  Constructing an array with an initial length 'Array(5)' doesn't work
@@ -138,6 +138,7 @@ inline void CLEAN(CScriptVarLink* x)
 	auto link = x;
 	if (link && !link->owned) {
 		delete link;
+		link = nullptr;
 	}
 }
 //Create a LINK to point to VAR and free the old link.
@@ -318,7 +319,7 @@ bool isAlphaNum(const wString& str)
 	return true;
 }
 
-#ifdef web
+#ifdef WEB
 void JSTRACE(SOCKET socket, const char* format, ...)
 {
 	char work[1024];
@@ -437,7 +438,7 @@ void CScriptLex::match(LEX_TYPES expected_tk)
 	}
 	getNextToken();
 }
-#ifdef web
+#ifdef WEB
 //グローバルで申し訳ないが最初に文字を出力する際にheaderを先に出す
 void headerCheckPrint(SOCKET socket, int* printed, wString* headerBuf, int flag)
 {
@@ -516,7 +517,7 @@ wString CScriptLex::getTokenStr(LEX_TYPES token)
 }
 
 /// <summary>
-/// 次の１文字取得
+/// 次の１文字を取り込む。
 /// </summary>
 /// <returns>取り込み前の1文字</returns>
 LEX_TYPES CScriptLex::getNextCh()
@@ -912,7 +913,12 @@ CScriptVarLink::CScriptVarLink(const CScriptVarLink& link)
 /// <summary>デストラクタ</summary>
 CScriptVarLink::~CScriptVarLink()
 {
+	if (var->getRefs() < 0) {
+		var = nullptr;
+	}
+	else {
 	var->unref();
+}
 }
 
 void CScriptVarLink::replaceWith(CScriptVar* newVar)
@@ -1131,6 +1137,7 @@ void CScriptVar::removeLink(CScriptVarLink* link)
 		firstChild = link->nextSibling;
 	}
 	delete link;
+	link = nullptr;
 }
 
 void CScriptVar::removeAllChildren()
@@ -1300,6 +1307,7 @@ bool CScriptVar::equals(CScriptVar* v)
 	CScriptVar* resV = mathsOp(v, LEX_TYPES::LEX_EQUAL);
 	bool res = resV->getBool();
 	delete resV;
+	resV = nullptr;
 	return res;
 }
 
@@ -1616,7 +1624,10 @@ inline CScriptVar* CScriptVar::setRef()
 
 void CScriptVar::unref()
 {
-	if (refs <= 0) printf("OMFG, we have unreffed too far!\n");
+
+	if (refs <= 0) {
+		printf("OMFG, we have unreffed too far!\n");
+	}
 	if ((--refs) == 0) {
 		delete this;
 	}
@@ -1750,6 +1761,7 @@ const wString& CTinyJS::execute(const wString& code, ExecuteModes executeMode)
 		lex = oldLex;
 		//いらないかも
 		delete e;
+		e = nullptr;
 
 		throw new CScriptException(msg.c_str());
 	}
@@ -1968,6 +1980,7 @@ CScriptVarLink* CTinyJS::functionCall(bool& execute, CScriptVarLink* function, C
 		returnVar = new CScriptVarLink(returnVarLink->var);
 		functionRoot->removeLink(returnVarLink);
 		delete functionRoot;
+		functionRoot = nullptr;
 		if (returnVar) {
 			return returnVar;
 		}
@@ -2230,7 +2243,7 @@ CScriptVarLink* CTinyJS::unary(bool& execute)
 }
 
 /// <summary>
-/// 
+///	項：*,/,%
 /// </summary>
 /// <param name="execute"></param>
 /// <returns></returns>
@@ -2488,6 +2501,7 @@ LEX_TYPES CTinyJS::block(bool& execute)
 				// スコープpop
 				scopes.pop_back();
 				delete blockScope;
+				blockScope = nullptr;
 				return ret;
 			}
 		}
@@ -2495,6 +2509,7 @@ LEX_TYPES CTinyJS::block(bool& execute)
 		// スコープpop
 		scopes.pop_back();
 		delete blockScope;
+		blockScope = nullptr;
 	}
 	else {
 		// fast skip of blocks
@@ -2740,11 +2755,21 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
 		lex = oldLex;
 		delete whileCond;
 		delete whileBody;
+		whileCond = nullptr;
+		whileBody = nullptr;
 	}
 	else if (lex->tk == LEX_TYPES::LEX_R_FOR) {
 		// for(statement condition; iterator)
 		lex->match(LEX_TYPES::LEX_R_FOR);
 		lex->match(LEX_TYPES::LEX_L_PARENTHESIS);
+
+		// Create a new block scope for `for` header variables declared with let/const
+		CScriptVar* forScope = nullptr;
+		if (execute) {
+			forScope = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_OBJECT);
+			scopes.push_back(forScope);
+		}
+
 		ret = statement(execute); // initialisation
 		if (ret > LEX_TYPES::LEX_EOF) {
 			wString errorString;
@@ -2807,6 +2832,16 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
 		delete forCond;
 		delete forIter;
 		delete forBody;
+		forCond = nullptr;
+		forIter = nullptr;
+		forBody = nullptr;
+
+        // Pop `for` scope so that header `let/const` do not leak outside
+        if (execute) {
+            scopes.pop_back();
+            delete forScope;
+            forScope = nullptr;
+        }
 	}
 	else if (lex->tk == LEX_TYPES::LEX_R_RETURN) {
 		lex->match(LEX_TYPES::LEX_R_RETURN);

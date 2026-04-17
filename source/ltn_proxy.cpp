@@ -303,12 +303,12 @@ SOCKET HTTP_RECV_INFO::send_header ()
 	}
 	else {
 		// UserAgent計算
-		if (user_agent[0]) {
+		if (user_agent.length()) {
 			if (*agent) {
-				send_http_header_buf.cat_sprintf ("User-agent: " USERAGENT ";%s%s%s\r\n", user_agent, agent, MACADDR);
+				send_http_header_buf.cat_sprintf ("User-agent: " USERAGENT ";%s%s%s\r\n", user_agent.c_str(), agent, MACADDR);
 			}
 			else {
-				send_http_header_buf.cat_sprintf ("User-agent: " USERAGENT ";%s%s\r\n", user_agent, MACADDR);
+				send_http_header_buf.cat_sprintf ("User-agent: " USERAGENT ";%s%s\r\n", user_agent.c_str(), MACADDR);
 			}
 		}
 		else {

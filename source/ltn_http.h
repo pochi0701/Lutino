@@ -45,20 +45,20 @@ enum class QUERY_METHOD
 // ==========================================================================
 class HTTP_RECV_INFO {
 private:
-    char   recv_range[256];          // 受信した Range
-    char   content_length[32];	     // Content-Length
-    char   content_type[128];	     // PUTのためのContent_type
+    wString recv_range;              // 受信した Range
+    wString content_length;	         // Content-Length
+    wString content_type;	         // PUTのためのContent_type
     wString cookie;                  // cookie;
 public:
     char   recv_uri[QUERY_MAX];      // 受信したURI(decoded)
-    char   user_agent[256];          // 受信したUser-Agent
-    char   recv_host[256];           // 受信したホスト名
+    wString user_agent;               // 受信したUser-Agent
+    wString recv_host;                // 受信したホスト名
     off_t  range_start_pos;          // Rangeデータ 開始位置
     off_t  range_end_pos;            // Rangeデータ 終了位置
-    char   mime_type[128];           //
+    wString mime_type;                //
     char   send_filename[QUERY_MAX]; // フルパス
     wString action;                  // ?action=  の内容
-    char   request_uri[QUERY_MAX];   // 受信した生のURI
+    wString request_uri;             // 受信した生のURI
     wString boundary;                // multipart/form-dataの時のboundary
     wString referer;                 // Referer
     wString secFetchDest;            // Sec-Fetch-Dest
@@ -110,19 +110,19 @@ public:
     {
         //memset(this, 0, sizeof(HTTP_RECV_INFO));
         //memset(&http_recv_info, 0, sizeof(http_recv_info));
-        *recv_range = 0;
-        *content_length = 0;
-        *content_type = 0;
+        recv_range.clear();
+        content_length.clear();
+        content_type.clear();
         cookie.clear();
         *recv_uri = 0;
-        *user_agent = 0;
-        *recv_host = 0;
+        user_agent.clear();
+        recv_host.clear();
         range_start_pos = 0;
         range_end_pos = 0;
-        *mime_type = 0;
+        mime_type.clear();
         *send_filename = 0;
         action.clear();
-        *request_uri = 0;
+        request_uri.clear();
         boundary.clear();
         referer.clear();
         secFetchDest.clear();

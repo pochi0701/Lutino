@@ -31,6 +31,8 @@
 
  // If defined, this keeps a note of all calls and where from in memory. This is slower, but good for debugging
 #define TINYJS_CALL_STACK
+#define WEB
+#define DB
 
 #include <vector>
 #include <map>

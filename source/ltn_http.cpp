@@ -76,8 +76,8 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 				break;
 			}
 			// 一致チェック
-			debug_log_output ("user_agent: Check[%d] '%s' in '%s'", i, allow_user_agent[i].user_agent, http_recv_info.user_agent);
-			if (strstr (http_recv_info.user_agent, allow_user_agent[i].user_agent) != NULL) {
+			debug_log_output ("user_agent: Check[%d] '%s' in '%s'", i, allow_user_agent[i].user_agent, http_recv_info.user_agent.c_str());
+			if (strstr (http_recv_info.user_agent.c_str(), allow_user_agent[i].user_agent) != NULL) {
 				debug_log_output ("user_agent: '%s' OK.", allow_user_agent[i].user_agent);
 				flag_allow_user_agent_check = 1; // 一致。OK
 				break;
@@ -97,7 +97,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		// なってしまうので、最近アクセスできたIPを保持しておき、そのIPならばUser-Agentが
 		// ltn.confに記述されていないものでもアクセスを認める
 		if ((strlen (access_host) == 0) ||
-			(strstr (http_recv_info.recv_host, access_host) == NULL)) {
+			(strstr (http_recv_info.recv_host.c_str(), access_host) == NULL)) {
 			debug_log_output ("%s(%d) accept_socet\n", __FILE__, __LINE__);
 			sClose (accept_socket);
 			return;
@@ -154,21 +154,30 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		// action=/system/xxx.jss等の場合
 		if (http_recv_info.action.find('/') >= 0)
 		{
-			strcpy(http_recv_info.send_filename, global_param.server_root);
+			strcpy(http_recv_info.send_filename, global_param.document_root);
 			strcat(http_recv_info.send_filename, http_recv_info.action.c_str());
+			//(aliasを加味して）
+			for (int i = 0; i < MAX_COUNT_ALIAS; i++) {
+				if (*global_param.alias_key[i] && strstr(http_recv_info.send_filename, global_param.alias_key[i])) {
+					//aliasで置換する
+					//snprintf(work_buf, sizeof(work_buf), "%s%s", global_param.document_org, global_param.alias_key[i]);
+					//replace_character(send_filename, work_buf, global_param.alias_rep[i]);
+					replace_character(http_recv_info.send_filename, global_param.alias_key[i], global_param.alias_rep[i]);
+				}
+			}
 		}
 		else {
 			skin_filename += http_recv_info.action;
 			strcpy(http_recv_info.send_filename, skin_filename.c_str());
 		}
-		for (unsigned int i = 0; i < strlen (http_recv_info.request_uri); i++) {
-			if (http_recv_info.request_uri[i] == '?') {
-				http_recv_info.request_uri[i] = 0;
-				break;
+		{
+			int qpos = http_recv_info.request_uri.find('?');
+			if (qpos >= 0) {
+				http_recv_info.request_uri = http_recv_info.request_uri.substr(0, qpos);
 			}
 		}
-		skin_filename.sprintf ("%s?url=%s", http_recv_info.action.c_str(), http_recv_info.request_uri);
-		strcpy (http_recv_info.request_uri, skin_filename.c_str ());
+		skin_filename.sprintf ("%s?url=%s", http_recv_info.action.c_str(), http_recv_info.request_uri.c_str());
+		http_recv_info.request_uri = skin_filename;
 		http_recv_info.http_cgi_response (accept_socket);
 		//debug_log_output ("%s end!\n", http_recv_info.action);
 		debug_log_output ("HTTP Process action done. From %s:%s\n", access_host, http_recv_info.recv_uri);
@@ -212,10 +221,10 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 			strcpy (http_recv_info.recv_uri, "/menu.jss");
 			tmp = tmp.substr (pos + 1, tmp.length () - pos - 1);
 			if (tmp.length ()) {
-				sprintf (http_recv_info.request_uri, "/menu.jss?%s", tmp.c_str ());
+				http_recv_info.request_uri.sprintf ("/menu.jss?%s", tmp.c_str ());
 			}
 			else {
-				sprintf (http_recv_info.request_uri, "/menu.jss?root=%s", http_recv_info.send_filename);
+				http_recv_info.request_uri.sprintf ("/menu.jss?root=%s", http_recv_info.send_filename);
 			}
 			//send file nameの設定
 			sprintf (http_recv_info.send_filename, "%s%smenu.jss", global_param.skin_root, global_param.skin_name);
@@ -250,9 +259,9 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 			}
 		}
 	}
-	if ((strlen (access_host) == 0) || (strstr (http_recv_info.recv_host, access_host) == NULL)) {
+	if ((strlen (access_host) == 0) || (strstr (http_recv_info.recv_host.c_str(), access_host) == NULL)) {
 		//アクセスしてきたIPを保持しておく
-		strncpy (access_host, http_recv_info.recv_host, sizeof (http_recv_info.recv_host) - 1);
+		strncpy (access_host, http_recv_info.recv_host.c_str(), http_recv_info.recv_host.length());
 		cut_after_character (access_host, ':');
 	}
 	//sClose(accept_socket);
@@ -283,46 +292,46 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 	// ----------------------------------------------
 	read_filename.sprintf ("%sindex.html", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
-		strcat (request_uri, "index.html");
+		request_uri += "index.html";
 		strcpy (send_filename, read_filename.c_str ());
 		// ファイルの拡張子より、Content-type を決定
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
-		MIME_LIST_T::check_file_extension_to_mime_type (file_extension, mime_type, sizeof (mime_type));
+		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 		return FILETYPES::_FILE;
 	}
 	read_filename.sprintf ("%sindex.htm", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
-		strcat (request_uri, "index.htm");
+		request_uri += "index.htm";
 		strcpy (send_filename, read_filename.c_str ());
 		// ファイルの拡張子より、Content-type を決定
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
-		MIME_LIST_T::check_file_extension_to_mime_type (file_extension, mime_type, sizeof (mime_type));
+		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 		return FILETYPES::_FILE;
 	}
 	read_filename.sprintf ("%sindex.php", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
-		strcat (request_uri, "index.php");
+		request_uri += "index.php";
 		strcpy (send_filename, read_filename.c_str ());
 		// ファイルの拡張子より、Content-type を決定
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
-		MIME_LIST_T::check_file_extension_to_mime_type (file_extension, mime_type, sizeof (mime_type));
+		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 		return FILETYPES::_CGI;
 	}
 	read_filename.sprintf ("%sindex.jss", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
-		strcat (request_uri, "index.jss");
+		request_uri += "index.jss";
 		strcpy (send_filename, read_filename.c_str ());
 		// ファイルの拡張子より、Content-type を決定
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
-		MIME_LIST_T::check_file_extension_to_mime_type (file_extension, mime_type, sizeof (mime_type));
+		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 		return FILETYPES::_CGI;
 	}
 	return FILETYPES::_DIR;
@@ -399,7 +408,7 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			// GETオプション部解析
 			// ===========================
 			// REQUEST_URI用・Proxy用に値を保存
-			strncpy (request_uri, line.c_str (), sizeof (request_uri) - 1);
+			request_uri = line;
 			// '?'が存在するかチェック。
 			if (line.find ('?') != wString::npos) {
 				split2 = line;
@@ -450,7 +459,7 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			line.cut_before_character (':');
 			line = line.ltrim ();
 			// 構造体に保存
-			strncpy (user_agent, line.c_str (), sizeof (user_agent) - 1);
+			user_agent = line;
 			continue;
 		}
 		// Rangeあるかチェック
@@ -460,7 +469,7 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			line.cut_before_character (':');
 			line = line.ltrim ();
 			// recv_range にRangeの中身保存
-			strncpy (recv_range, line.c_str (), sizeof (recv_range) - 1);
+			recv_range = line;
 			// '=' より前を切る
 			line.cut_before_character ('=');
 			// '-'で前後に分割。
@@ -480,8 +489,8 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			// ':' より前を切る。
 			line.cut_before_character (':');
 			line = line.ltrim ();
-			strncpy (recv_host, line.c_str (), sizeof (recv_host) - 1);
-			//debug_log_output("%s Detect. %s '%s'", HTTP_HOST, HTTP_HOST, recv_host);
+			recv_host = line;
+			//debug_log_output("%s Detect. %s '%s'", HTTP_HOST, HTTP_HOST, recv_host.c_str());
 			continue;
 		}
 		// cookieあるかチェック
@@ -499,8 +508,8 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			// ':' より前を切る。
 			line.cut_before_character (':');
 			line = line.ltrim ();
-			strncpy (content_length, line.c_str (), sizeof (content_length) - 1);
-			//debug_log_output("%s Detect. %s '%s'", HTTP_CONTENT_LENGTH1, HTTP_CONTENT_LENGTH1, content_length);
+			content_length = line;
+			//debug_log_output("%s Detect. %s '%s'", HTTP_CONTENT_LENGTH1, HTTP_CONTENT_LENGTH1, content_length.c_str());
 			continue;
 		}
 		// Content-TYPEあるかチェック
@@ -514,12 +523,12 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 				bnd.cut_before_character ('=');
 				boundary = bnd;
 				//strncpy (boundary, bnd.c_str (), sizeof (boundary) - 1);
-				strncpy (content_type, "multipart/form-data", sizeof ("multipart/form-data") - 1);
+				content_type = "multipart/form-data";
 				//debug_log_output("%s Detect. %s '%s'", "multipart/form-data", "multipart/form-data", boundary);
 			}
 			else {
-				strncpy (content_type, line.c_str (), sizeof (content_type) - 1);
-				//debug_log_output("%s Detect. %s '%s'", HTTP_CONTENT_TYPE1, HTTP_CONTENT_TYPE1, content_type);
+				content_type = line;
+				//debug_log_output("%s Detect. %s '%s'", HTTP_CONTENT_TYPE1, HTTP_CONTENT_TYPE1, content_type.c_str());
 			}
 			continue;
 		}
@@ -598,7 +607,7 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
-		MIME_LIST_T::check_file_extension_to_mime_type (file_extension, mime_type, sizeof (mime_type));
+		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 		// 実体ファイルで分岐
 		if (strcasecmp (file_extension, "cgi") == 0 ||
 			strcasecmp (file_extension, "jss") == 0 ||
@@ -669,7 +678,7 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 			// -------------------------------------------
 			filename_to_extension (send_filename, file_extension, sizeof (file_extension));
 			//debug_log_output("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
-			MIME_LIST_T::check_file_extension_to_mime_type (file_extension, mime_type, sizeof (mime_type));
+			mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 			if (strcasecmp (file_extension, "cgi") == 0 ||
 				strcasecmp (file_extension, "jss") == 0 ||
 				strcasecmp (file_extension, "exe") == 0) {
@@ -772,7 +781,7 @@ int HTTP_RECV_INFO::http_not_found_response (SOCKET accept_socket)
 					, (size_t)9
 					, "Not Found");
 	send (accept_socket, buffer.c_str (), buffer.length (), 0);
-	debug_log_output ("Not Found %s", request_uri);
+	debug_log_output ("Not Found %s", request_uri.c_str());
 	sClose (accept_socket);
 	return 0;
 }
