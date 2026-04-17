@@ -754,10 +754,10 @@ wString wString::replace_env(const wString& path)
 {
 	//文字列から%%で囲まれた部分を抽出
 	wString result = path;
-	size_t start = 0;
+	int start = 0;
 
 	while ((start = result.find('%', start)) != wString::npos) {
-		size_t end = result.find('%', start + 1);
+		int end = result.find('%', start + 1);
 		if (end == wString::npos) {
 			break;  // 閉じる % がない場合は終了
 		}

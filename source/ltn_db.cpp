@@ -190,7 +190,7 @@ private:
 	/// <summary>表示するテーブルリスト</summary>
 	vector<Table*>         Tables;
 	/// <summary>テーブル毎のノード数(行数)</summary>
-	vector<int>            RowNum;
+	vector<unsigned int>   RowNum;
 	//カラムは順番がテーブル順ではないのでpairでテーブル参照できるようにする
 	vector<pair<int, int> > Column;//カラム情報(順番、テーブル番号)
 	vector<int>            Node;
@@ -217,7 +217,7 @@ public:
 		Column.clear();
 		Node.clear();
 		Tables.push_back(tbl);
-		const int ROWNUM = (int)tbl->node[0]->size();
+		const unsigned int ROWNUM = (int)tbl->node[0]->size();
 
 		/// <summary>追加したテーブルのインデックス((0,0),(1,0),,(0.1),(1,1)...)</summary>
 		const int idx = (int)Tables.size() - 1;
@@ -260,7 +260,7 @@ public:
 			err("SELECT:Illigal condition setting");
 			return -1;
 		}
-		const int ROWNUM = (int)tbl->node[0]->size();
+		const unsigned int ROWNUM = (int)tbl->node[0]->size();
 		vector<char> mat2;
 		//！！ここで使った条件はなくなる
 		tbl->condition_mat(cond_param, mat2);
@@ -377,7 +377,7 @@ public:
 	int Add(Table* tbl)
 	{
 		vector<char> mat;
-		const int ROWNUM = (int)tbl->node[0]->size();
+		const unsigned int ROWNUM = (int)tbl->node[0]->size();
 		conditionMatTables(tbl, cond, mat);
 		//ノード追加
 		vector<int> node;
@@ -415,7 +415,7 @@ public:
 	{
 		vector<char> mat;
 		conditionMatTables(tbl, join_cond, mat);
-		const int ROWNUM = (int)tbl->node[0]->size();
+		const unsigned int ROWNUM = (int)tbl->node[0]->size();
 		//ノード追加
 		vector<int> node;
 		int cnt = 0;
