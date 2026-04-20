@@ -40,7 +40,6 @@
 
 #include "ltn.h"
 #include "ltn_tools.h"
-#include "ltn_io.h"
 #include "ltn_String.h"
 #include "define.h"
 
@@ -135,7 +134,7 @@ size_t HTTP_RECV_INFO::http_header_response(SOCKET accept_socket)
 	// ヘッダ返信
 	// --------------
 	//メモリ上にヘッダを作成して送出
-	ltn_send(accept_socket, send_http_header_buf.c_str(), send_header_data_len, 0);
+	send(accept_socket, send_http_header_buf.c_str(), send_header_data_len, 0);
 	//debug_log_output("send_header_data_len = %d\n", send_header_data_len);
 	//debug_log_output("--------\n");
 	//debug_log_output("%s", send_http_header_buf.c_str());
@@ -327,7 +326,7 @@ int copy_body(int in_fd, int out_fd, unsigned int content_length, unsigned int r
 			close(in_fd);
 			in_fd = -1;
 			//debug_log_output("%s(%d) out_fd",__FILE__,__LINE__);
-			ltn_close(reinterpret_cast<SOCKET&>(out_fd));
+			sClose(reinterpret_cast<SOCKET&>(out_fd));
 			delete[] send_buf_p;
 			send_buf_p = 0;
 			return 0;
@@ -337,7 +336,7 @@ int copy_body(int in_fd, int out_fd, unsigned int content_length, unsigned int r
 			//debug_log_output("%s(%d) in_fd",__FILE__,__LINE__);
 			close(in_fd);
 			//debug_log_output("%s(%d) out_fd",__FILE__,__LINE__);
-			ltn_close(reinterpret_cast<SOCKET&>(out_fd));
+			sClose(reinterpret_cast<SOCKET&>(out_fd));
 			delete[] send_buf_p;
 			debug_log_output("read error error=%s\n", strerror(errno));
 			return (-1);
@@ -385,7 +384,7 @@ int copy_body(int in_fd, int out_fd, unsigned int content_length, unsigned int r
 			current_read_size = read_length;
 		}
 		// SOCKET にデータを送信
-		auto write_length = ltn_send(out_fd, reinterpret_cast<char*>(send_buf_p), current_read_size, 0);
+		auto write_length = send(out_fd, reinterpret_cast<char*>(send_buf_p), current_read_size, 0);
 		//write error
 		if (write_length < 0) {
 			debug_log_output("send() error.%d %s\n", errno, strerror(errno));
@@ -393,7 +392,7 @@ int copy_body(int in_fd, int out_fd, unsigned int content_length, unsigned int r
 			debug_log_output("%s(%d) in_fd", __FILE__, __LINE__);
 			close(in_fd);   // File Close
 			debug_log_output("%s(%d) out_fd", __FILE__, __LINE__);
-			ltn_close(reinterpret_cast<SOCKET&>(out_fd));
+			sClose(reinterpret_cast<SOCKET&>(out_fd));
 			return (-1);
 		}
 		//書き込み更新

@@ -14,15 +14,7 @@
 //#include <dir.h>
 #include <direct.h>
 #include <io.h>
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef _WINSOCK_DEPRECATED_NO_WARNINGS
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-#endif
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-#include <windows.h>
+#include <winsock.h>
 #include <time.h>
 #include <sys/types.h>
 #endif
@@ -74,6 +66,10 @@ typedef int socklen_t;
 // ======================
 // define いろいろ
 // ======================
+//WINSOCK2より
+#define SD_RECEIVE      0x00
+#define SD_SEND         0x01
+#define SD_BOTH         0x02
 #define SERVER_NAME     "Lutino "
 #define SERVER_DETAIL   "Application Server Daemon."
 #ifndef TRUE
@@ -97,7 +93,6 @@ typedef int socklen_t;
 #define LISTEN_BACKLOG                  (32)
 #define SEND_BUFFER_SIZE                (1024*128)
 #define DEFAULT_SERVER_PORT             (8000)
-#define DEFAULT_SSL_SERVER_PORT         (0)
 #define DEFAULT_DOCUMENT_ROOT           "/"
 #define DEFAULT_FLAG_DAEMON             TRUE
 //#define DEFAULT_FLAG_AUTO_DETECT        TRUE

@@ -33,7 +33,6 @@
 #include <fcntl.h>
 #include <vector>
 #include "ltn.h"
-#include "ltn_io.h"
 #include "TinyJS.h"
 #include "TinyJS_Functions.h"
 #include "TinyJS_MathFunctions.h"
@@ -91,12 +90,12 @@ int HTTP_RECV_INFO::http_cgi_response(SOCKET accept_socket)
 	if (strcasecmp(ext, "jss") == 0) {
 		//スレッドIDについて出力先を保存
 		jss(accept_socket, script_filename, query_string);
-		ltn_close(accept_socket);
+		sClose(accept_socket);
 		return 0;
 	}
 	else {
 		//ヘッダくらいは返したほうが良いが
-		ltn_close(accept_socket);
+		sClose(accept_socket);
 		return 0;
 	}
 }
@@ -259,7 +258,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 					readsize = 1024;
 				}
 				//num = read( accept_socket, buf, readsize);
-				auto num = ltn_recv(accept_socket, buf, readsize, 0);
+				auto num = recv(accept_socket, buf, readsize, 0);
 				////wString* tmp;
 				if (num <= 0) {
 					break;
@@ -364,7 +363,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 		debug_log_output("SCRIPT ERROR: %s\n", e->text.c_str());
 		wString tmp;
 		tmp.sprintf("SCRIPT ERROR: %s\n", e->text.c_str());
-		ltn_send(accept_socket, tmp.c_str(), tmp.length(), 0);
+		send(accept_socket, tmp.c_str(), tmp.length(), 0);
 		delete[] buffer;
 		for (auto p : mp)
 		{

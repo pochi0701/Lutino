@@ -13,6 +13,3 @@ List of Functions
 Lutino has changed its name from wizd and Cybele.
 MFC removed.
 
-## Third-Party Libraries
-- [BearSSL](https://www.bearssl.org/) — TLS/SSL implementation by Thomas Pornin (MIT License)
-

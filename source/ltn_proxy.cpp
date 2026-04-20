@@ -32,7 +32,6 @@
 //#include <dirent.h>
 #include "ltn.h"
 #include "ltn_tools.h"
-#include "ltn_io.h"
 #include "ltn_String.h"
 #include "define.h"
 //#include "const.h"
@@ -115,7 +114,7 @@ int HTTP_RECV_INFO::http_proxy_response (SOCKET accept_socket)
 			if (!strncasecmp (ln.c_str (), HTTP_RECV_CONTENT_LENGTH, strlen (HTTP_RECV_CONTENT_LENGTH))) {
 				continue;
 			}
-			ltn_send (accept_socket, ln.c_str (), ln.length (), 0);
+			send (accept_socket, ln.c_str (), ln.length (), 0);
 		}
 		//debug_log_output("sent header");
 		//write(accept_socket, "debug:--\n", strlen("debug:--\n"));
@@ -222,7 +221,7 @@ int HTTP_RECV_INFO::http_proxy_response (SOCKET accept_socket)
 			}
 			//send( accept_socket , work_buf , strlen( work_buf ) , 0 );
 			//debug_log_output("sent html: %s", work_buf);
-			ltn_send (accept_socket, wb.c_str (), wb.length (), 0);
+			send (accept_socket, wb.c_str (), wb.length (), 0);
 			debug_log_output ("sent html: %s", wb.c_str ());
 		}
 		//画像等
@@ -231,7 +230,7 @@ int HTTP_RECV_INFO::http_proxy_response (SOCKET accept_socket)
 		//for (int i=0; i<line; i++) {
 		//    send( accept_socket , line_buf[i] , strlen( line_buf[i] ) , 0 );
 		//}
-		ltn_send (accept_socket, lines.c_str (), lines.length (), 0);
+		send (accept_socket, lines.c_str (), lines.length (), 0);
 		copy_all (sock, accept_socket);
 	}
 	sClose (sock);
@@ -444,7 +443,7 @@ int copy_all (SOCKET in_fd, SOCKET out_fd)
 		}
 		//読み込み正常終了
 		// SOCKET にデータを送信
-		auto wlen = ltn_send (out_fd, buf, rlen, 0);
+		auto wlen = send (out_fd, buf, rlen, 0);
 
 		//write error
 		if (rlen != wlen) {

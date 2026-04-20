@@ -36,7 +36,6 @@
 #include "dregex.h"
 #include "ltn.h"
 #include "ltn_tools.h"
-#include "ltn_io.h"
 #include "define.h"
 #include "Lutino.h"
  //#include "unit1.h"
@@ -65,7 +64,7 @@ void js_print(CScriptVar* v, void* userdata)
 		js->outBuffer += str;
 	}
 	else {
-		num = ltn_send(js->socket, str.c_str(), str.length(), 0);
+		num = send(js->socket, str.c_str(), str.length(), 0);
 	}
 	if (num < 0) {
 		debug_log_output("Script Write Error at js_print");
