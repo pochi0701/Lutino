@@ -1915,24 +1915,54 @@ CScriptVarLink* CTinyJS::functionCall(bool& execute, CScriptVarLink* function, C
 		CScriptVar* functionRoot = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_FUNCTION);
 		if (parent)
 			functionRoot->addChildNoDup("this", parent);
-		// grab in all parameters
+		// grab in all parameters and build arguments array
+		CScriptVar* argumentsArray = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_ARRAY);
+		int argIndex = 0;
 		CScriptVarLink* v = function->var->firstChild;
-		while (v) {
+		// named parameters
+		while (v && lex->tk != LEX_TYPES::LEX_R_PARENTHESIS) {
 			CScriptVarLink* value = base(execute);
 			if (execute) {
 				if (value->var->isBasic()) {
 					// pass by value
-					functionRoot->addChild(v->name, value->var->deepCopy());
+					CScriptVar* copied = value->var->deepCopy();
+					functionRoot->addChild(v->name, copied);
+					argumentsArray->setArrayIndex(argIndex, copied);
 				}
 				else {
 					// pass by reference
 					functionRoot->addChild(v->name, value->var);
+					argumentsArray->setArrayIndex(argIndex, value->var);
 				}
 			}
 			CLEAN(value);
+			argIndex++;
 			if (lex->tk != LEX_TYPES::LEX_R_PARENTHESIS) lex->match(LEX_TYPES::LEX_COMMA);
 			v = v->nextSibling;
 		}
+		// fill remaining named parameters with undefined
+		while (v) {
+			if (execute) {
+				functionRoot->addChild(v->name, new CScriptVar());
+			}
+			v = v->nextSibling;
+		}
+		// extra arguments beyond named parameters
+		while (lex->tk != LEX_TYPES::LEX_R_PARENTHESIS) {
+			CScriptVarLink* value = base(execute);
+			if (execute) {
+				if (value->var->isBasic()) {
+					argumentsArray->setArrayIndex(argIndex, value->var->deepCopy());
+				}
+				else {
+					argumentsArray->setArrayIndex(argIndex, value->var);
+				}
+			}
+			CLEAN(value);
+			argIndex++;
+			if (lex->tk != LEX_TYPES::LEX_R_PARENTHESIS) lex->match(LEX_TYPES::LEX_COMMA);
+		}
+		functionRoot->addChild("arguments", argumentsArray);
 		lex->match(LEX_TYPES::LEX_R_PARENTHESIS);
 		// setup a return variable
 		CScriptVarLink* returnVar = NULL;
@@ -1995,7 +2025,6 @@ CScriptVarLink* CTinyJS::functionCall(bool& execute, CScriptVarLink* function, C
 			CScriptVarLink* value = base(execute);
 			CLEAN(value);
 			if (lex->tk != LEX_TYPES::LEX_R_PARENTHESIS) lex->match(LEX_TYPES::LEX_COMMA);
-			value = 0;
 		}
 		lex->match(LEX_TYPES::LEX_R_PARENTHESIS);
 		if (lex->tk == LEX_TYPES::LEX_L_BRACE) { // TODO: why is this here?
