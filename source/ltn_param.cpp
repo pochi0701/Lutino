@@ -109,6 +109,11 @@ void GLOBAL_PARAM_T::global_param_init(void)
 	gethostname(server_name, sizeof(server_name));
 	// デフォルトHTTP 待ち受けPort.
 	server_port = DEFAULT_SERVER_PORT;
+	// デフォルトHTTPS 待ち受けPort (0=無効).
+	server_ssl_port = DEFAULT_SSL_SERVER_PORT;
+	// SSL証明書・秘密鍵ファイル (空=テスト証明書使用)
+	*ssl_cert_file = 0;
+	*ssl_key_file = 0;
 	// Document Root
 	strncpy(document_root, DEFAULT_DOCUMENT_ROOT, sizeof(document_root)-1);
 	// DebugLog
@@ -255,6 +260,18 @@ void GLOBAL_PARAM_T::config_file_read(void)
 				// server_port
 				else if (strcasecmp("server_port", key) == 0) {
 					server_port = atoi(value);
+				}
+				// server_ssl_port
+				else if (strcasecmp("server_ssl_port", key) == 0) {
+					server_ssl_port = atoi(value);
+				}
+				// ssl_cert_file
+				else if (strcasecmp("ssl_cert_file", key) == 0) {
+					strncpy(ssl_cert_file, value, sizeof(ssl_cert_file) - 1);
+				}
+				// ssl_key_file
+				else if (strcasecmp("ssl_key_file", key) == 0) {
+					strncpy(ssl_key_file, value, sizeof(ssl_key_file) - 1);
 				}
 				// document_root
 				else if (strcasecmp("document_root", key) == 0) {

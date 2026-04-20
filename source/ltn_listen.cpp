@@ -33,6 +33,8 @@
 #endif
 #include "ltn.h"
 #include "ltn_tools.h"
+#include "ltn_io.h"
+#include "TlsLib.h"
 //int volatile child_count = 0;
 void    thread_process(const ACCESS_INFO& ac_in);
 #ifdef linux
@@ -40,95 +42,145 @@ void* accessloop(void* arg);
 #else
 unsigned int __stdcall   accessloop(void* arg);
 #endif
-SOCKET	listen_socket;	//待ち受けソケット
+SOCKET	listen_socket;		//HTTP待ち受けソケット
+SOCKET	listen_socket_ssl;	//HTTPS待ち受けソケット
+static TlsCertFile g_certFile;	// HTTPS用証明書（ファイルから読み込み時）
+
+// accessloopへ渡す引数
+typedef struct {
+	SOCKET* listen_socket;
+	int     is_https;
+} LISTEN_ARG;
+/////////////////////////////////////////////////////////////////////////
+// listenソケットを生成してbind/listenする共通関数
+/////////////////////////////////////////////////////////////////////////
+static SOCKET create_listen_socket(int port)
+{
+	struct sockaddr_in saddr = {};
+	int sock_opt_val;
+
+	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (SERROR(sock)) {
+		debug_log_output("socket() error for port %d.", port);
+		return INVALID_SOCKET;
+	}
+	sock_opt_val = 1;
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&sock_opt_val), sizeof(sock_opt_val));
+
+	memset(reinterpret_cast<char*>(&saddr), 0, sizeof(saddr));
+	saddr.sin_family = AF_INET;
+	saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	saddr.sin_port = htons((u_short)port);
+
+	int ret = bind(sock, reinterpret_cast<struct sockaddr*>(&saddr), sizeof(saddr));
+	if (ret < 0) {
+		debug_log_output("bind() error for port %d. ret=%d", port, ret);
+		sClose(sock);
+		return INVALID_SOCKET;
+	}
+	ret = listen(sock, LISTEN_BACKLOG);
+	if (ret < 0) {
+		debug_log_output("listen() error for port %d. ret=%d", port, ret);
+		sClose(sock);
+		return INVALID_SOCKET;
+	}
+	return sock;
+}
 /////////////////////////////////////////////////////////////////////////
 // HTTPサーバ 待ち受け動作部
 /////////////////////////////////////////////////////////////////////////
 void	server_listen(void)
 {
-	int    ret;
-	struct sockaddr_in    saddr = {};				// サーバソケットアドレス構造体
-	//struct sockaddr_in  caddr;						// クライアントソケットアドレス構造体
+	// =============================
+	// HTTP listenソケット生成
+	// =============================
+	listen_socket = create_listen_socket(global_param.server_port);
+	if (SERROR(listen_socket)) {
+		debug_log_output("HTTP listen socket creation failed.");
+		return;
+	}
+	debug_log_output("HTTP listening on port %d...", global_param.server_port);
 
-	//socklen_t           caddr_len = sizeof(caddr);   // クライアントソケットアドレス構造体のサイズ
-	int             sock_opt_val;
-	//ACCESS_INFO*        ac_in;
+	// =============================
+	// HTTPS listenソケット生成 (ssl_port > 0 のとき)
+	// =============================
+	int ssl_enabled = (global_param.server_ssl_port > 0);
+	if (ssl_enabled) {
+		listen_socket_ssl = create_listen_socket(global_param.server_ssl_port);
+		if (SERROR(listen_socket_ssl)) {
+			debug_log_output("HTTPS listen socket creation failed. SSL disabled.");
+			ssl_enabled = 0;
+		} else {
+			debug_log_output("HTTPS listening on port %d...", global_param.server_ssl_port);
+			// 証明書ファイル読み込み
+			if (global_param.ssl_cert_file[0] && global_param.ssl_key_file[0]) {
+				if (g_certFile.load(global_param.ssl_cert_file, global_param.ssl_key_file)) {
+					debug_log_output("SSL cert loaded: %s", global_param.ssl_cert_file);
+				} else {
+					debug_log_output("SSL cert load FAILED: %s / %s  (using test cert)",
+						global_param.ssl_cert_file, global_param.ssl_key_file);
+				}
+			} else {
+				debug_log_output("No ssl_cert_file/ssl_key_file configured. Using test cert.");
+			}
+		}
+	}
 
-	// =============================
-	// listenソケット生成
-	// =============================
-	listen_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (SERROR(listen_socket)) { // ソケット生成失敗チェック
-		debug_log_output("socket() error.");
-		perror("socket");
-		return;
-	}
-	// ===============================
-	// SO_REUSEADDRをソケットにセット
-	// (ソケットが再利用されるため）
-	// ===============================
-	sock_opt_val = 1;
-	setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&sock_opt_val), sizeof(sock_opt_val));
-	// ===========================================
-	// ソケットアドレス構造体に値をセット
-	// ===========================================
-	memset(reinterpret_cast<char*>(&saddr), 0, sizeof(saddr));
-	saddr.sin_family = AF_INET;
-	saddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	saddr.sin_port = htons((u_short)global_param.server_port);
-	// =============================
-	// bind 実行
-	// =============================
-	ret = bind(listen_socket, reinterpret_cast<struct sockaddr*>(&saddr), sizeof(saddr));
-	debug_log_output("binding...");
-	if (ret < 0) { // bind 失敗チェック
-		debug_log_output("bind() error. ret=%d\n", ret);
-		perror("bind");
-		return;
-	}
-	// =============================
-	// listen実行
-	// =============================
-	ret = listen(listen_socket, LISTEN_BACKLOG);
-	debug_log_output("listening...");
-	if (ret < 0) {  // listen失敗チェック
-		debug_log_output("listen() error. ret=%d\n", ret);
-		perror("listen");
-		return;
-	}
 	// =====================
 	// BLOCKING MODE設定
 	// =====================
 	debug_log_output("THREAD MODE START");
-	//TODO:worker数で設定出来るようにすること
+
+	// accessloop引数
+	LISTEN_ARG http_arg  = { &listen_socket, 0 };
+	LISTEN_ARG https_arg = { &listen_socket_ssl, 1 };
+
+	int total_threads = MAXTHREAD + (ssl_enabled ? MAXTHREAD : 0);
+
 #ifdef linux
-	pthread_t hdl[MAXTHREAD];
+	pthread_t* hdl = new pthread_t[total_threads];
+	int idx = 0;
 	for (int i = 0; i < MAXTHREAD; i++) {
-		pthread_create(&hdl[i], NULL, accessloop, (void*)&listen_socket);
+		pthread_create(&hdl[idx++], NULL, accessloop, (void*)&http_arg);
 	}
-	for (int i = 0; i < MAXTHREAD; i++) {
-		ret = pthread_join(hdl[i], NULL);
+	if (ssl_enabled) {
+		for (int i = 0; i < MAXTHREAD; i++) {
+			pthread_create(&hdl[idx++], NULL, accessloop, (void*)&https_arg);
+		}
 	}
+	for (int i = 0; i < total_threads; i++) {
+		pthread_join(hdl[i], NULL);
+	}
+	delete[] hdl;
 #else
+	HANDLE* thread_handle = new HANDLE[total_threads]{};
+	unsigned int* id = new unsigned int[total_threads]{};
+	int idx = 0;
 
-	HANDLE thread_handle[MAXTHREAD] = {};
-	unsigned int  id[MAXTHREAD] = {};
-
-	//handle1 = CreateThread(0, 0, (LPTHREAD_START_ROUTINE) accessloop , (void*)&listen_socket, 0, &id1);
-	//handle2 = CreateThread(0, 0, (LPTHREAD_START_ROUTINE) accessloop , (void*)&listen_socket, 0, &id2);
-	//handle3 = CreateThread(0, 0, (LPTHREAD_START_ROUTINE) accessloop , (void*)&listen_socket, 0, &id3);
 	for (auto i = 0; i < MAXTHREAD; i++) {
-		thread_handle[i] = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, accessloop, static_cast<void*>(&listen_socket), 0, &id[i]));
+		thread_handle[idx] = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, accessloop, static_cast<void*>(&http_arg), 0, &id[idx]));
+		idx++;
+	}
+	if (ssl_enabled) {
+		for (auto i = 0; i < MAXTHREAD; i++) {
+			thread_handle[idx] = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, accessloop, static_cast<void*>(&https_arg), 0, &id[idx]));
+			idx++;
+		}
 	}
 
-	WaitForMultipleObjects(MAXTHREAD, thread_handle, TRUE, INFINITE);
-	for (auto i = 0; i < MAXTHREAD; i++) {
+	WaitForMultipleObjects(total_threads, thread_handle, TRUE, INFINITE);
+	for (auto i = 0; i < total_threads; i++) {
 		if (thread_handle[i]) {
 			CloseHandle(thread_handle[i]);
 		}
 	}
+	delete[] thread_handle;
+	delete[] id;
 #endif
 	sClose(listen_socket);
+	if (ssl_enabled) {
+		sClose(listen_socket_ssl);
+	}
 	return;
 }
 /////////////////////////////////////////////////////////////////////////
@@ -140,7 +192,9 @@ void* accessloop(void* arg)
 unsigned int __stdcall accessloop(void* arg)
 #endif
 {
-	int                lis_soc = *static_cast<int*>(arg);
+	LISTEN_ARG* la = static_cast<LISTEN_ARG*>(arg);
+	int                lis_soc = (int)*la->listen_socket;
+	int                is_https = la->is_https;
 	struct sockaddr_in caddr = {};					// クライアントソケットアドレス構造体
 	socklen_t          caddr_len = sizeof(caddr);   // クライアントソケットアドレス構造体のサイズ
 	char               access_host[256] = {};
@@ -173,6 +227,7 @@ unsigned int __stdcall accessloop(void* arg)
 		ac_in.accept_socket = (unsigned int)accept_socket;
 		ac_in.access_host = access_host;
 		ac_in.caddr = caddr;
+		ac_in.is_https = is_https;
 		thread_process(ac_in);
 	}
 	//_endthreadex(0);
@@ -260,6 +315,27 @@ void thread_process(const ACCESS_INFO& ac_in)
 		debug_log_output("Access Denied.\n");
 		debug_log_output("%s(%d) accept_socet\n", __FILE__, __LINE__);
 		sClose(accept_socket);     // Socketクローズ
+	}
+	else if (ac_in.is_https) {
+		// HTTPS: TLSハンドシェイク後にHTTP処理
+		TlsConn tls;
+		bool ok;
+		if (g_certFile.isLoaded()) {
+			ok = tls.open(accept_socket, g_certFile);
+		} else {
+			ok = tls.open(accept_socket);
+		}
+		if (!ok) {
+			debug_log_output("TLS handshake failed. err=%d", tls.lastError());
+			sClose(accept_socket);
+		} else {
+			debug_log_output("TLS handshake OK from %s", client_addr_str);
+			// TLSラッパーを設定してserver_http_processを呼ぶ
+			ltn_set_tls(&tls);
+			server_http_process(accept_socket, access_host, client_addr_str);
+			// server_http_process内のltn_closeでTLSはクローズされるが、念のためクリア
+			ltn_set_tls(nullptr);
+		}
 	}
 	else {
 		// HTTP鯖として、仕事実行

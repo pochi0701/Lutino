@@ -29,6 +29,7 @@
 //#include <dirent.h>
 #include "ltn.h"
 #include "ltn_tools.h"
+#include "ltn_io.h"
 #include "ltn_String.h"
 #include "define.h"
 #include "TinyJS.h"
@@ -57,7 +58,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 	if (ret != 0) { // エラーチェック
 		// エラーメッセージ
 		debug_log_output ("%s(%d):http_header_receive() Error. result=%d\n", __FILE__, __LINE__, ret);
-		sClose (accept_socket);
+		ltn_close (accept_socket);
 		return;
 	}
 	// ==========================
@@ -110,7 +111,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		// BAD REQUEST!
 		http_recv_info.http_not_found_response (accept_socket);
 		debug_log_output ("%s(%d) BAD REQUEST. Path sanitize %s\n", __FILE__, __LINE__,http_recv_info.recv_uri);
-		sClose(accept_socket);
+		ltn_close(accept_socket);
 		return;
 	}
 	//PROXY判定
@@ -121,7 +122,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		}
 		// ソケットクローズ
 		//debug_log_output("%s(%d) accept_socet\n", __FILE__, __LINE__);
-		sClose (accept_socket);
+		ltn_close (accept_socket);
 		return;
 	}
 
@@ -266,7 +267,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 	}
 	//sClose(accept_socket);
 	debug_log_output ("HTTP Process done. From %s:%s\n", access_host, http_recv_info.recv_uri);
-	sClose(accept_socket);
+	ltn_close(accept_socket);
 	accept_socket = -1;
 	return;
 }
@@ -714,7 +715,7 @@ int line_receive (int accept_socket, char* line_buf_p, int line_max)
 	int		received = 0;
 	// １行受信実行
 	while (1) {
-		recv_len = recv (accept_socket, &byte_buf, 1, 0);
+		recv_len = ltn_recv (accept_socket, &byte_buf, 1, 0);
 		if (recv_len == 0) {
 			if (received) {
 				return line_len;
@@ -762,9 +763,9 @@ int HTTP_RECV_INFO::http_redirect_response (SOCKET accept_socket, char* location
 {
 	wString buffer;
 	buffer.sprintf ("HTTP/1.1 301 Found\r\n" "Location: %s\r\n" "\r\n", location);
-	send (accept_socket, buffer.c_str (), buffer.length (), 0);
+	ltn_send (accept_socket, buffer.c_str (), buffer.length (), 0);
 	debug_log_output ("Redirect to %s", location);
-	sClose (accept_socket);
+	ltn_close (accept_socket);
 	return 0;
 }
 /// <summary>
@@ -780,8 +781,8 @@ int HTTP_RECV_INFO::http_not_found_response (SOCKET accept_socket)
 					, "text/html"
 					, (size_t)9
 					, "Not Found");
-	send (accept_socket, buffer.c_str (), buffer.length (), 0);
+	ltn_send (accept_socket, buffer.c_str (), buffer.length (), 0);
 	debug_log_output ("Not Found %s", request_uri.c_str());
-	sClose (accept_socket);
+	ltn_close (accept_socket);
 	return 0;
 }

@@ -123,6 +123,7 @@
 #include "TinyJS.h"
 #include <assert.h>
 #include "define.h"
+#include "ltn_io.h"
 
 #ifndef ASSERT
 #define ASSERT(X) assert(X)
@@ -327,7 +328,7 @@ void JSTRACE(SOCKET socket, const char* format, ...)
 	va_start(ap, format);
 	vsnprintf(work, sizeof(work), format, ap);
 	va_end(ap);
-	send(socket, work, static_cast<int>(strlen(work)), 0);
+	ltn_send(socket, work, static_cast<int>(strlen(work)), 0);
 }
 #endif
 // ----------------------------------------------------------------------------------- CSCRIPTEXCEPTION
@@ -556,7 +557,7 @@ void CScriptLex::getNextToken()
 		if (prBuffer->length() > 0) {
 
 			headerCheckPrint(socket, printed, headerBuf, 1);
-			send(socket, prBuffer->c_str(), prBuffer->length(), 0);
+			ltn_send(socket, prBuffer->c_str(), prBuffer->length(), 0);
 			prBuffer->clear();
 			*prPos = -1;
 		}
@@ -1491,7 +1492,7 @@ void CScriptVar::trace(SOCKET socket, const wString& indentStr, const wString& n
 {
 	wString work;
 	work.wString::sprintf("%s'%s' = '%s' %s\n", indentStr.c_str(), name.c_str(), getString().c_str(), getFlagsAsString().c_str());
-	send(socket, work.c_str(), work.length(), 0);
+	ltn_send(socket, work.c_str(), work.length(), 0);
 	wString indent = indentStr + " ";
 	CScriptVarLink* link = firstChild;
 	while (link) {
@@ -1701,7 +1702,7 @@ void CTinyJS::FlushBuf(void)
 				outBuffer += prBuffer;
 			}
 			else {
-				send(socket, prBuffer.c_str(), prBuffer.length(), 0);
+				ltn_send(socket, prBuffer.c_str(), prBuffer.length(), 0);
 			}
 			prBuffer.clear();
 			prPos = -1;

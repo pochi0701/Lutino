@@ -41,6 +41,8 @@
 #include "ltn_String.h"
 #include "ltn.h"
 #include "ltn_tools.h"
+#include "ltn_io.h"
+#include "TlsLib.h"
 #include <time.h>
 #include "define.h"
 #include <fstream>
@@ -2405,9 +2407,9 @@ void wString::init_header (size_t content_length, int expire, const char* mime_t
 /// <param name="endflag">指定するとHTTPヘッダ終了(\r\n\r\n)</param>
 void wString::send_header (SOCKET socket, int endflag)
 {
-	send (socket, String, len, 0);
+	ltn_send (socket, String, len, 0);
 	if (endflag) {
-		send (socket, HTTP_END, (int)strlen (HTTP_END), 0);
+		ltn_send (socket, HTTP_END, (int)strlen (HTTP_END), 0);
 	}
 }
 wString wString::headerPrintMem (void)
@@ -2667,7 +2669,8 @@ wString wString::http_get (const wString& url, off_t offset)
 	int         locPos;
 	int         portPos;
 	SOCKET      server_socket;                  //サーバーソケット
-	int         server_port = HTTP_SERVER_PORT;
+	bool        use_tls = url.starts_with ("https://");
+	int         server_port = use_tls ? 443 : HTTP_SERVER_PORT;
 	//出力ファイルの設定
 	// ================
 	// 実体転送開始
@@ -2698,6 +2701,13 @@ wString wString::http_get (const wString& url, off_t offset)
 	//ソケット作成と接続
 	server_socket = sock_connect (host.String, server_port);
 	if (!SERROR (server_socket)) {
+		TlsClientConn tls;
+		if (use_tls) {
+			if (!tls.tlsOpen (server_socket, host.String)) {
+				sClose (server_socket);
+				return wString ();
+			}
+		}
 		//HTTP1.0 GET発行
 		ptr.sprintf ("GET %s HTTP/1.0\r\n"
 					 "Accept: */*\r\n"
@@ -2710,17 +2720,33 @@ wString wString::http_get (const wString& url, off_t offset)
 					 offset);
 		//ptr.len = strlen(ptr.String);
 		//サーバに繋がった
-		if (send (server_socket, ptr.String, ptr.len, 0) != SOCKET_ERROR) {
+		bool send_ok;
+		if (use_tls) {
+			send_ok = (tls.tlsWrite (ptr.String, ptr.len) >= 0);
+			if (send_ok) tls.tlsFlush ();
+		} else {
+			send_ok = (send (server_socket, ptr.String, ptr.len, 0) != SOCKET_ERROR);
+		}
+		if (send_ok) {
 
 			//初回分からヘッダを削除
-			auto recv_len = recv (server_socket, ptr.String, ptr.capacity () - 1, 0);
+			int recv_len;
+			if (use_tls) {
+				recv_len = tls.tlsRead (ptr.String, ptr.capacity () - 1);
+			} else {
+				recv_len = recv (server_socket, ptr.String, ptr.capacity () - 1, 0);
+			}
+			if (recv_len <= 0) {
+				if (use_tls) tls.tlsClose (); else sClose (server_socket);
+				return wString ();
+			}
 			ptr.String[recv_len] = 0;
 			ptr.len = recv_len;
 
 			//見つからない
 			hostPos = atoi (ptr.String + (ptr.Pos (" ") + 1));
 			if (hostPos < 200 || 300 <= hostPos) {
-				sClose (server_socket);
+				if (use_tls) tls.tlsClose (); else sClose (server_socket);
 				return wString ();
 			}
 			//content_length = atoi(buf.String+buf.Pos("Content-Length:" )+16);
@@ -2729,7 +2755,11 @@ wString wString::http_get (const wString& url, off_t offset)
 			wString work (8000);
 			//転送する
 			while (loop_flag) {
-				recv_len = recv (server_socket, work.String, work.capacity (), 0);
+				if (use_tls) {
+					recv_len = tls.tlsRead (work.String, work.capacity ());
+				} else {
+					recv_len = recv (server_socket, work.String, work.capacity (), 0);
+				}
 				if (recv_len <= 0) {
 					break;
 				}
@@ -2745,10 +2775,10 @@ wString wString::http_get (const wString& url, off_t offset)
 			}
 		}
 		else {
-			sClose (server_socket);
+			if (use_tls) tls.tlsClose (); else sClose (server_socket);
 			return wString ();
 		}
-		sClose (server_socket);
+		if (use_tls) tls.tlsClose (); else sClose (server_socket);
 	}
 	else {
 		return wString ();
@@ -2777,7 +2807,8 @@ wString wString::http_rest (const wString& methods, const wString& url, const wS
 	int         work2;
 	int         work3;
 	SOCKET      server_socket;                  //サーバーソケット
-	int         server_port = HTTP_SERVER_PORT;
+	bool        use_tls = url.starts_with ("https://");
+	int         server_port = use_tls ? 443 : HTTP_SERVER_PORT;
 	//出力ファイルの設定
 	// ================
 	// 実体転送開始
@@ -2802,6 +2833,13 @@ wString wString::http_rest (const wString& methods, const wString& url, const wS
 	//ソケット作成と接続
 	server_socket = sock_connect (host.String, server_port);
 	if (!SERROR (server_socket)) {
+		TlsClientConn tls;
+		if (use_tls) {
+			if (!tls.tlsOpen (server_socket, host.String)) {
+				sClose (server_socket);
+				return wString ();
+			}
+		}
 		//HTTP1.0 GET発行
 		if (methods == "GET") {
 			ptr.sprintf ("%s %s HTTP/1.0\r\n"
@@ -2835,14 +2873,25 @@ wString wString::http_rest (const wString& methods, const wString& url, const wS
 			ptr += data;
 		}
 		//サーバに繋がった
-		if (send (server_socket, ptr.String, ptr.len, 0) != SOCKET_ERROR) {
+		bool send_ok;
+		if (use_tls) {
+			send_ok = (tls.tlsWrite (ptr.String, ptr.len) >= 0);
+			if (send_ok) tls.tlsFlush ();
+		} else {
+			send_ok = (send (server_socket, ptr.String, ptr.len, 0) != SOCKET_ERROR);
+		}
+		if (send_ok) {
 			ptr.set_length (HTTP_STR_BUF_SIZE + 1);
 			char buff[1024];
 			ptr = "";
 			int recv_len;
 			//初回分からヘッダを削除
 			for (;;) {
-				recv_len = recv (server_socket, buff, sizeof (buff) - 1, 0);
+				if (use_tls) {
+					recv_len = tls.tlsRead (buff, sizeof (buff) - 1);
+				} else {
+					recv_len = recv (server_socket, buff, sizeof (buff) - 1, 0);
+				}
 				if (recv_len > 0) {
 					buff[recv_len] = 0;
 					ptr += buff;
@@ -2851,13 +2900,14 @@ wString wString::http_rest (const wString& methods, const wString& url, const wS
 					break;
 				}
 				else {
+					if (use_tls) tls.tlsClose ();
 					return wString ();
 				}
 			}
 			//見つからない
 			work1 = atoi (ptr.String + (ptr.Pos (" ") + 1));
 			if (work1 < 200 || 300 <= work1) {
-				sClose (server_socket);
+				if (use_tls) tls.tlsClose (); else sClose (server_socket);
 				return wString ();
 			}
 			//content_length = atoi(buf.String+buf.Pos("Content-Length:" )+16);
@@ -2868,7 +2918,11 @@ wString wString::http_rest (const wString& methods, const wString& url, const wS
 			buf = ptr.substr (work1, ptr.length () - recv_len);
 			//転送する
 			while (loop_flag) {
-				recv_len = recv (server_socket, ptr.String, ptr.capacity () - 1, 0);
+				if (use_tls) {
+					recv_len = tls.tlsRead (ptr.String, ptr.capacity () - 1);
+				} else {
+					recv_len = recv (server_socket, ptr.String, ptr.capacity () - 1, 0);
+				}
 				if (recv_len <= 0) {
 					break;
 				}
@@ -2879,10 +2933,10 @@ wString wString::http_rest (const wString& methods, const wString& url, const wS
 			}
 		}
 		else {
-			sClose (server_socket);
+			if (use_tls) tls.tlsClose (); else sClose (server_socket);
 			return wString ();
 		}
-		sClose (server_socket);
+		if (use_tls) tls.tlsClose (); else sClose (server_socket);
 	}
 	else {
 		return wString ();
@@ -3439,7 +3493,7 @@ int wString::line_receive (SOCKET accept_socket)
 	clear ();
 	// １行受信実行
 	while (1) {
-		int recv_len = recv (accept_socket, &byte_buf, 1, 0);
+		int recv_len = ltn_recv (accept_socket, &byte_buf, 1, 0);
 		if (recv_len == 0) {
 			if (len) {
 				return len;
