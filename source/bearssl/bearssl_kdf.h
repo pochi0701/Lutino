@@ -31,10 +31,6 @@
 #include "bearssl_hash.h"
 #include "bearssl_hmac.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** \file bearssl_kdf.h
  *
  * # Key Derivation Functions
@@ -177,9 +173,5 @@ void br_hkdf_flip(br_hkdf_context *hc);
  */
 size_t br_hkdf_produce(br_hkdf_context *hc,
 	const void *info, size_t info_len, void *out, size_t out_len);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

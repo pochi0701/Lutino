@@ -21,7 +21,7 @@
 #include  <sys/stat.h>
 #include  <time.h>
 
-#ifdef linux
+#ifdef __linux__
 #include  <fcntl.h>
 #include  <unistd.h>
 #include  <sys/time.h>
@@ -654,7 +654,7 @@ int uri_decode(char* dst, unsigned int dst_len, const char* src, unsigned int sr
 	return cnt;
 }
 
-#ifndef linux
+#ifndef __linux__
 /// <summary>
 /// VC用gettimeofdayの定義がない場合のソース
 /// </summary>
@@ -752,7 +752,7 @@ void debug_log_output(const char* fmt, ...)
 	char       work_buf[1024 * 4 + 1] = {};
 	char       date_and_time[80];
 	char       replace_date_and_time[256] = {};
-#ifdef linux
+#ifdef __linux__
 	struct timeval tv;
 #endif
 	va_list     arg;
@@ -779,14 +779,14 @@ void debug_log_output(const char* fmt, ...)
 	}
 	// 挿入用文字列生成( "\ndate_and_time" になる)
 	make_datetime_string(date_and_time);
-#ifdef linux
+#ifdef __linux__
 	snprintf(replace_date_and_time, sizeof(replace_date_and_time), "\n%s[%d] ", date_and_time, getpid());
 #else
 	snprintf(replace_date_and_time, sizeof(replace_date_and_time), "\n%s[%ld] ", date_and_time, GetCurrentThreadId());
 #endif
 
 	// 出力文字列生成開始。
-#ifdef linux
+#ifdef __linux__
 	snprintf((char*)buf, sizeof(buf), "%s[%d] %s", date_and_time, getpid(), work_buf);
 #else
 	snprintf(buf, sizeof(buf), "%s[%d] %s", date_and_time, _getpid(), work_buf);
@@ -830,7 +830,7 @@ char* path_sanitize(char* orig_dir, size_t dir_size)
 	//strcpy (orig_dir, work);
 	//
 
-#ifdef linux
+#ifdef __linux__
 	char* p;
 	char* q;
 	char* dir;
@@ -1027,7 +1027,7 @@ char* path_sanitize(char* orig_dir, size_t dir_size)
 //			if (offset < content_length) {   //range発行
 //				sprintf(buf, "GET %s HTTP/1.0\r\n"
 //					"Accept: */*\r\n"
-//#ifdef linux
+//#ifdef __linux__
 //					"User-Agent: %s\r\nHost: %s\r\nRange: bytes=%ld-\r\nConnection: close\r\n\r\n",
 //#elif raspberry
 //					"User-Agent: %s\r\nHost: %s\r\nRange: bytes=%zu-\r\nConnection: close\r\n\r\n",
@@ -1163,7 +1163,7 @@ wString GetAuthorization(const wString& AuthorizedString)
 	return auth;
 }
 
-#ifdef linux
+#ifdef __linux__
 //---------------------------------------------------------------------------
 int send(int fd, const char* buffer, unsigned int length, int mode)
 {
@@ -1338,7 +1338,7 @@ void set_nonblocking_mode(int fd, int flag)
 /// <returns></returns>
 int myopen(const wString& filename, int amode, int option)
 {
-#ifdef linux
+#ifdef __linux__
 	if (option != 0) {
 		return open(filename.c_str(), amode, option);
 	}
@@ -1361,7 +1361,7 @@ int myopen(const wString& filename, int amode, int option)
 int sClose(SOCKET& socket)
 {
 	int ret;
-#ifdef linux
+#ifdef __linux__
 	ret = shutdown(socket, SD_BOTH);
 	//if (ret != 0) debug_log_output("shutdown error=%s,%d,%d", strerror(errno), errno, socket);
 	ret = close(socket);
@@ -1379,7 +1379,7 @@ int sClose(SOCKET& socket)
 	socket = 0;
 	return ret;
 }
-//#ifdef linux
+//#ifdef __linux__
 //void ExitThread(DWORD dwExitCode)
 //{
 //    return;

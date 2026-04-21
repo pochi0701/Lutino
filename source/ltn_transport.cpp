@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include "ltn_tools.h"
 #include "ltn_tls.h"
@@ -24,7 +24,7 @@ int transport_send(SOCKET socket, const char* buffer, unsigned int length, int m
 	if (ltn_tls_active(socket)) {
 		return ltn_tls_send(socket, buffer, length);
 	}
-#ifdef linux
+#ifdef __linux__
 	return ::send(socket, buffer, length, 0);
 #else
 	return ::send(socket, buffer, static_cast<int>(length), 0);
@@ -37,7 +37,7 @@ int transport_recv(SOCKET socket, char* buffer, unsigned int length, int mode)
 	if (ltn_tls_active(socket)) {
 		return ltn_tls_recv(socket, buffer, length);
 	}
-#ifdef linux
+#ifdef __linux__
 	return ::recv(socket, buffer, length, 0);
 #else
 	return ::recv(socket, buffer, static_cast<int>(length), 0);

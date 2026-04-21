@@ -28,10 +28,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** \file bearssl_block.h
  *
  * # Block Ciphers and Symmetric Ciphers
@@ -2610,9 +2606,5 @@ void br_poly1305_ctmulq_run(const void *key, const void *iv,
  * \return  the ctmulq ChaCha20+Poly1305 implementation, or 0.
  */
 br_poly1305_run br_poly1305_ctmulq_get(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

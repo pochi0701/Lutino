@@ -28,10 +28,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** \file bearssl_pem.h
  *
  * # PEM Support
@@ -286,9 +282,5 @@ size_t br_pem_encode(void *dest, const void *data, size_t len,
  * \brief PEM encoding flag: use CR+LF line endings.
  */
 #define BR_PEM_CRLF     0x0002
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

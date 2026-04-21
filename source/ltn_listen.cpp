@@ -17,7 +17,7 @@
 #include <memory.h>
 #include <sys/types.h>
 #include <signal.h>
-#ifdef linux
+#ifdef __linux__
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -76,7 +76,7 @@ SOCKET create_listener_socket(int port, const char* name)
 	return socket_fd;
 }
 }
-#ifdef linux
+#ifdef __linux__
 void* accessloop(void* arg);
 #else
 unsigned int __stdcall   accessloop(void* arg);
@@ -110,7 +110,7 @@ void	server_listen(void)
 	// =====================
 	debug_log_output("THREAD MODE START");
 	//TODO:worker数で設定出来るようにすること
-#ifdef linux
+#ifdef __linux__
 	pthread_t hdl[MAXTHREAD * 2];
 	int thread_count = 0;
 	for (int listener_index = 0; listener_index < listener_count; listener_index++) {
@@ -149,7 +149,7 @@ void	server_listen(void)
 /////////////////////////////////////////////////////////////////////////
 // 複数アクセス対応
 /////////////////////////////////////////////////////////////////////////
-#ifdef linux
+#ifdef __linux__
 void* accessloop(void* arg)
 #else
 unsigned int __stdcall accessloop(void* arg)

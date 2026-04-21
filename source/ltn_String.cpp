@@ -19,7 +19,7 @@
 #include <sys/types.h>
 #include <vector>
 #include <algorithm>
-#ifdef linux
+#ifdef __linux__
 #include <dirent.h>
 #include <unistd.h>
 #include <netdb.h>
@@ -897,7 +897,7 @@ int wString::load_from_file (const wString& FileName)
 	}
 	else {
 		wString FileName2 = replace_env(FileName);
-#ifdef linux
+#ifdef __linux__
 		handle = open (FileName2.c_str (), O_RDONLY | S_IREAD);
 #else
 		handle = myopen (FileName2, O_RDONLY | O_BINARY, S_IREAD);
@@ -1105,7 +1105,7 @@ int wString::save_to_file (const char* str)
 int wString::save_to_file (const wString& FileName)
 {
 	wString FileName2 = replace_env(FileName);
-#ifdef linux
+#ifdef __linux__
 	int handle = myopen (FileName2, O_CREAT | O_TRUNC | O_RDWR, S_IREAD | S_IWRITE);
 #else
 	int handle = myopen (FileName2, O_CREAT | O_TRUNC | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
@@ -1149,7 +1149,7 @@ wString wString::trim (void)
 	if (temp.len) {
 		//先頭の空白等を抜く
 		while (temp.len && *reinterpret_cast<unsigned char*>(temp.String) <= ' ') {
-#ifdef linux
+#ifdef __linux__
 			char* src = temp.String;
 			char* dst = src + 1;
 			while (*src) {
@@ -1279,7 +1279,7 @@ wString wString::file_stats (const char* str, int mode)
 		if (mode == 0) {
 			/* ファイル情報を表示 */
 
-#ifdef linux
+#ifdef __linux__
 			buf.sprintf ("{\"permission\":\"%o\",\"size\":%d,\"date\":\"%s\"}", stat_buf.st_mode, stat_buf.st_size, ctime (&stat_buf.st_mtime));
 #else
 			wString* time_data = ctimew (&stat_buf.st_mtime);
@@ -1334,7 +1334,7 @@ wString wString::file_stats (const wString& str, int mode)
 //---------------------------------------------------------------------------
 int wString::file_exists (const char* str)
 {
-#ifdef linux
+#ifdef __linux__
 	struct stat send_filestat;
 	int  result = stat (str, &send_filestat);
 	if ((result == 0) && (S_ISREG (send_filestat.st_mode) == 1)) {
@@ -1382,7 +1382,7 @@ wString wString::extract_file_dir (const wString& str)
 bool wString::create_dir (const wString& str)
 {
 	bool flag = false;
-#ifdef linux
+#ifdef __linux__
 	//0x777ではちゃんとフォルダできない
 	flag = (mkdir (str.String, 0777) != -1);
 #else
@@ -1440,7 +1440,7 @@ bool wString::rename_file (const wString& src, const wString& dst)
 {
 	wString src2 = src;
 	wString dst2 = dst;
-#ifdef linux
+#ifdef __linux__
 #else
 	src2 = src2.nkfcnv ("Ws");
 	dst2 = dst2.nkfcnv ("Ws");
@@ -1458,7 +1458,7 @@ unsigned long wString::file_size_by_name (char* str)
 {
 	unsigned long pos;
 	int handle;
-#ifdef linux
+#ifdef __linux__
 	handle = open (str, 0);
 #else
 	wString temp = str;
@@ -1536,7 +1536,7 @@ wString wString::change_file_ext (const wString& str, const char* ext)
 int wString::delete_file (const wString& str)
 {
 	int flag = 0;
-#ifdef linux
+#ifdef __linux__
 	flag = (unlink (str.String) == 0);
 #else
 	wString str2 = str;
@@ -1559,7 +1559,7 @@ int wString::delete_file (const wString& str)
 int wString::delete_folder (const wString& str)
 {
 	int flag = 0;
-#ifdef linux
+#ifdef __linux__
 	flag = (rmdir (str.String) == 0);
 #else
 	wString str2 = str;
@@ -1581,7 +1581,7 @@ int wString::delete_folder (const wString& str)
 int wString::directory_exists (const char* str)
 {
 	int flag = 0;
-#ifdef linux
+#ifdef __linux__
 	struct stat send_filestat;
 	int  result = stat (str, &send_filestat);
 	if ((result == 0) && (S_ISDIR (send_filestat.st_mode) == 1)) {
@@ -1659,7 +1659,7 @@ void wString::replace_character_len (const char* sentence, int slen, const char*
 /// <returns>一覧のJSON文字列。コピーしてほしい</returns>
 wString wString::enum_folder_json (const wString& Path)
 {
-#ifdef linux
+#ifdef __linux__
 	struct dirent** namelist;
 	int n;
 	wString temp;
@@ -1743,7 +1743,7 @@ wString wString::get_current_dir ()
 		throw new CScriptException ("get_current_dir");
 		//exit(-1);
 	}
-#ifdef linux
+#ifdef __linux__
 	return wString (cwd);
 #else
 	return wString (cwd).nkfcnv ("Sw");
@@ -1758,7 +1758,7 @@ wString wString::get_current_dir ()
 /// <returns>一覧のJSON文字列。コピーしてほしい</returns>
 wString wString::enum_folder (const wString& Path)
 {
-#ifdef linux
+#ifdef __linux__
 	struct dirent** namelist;
 	int n;
 	wString temp;
@@ -3038,7 +3038,7 @@ int wString::http_size (const wString& url)
 /// <returns>変換した文字列</returns>
 char* wString::windows_file_name (char* FileName)
 {
-#ifdef linux
+#ifdef __linux__
 	return FileName;
 #else
 	char* work = FileName;
@@ -3059,7 +3059,7 @@ char* wString::windows_file_name (char* FileName)
 /// <returns>変換した文字列</returns>
 wString wString::windows_file_name ()
 {
-#ifdef linux
+#ifdef __linux__
 	return *this;
 #else
 
@@ -3079,7 +3079,7 @@ wString wString::windows_file_name ()
 /// <returns>変換した文字列</returns>
 char* wString::linux_file_name (char* FileName)
 {
-#ifdef linux
+#ifdef __linux__
 	return FileName;
 #else
 	char* work = FileName;
@@ -3099,7 +3099,7 @@ char* wString::linux_file_name (char* FileName)
 /// <returns>ローカルアドレス</returns>
 wString wString::get_local_address (void)
 {
-#ifdef linux
+#ifdef __linux__
 	//linux番の自IP/ホスト名を設定する
 	struct ifaddrs* ifa_list;
 	struct ifaddrs* ifa;
@@ -3395,7 +3395,7 @@ int wString::line_receive (SOCKET accept_socket)
 			}
 		}
 		else if (recv_len < 0) { // 受信失敗チェック
-#ifdef linux
+#ifdef __linux__
 			debug_log_output ("header read error cnt = %d error=%s\n", recv_len, strerror (errno));
 #else
 			debug_log_output ("header read error cnt = %d socket=%d error=%d\n", recv_len, accept_socket, WSAGetLastError ());
@@ -3651,7 +3651,7 @@ wString wString::jpeg_size (const wString& jpeg_filename)
 wString wString::bios_uuid()
 {
 	wString tmp;
-#ifndef linux
+#ifndef __linux__
 	unsigned char uuid[16] = {};
 	int cnt = 0;
 	/// <summary>

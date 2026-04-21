@@ -11,7 +11,7 @@
 //---------------------------------------------------------------------------
 #include <stdio.h>
 #include <string.h>
-#ifdef linux
+#ifdef __linux__
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -49,7 +49,7 @@ int    sClose(SOCKET& socket);
 int sClose(SOCKET& socket)
 {
 	int ret;
-#ifdef linux
+#ifdef __linux__
 	ret = shutdown(socket, SD_BOTH);
 	if (ret != 0) {
 		printf("shutdown error=%s,%d,%d\n", strerror(errno), errno, socket);
@@ -74,14 +74,14 @@ int sClose(SOCKET& socket)
 //Function Call
 int main()
 {
-#ifndef linux
+#ifndef __linux__
 	WSADATA wsaData;
 	WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
 	wString str;
 	ssdp_client(str, 2);
 	printf("%s\n", str.c_str());
-#ifndef linux
+#ifndef __linux__
 	WSACleanup();
 #endif
 }
@@ -90,7 +90,7 @@ int main()
 int ssdp_client(wString& str, int loops)
 {
 	char rcvdbuff[1000];
-#ifdef linux
+#ifdef __linux__
 	unsigned int len;
 #else
 	int len;
@@ -126,7 +126,7 @@ int ssdp_client(wString& str, int loops)
 			memset(rcvdbuff, 0, sizeof(rcvdbuff));
 
 			// 受信のタイムアウト時間を設定
-#ifdef linux
+#ifdef __linux__
 			//linuxではタイムアウトしないのでselectの実装にすること
 			struct timeval send_tv;
 			send_tv.tv_sec = 0;

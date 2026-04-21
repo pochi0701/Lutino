@@ -1,4 +1,4 @@
-﻿################################################################################
+################################################################################
 # ltn makefile
 #						$Revision: 1.7 $
 #						$Date: 2024/03/04 19:16:51 $
@@ -12,10 +12,10 @@ AR=$(CROSS)ar
 STRIP=$(CROSS)strip
 LD=$(CROSS)ld
 RANLIB=$(CROSS)ranlib
-#CFLAGS= -g -O3 -Wall -Dlinux -pthread
-CFLAGS= -g -O3 -Wall -Dlinux -D_DEBUG -pthread -std=c++11
-#CFLAGS= -O1 -Wall -Dlinux -pthread
-#CFLAGS= -g -Wall -Dlinux -D_DEBUG
+#CFLAGS= -g -O3 -Wall  -pthread
+CFLAGS= -g -O3 -Wall  -D_DEBUG -pthread -std=c++11
+#CFLAGS= -O1 -Wall  -pthread
+#CFLAGS= -g -Wall  -D_DEBUG
 RM=rm
 
 # Makefile

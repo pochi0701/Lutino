@@ -11,11 +11,6 @@
     
 */
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 typedef struct DIR DIR;
 
 struct dirent
@@ -42,9 +37,4 @@ void          rewinddir(DIR *);
     But that said, if there are any problems please get in touch.
 
 */
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif

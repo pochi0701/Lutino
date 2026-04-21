@@ -14,7 +14,7 @@
 /* デフォルトの出力コード選択 */
 /* Select DEFAULT_CODE        */
 /* #define DEFAULT_CODE_JIS   */
-#ifdef linux
+#ifdef __linux__
 #define DEFAULT_CODE_UTF8
 #else
 #define DEFAULT_CODE_SJIS

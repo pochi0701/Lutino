@@ -225,7 +225,7 @@ class DBCatalog
 {
 private:
 	int refs;
-//#ifdef linux
+//#ifdef __linux__
 //	pthread_mutex_t mutex;        //クリティカルセッションmutex
 //#else
 //	CRITICAL_SECTION cs;          //クリティカルセクション

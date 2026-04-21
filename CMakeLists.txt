@@ -82,7 +82,6 @@ target_include_directories(lutino PRIVATE
 )
 
 target_compile_definitions(lutino PRIVATE
-  linux
   BR_AES_X86NI=0
   BR_SSE2=0
   BR_RDRAND=0

@@ -16,7 +16,7 @@
 #include  <signal.h>
 #include  <sys/types.h>
 
-#ifdef linux
+#ifdef __linux__
 #include  <unistd.h>
 #include  <pwd.h>
 #include  <grp.h>
@@ -36,7 +36,7 @@
 #include  "ltn_db.h"
 static char Application[256];
 static void print_help(void);
-#ifdef linux
+#ifdef __linux__
 static void daemon_init(void);
 static void set_user_id(char* user, char* group);
 static void setup_SIGCHLD(void);
@@ -63,7 +63,7 @@ std::map<wString, wString>* session;
 // **************************************************************************
 // * Main Program
 // **************************************************************************
-#ifdef linux
+#ifdef __linux__
 int main(int argc, char* argv[])
 #else
 int Lutinomain(void* arg)
@@ -71,7 +71,7 @@ int Lutinomain(void* arg)
 {
 	char flag_daemon = FALSE;
 	/* スレッド用パラメータ */
-#ifdef linux
+#ifdef __linux__
         strcpy(Application, argv[0]);
         if( Application[0] == '.' ){
 	        std::ignore = getcwd(Application, sizeof(Application));
@@ -105,7 +105,7 @@ int Lutinomain(void* arg)
 	// =============================================
 	// オプションチェック
 	// =============================================
-#ifdef linux
+#ifdef __linux__
 
 	for (auto i = 1; i < argc; i++) {
 		// ----------------------------------------------------
@@ -138,7 +138,7 @@ int Lutinomain(void* arg)
 	{
 		global_param.flag_daemon = TRUE;
 	}
-#ifdef linux
+#ifdef __linux__
 	// ======================
 	// = SetUID 実行
 	// ======================
@@ -148,7 +148,7 @@ int Lutinomain(void* arg)
 	// Debug Log 出力開始
 	// =======================
 	if (global_param.flag_debug_log_output == TRUE) {
-#ifdef linux
+#ifdef __linux__
 		printf("debug log output start..\n");
 #endif
 		debug_log_output("\n%s boot up.", SERVER_NAME);
@@ -158,7 +158,7 @@ int Lutinomain(void* arg)
 	// =================
 	// daemon化する。
 	// =================
-#ifdef linux
+#ifdef __linux__
 	if (global_param.flag_daemon == TRUE) {
 		printf("Daemoning....\n");
 		daemon_init();
@@ -178,7 +178,7 @@ int Lutinomain(void* arg)
 	// ==================================
 	//if (global_param.flag_auto_detect == TRUE) {
     // 以下子プロセス部
-#ifdef linux
+#ifdef __linux__
 	int pid = fork();
 	if (pid < 0) // fork失敗チェック
 	{
@@ -205,7 +205,7 @@ int Lutinomain(void* arg)
 	// HTTP Server仕事開始
 	// =======================
 	server_listen();
-#ifndef linux
+#ifndef __linux__
 	if (handle != 0) {
 		//server_detect待ち
 		if (WaitForSingleObject(handle, INFINITE) != WAIT_OBJECT_0) {
@@ -239,7 +239,7 @@ int Initialize(void)
 	srand((unsigned int)time(NULL));
 	//wString::wStringInit();
 	wString     curdir;
-#ifdef linux
+#ifdef __linux__
 	wString tmp(Application);
 	curdir = tmp.trim();
 #else
@@ -261,7 +261,7 @@ int Initialize(void)
 	//curdir.trim();
 	current_dir = curdir;
 	//ショートカットから呼ばれたときのパッチ。だましですよー
-#ifdef linux
+#ifdef __linux__
 	std::ignore = chdir(current_dir.c_str());
 #else
 	SetCurrentDirectoryA(current_dir.nkfcnv("Ws").c_str());
@@ -303,7 +303,7 @@ int Finalize(void)
 	}
 	delete session;
 
-#ifndef linux
+#ifndef __linux__
 	//WINSOCK DLL停止
 	WSACleanup();
 #endif
@@ -315,7 +315,7 @@ int Finalize(void)
 // **************************************************************************
 static void print_help(void)
 {
-#ifdef linux
+#ifdef __linux__
 	printf("%s -- %s\n\n", SERVER_NAME, SERVER_DETAIL);
 	printf("Usase: lutino [options]\n");
 	printf("Options:\n");
@@ -323,7 +323,7 @@ static void print_help(void)
 	printf("\n");
 #endif
 }
-#ifdef linux
+#ifdef __linux__
 // **************************************************************************
 // デーモン化する。
 // **************************************************************************

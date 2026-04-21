@@ -16,7 +16,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
-#ifdef linux
+#ifdef __linux__
 #include <unistd.h>
 #include <sys/time.h>
 #define stricmp strcasecmp
@@ -1232,13 +1232,13 @@ Table::~Table()
 //void Table::readStart (void)
 //{
 //	//書き込みセッションはここで待つ
-//#ifdef linux
+//#ifdef __linux__
 //	pthread_mutex_lock (&mutex);
 //#else
 //	EnterCriticalSection (&cs);
 //#endif
 //	ref++;
-//#ifdef linux
+//#ifdef __linux__
 //	pthread_mutex_unlock (&mutex);
 //#else
 //	LeaveCriticalSection (&cs);
@@ -1255,7 +1255,7 @@ Table::~Table()
 //	//読み込み終了待ち。
 //	//読み込みが半端無く続くようであれば抜けづらいだろうが、まあいいか
 //	while (ref) { Sleep (10); }
-//#ifdef linux
+//#ifdef __linux__
 //	pthread_mutex_lock (&mutex);
 //#else
 //	EnterCriticalSection (&cs);
@@ -1264,7 +1264,7 @@ Table::~Table()
 /////////////////////////////////////////////////////////////////////////////////
 //void Table::writeEnd (void)
 //{
-//#ifdef linux
+//#ifdef __linux__
 //	pthread_mutex_unlock (&mutex);
 //#else
 //	LeaveCriticalSection (&cs);
@@ -2731,7 +2731,7 @@ int main(int argc, char* argv[])
 {
 	IGNORE_PARAMETER(argc);
 	IGNORE_PARAMETER(argv);
-#ifdef linux
+#ifdef __linux__
 	wString tmp(Application);
 	curdir = tmp.trim();
 #else

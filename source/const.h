@@ -1,6 +1,6 @@
 ﻿#ifndef CONSTH
 #define CONSTH
-#ifdef linux
+#ifdef __linux__
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@ extern char MAC_ADDR[256];
 
 
 //CONSTANCES
-#ifdef linux
+#ifdef __linux__
 typedef int HANDLE;
 typedef int SOCKET;
 typedef unsigned int DWORD;
@@ -99,7 +99,7 @@ typedef int socklen_t;
 //#define DEFAULT_FLAG_AUTO_DETECT        TRUE
 #define DEFAULT_MIME_TYPE               "text/plain"
 
-#ifdef linux
+#ifdef __linux__
 #define DEFAULT_CONF_FILENAME1          "./ltn.conf"
 #else
 #define DEFAULT_CONF_FILENAME1          "ltn.conf"
@@ -108,7 +108,7 @@ typedef int socklen_t;
 #define	DEFAULT_CONF_FILENAME3	        "/etc/ltn.conf"
 
 #define	DEFAULT_FLAG_DEBUG_LOG_OUTPUT	FALSE
-#ifdef linux
+#ifdef __linux__
 #define	DEFAULT_DEBUG_LOG_FILENAME	    "/tmp/ltn_debug.log"
 #else
 #define DEFAULT_DEBUG_LOG_FILENAME      "ltn_debug.log"
@@ -144,7 +144,7 @@ typedef int socklen_t;
 #define	HTTP_OK 	        		"HTTP/1.0 200 OK\r\n"
 #define	HTTP_NOT_FOUND 				"HTTP/1.0 404 File Not Found\r\n"
 #define HTTP_NOT_FOUND1     		"HTTP/1.x 404 Not Found\r\n"
-//#ifdef linux
+//#ifdef __linux__
 #define HTTP_CONTENT_LENGTH			"Content-Length: %zu\r\n"
 //#else
 //#define HTTP_CONTENT_LENGTH			"Content-Length: %lu\r\n"

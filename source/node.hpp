@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#ifdef linux
+#ifdef __linux__
 #include <unistd.h>
 #endif
 #include "ltn_String.h"

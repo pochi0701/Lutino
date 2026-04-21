@@ -31,7 +31,7 @@
 // SUCH DAMAGE.
 //
 #define _CRT_SECURE_NO_WARNINGS
-#ifdef linux
+#ifdef __linux__
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/times.h>
@@ -50,11 +50,11 @@
 #define TIME_MAX                2147483647L
 #define ASCBUFSIZE              (26 + 2)
 
-#ifdef linux
+#ifdef __linux__
 int _daylight = 0;                  // Non-zero if daylight savings time is used
 #endif
 //long _dstbias = 0;                  // Offset for Daylight Saving Time
-#ifdef linux
+#ifdef __linux__
 long _timezone = 0;                 // Difference in seconds between GMT and local time
 char* _tzname[2] = { (char*)"GMT", (char*)"GMT" };  // Standard/daylight savings time zone names
 #endif
@@ -136,7 +136,7 @@ struct tm* gmtime_r(const time_t* timer, struct tm* tmbuf) {
 	}
 	tmbuf->tm_mday = dayno + 1;
 	tmbuf->tm_isdst = 0;
-#ifdef linux
+#ifdef __linux__
 	tmbuf->tm_gmtoff = 0;
 	tmbuf->tm_zone = "UTC";
 #endif

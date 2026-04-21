@@ -1,4 +1,4 @@
-/* Auto-generated BearSSL aggregate translation unit. */
+﻿/* Auto-generated BearSSL aggregate translation unit. */
 #define _CRT_SECURE_NO_WARNINGS
 #define BR_AES_X86NI 0
 #define BR_SSE2 0

@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
-#ifdef linux
+#ifdef __linux__
 #include <unistd.h>
 #else
 #include <io.h>
@@ -114,7 +114,7 @@ void GLOBAL_PARAM_T::global_param_init(void)
 	strncpy(document_root, DEFAULT_DOCUMENT_ROOT, sizeof(document_root)-1);
 	// DebugLog
 	flag_debug_log_output = DEFAULT_FLAG_DEBUG_LOG_OUTPUT;
-#ifndef linux
+#ifndef __linux__
 	/// debuglogを完全パスに
 	wString cwd = wString::get_current_dir();
 	debug_log_filename.sprintf("%s%s%s", cwd.c_str(), DELIMITER, DEFAULT_DEBUG_LOG_FILENAME);
@@ -179,7 +179,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 	char   value[1023];
 	char   work1[1024];
 	char   work2[1024];
-#ifdef linux
+#ifdef __linux__
 	int    count_access_allow = 0;
 	char   work3[1024];
 	char   work4[1023];
@@ -198,7 +198,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 		// １行読む。
 		ret = config_file_read_line(fd, line_buf, sizeof(line_buf));
 		if (ret < 0) {
-#ifdef linux
+#ifdef __linux__
 			printf("EOF Detect.\n");
 #endif
 			break;
@@ -209,7 +209,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 		{
 			// ' 'で、前後に分ける
 			sentence_split(line_buf, ' ', key, value);
-#ifdef linux
+#ifdef __linux__
 			printf("key='%s', value='%s'\n", key, value);
 #endif
 			// ---------------------
@@ -226,7 +226,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 				if (strcasecmp("flag_debug_log_output", key) == 0) {
 					readTF(value, flag_debug_log_output);
 				}
-#ifdef linux
+#ifdef __linux__
 				// flag_daemon
 				else if (strcasecmp("flag_daemon", key) == 0) {
 					readTF(value, flag_daemon);
@@ -265,7 +265,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 				else if (strcasecmp("document_root", key) == 0) {
 					//ALIASのために保存
 					//strncpy(document_org, value, sizeof(document_org));
-#ifdef linux
+#ifdef __linux__
 					strncpy(document_root, value, sizeof(document_root)-1);
 					cut_after_last_character(value, '/');
 					strncpy(server_root, value, sizeof(server_root) - 1);
@@ -304,7 +304,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 				}
 				// skin_root
 				else if (strcasecmp("skin_root", key) == 0) {
-#ifdef linux
+#ifdef __linux__
 					strncpy(skin_root, value, sizeof(skin_root)-1);
 #else
 					// ":"が含まれていなければ、相対パスとみなす
@@ -335,7 +335,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 					strncpy(system_password, value, sizeof(system_password)-1);
 				}
 
-#ifndef linux
+#ifndef __linux__
 				// work_root
 				else if (strcasecmp("work_root", key) == 0) {
 					strncpy(work_root, value, sizeof(work_root)-1);
@@ -461,7 +461,7 @@ int GLOBAL_PARAM_T::config_file_read_line(int fd, char* line_buf, int line_buf_s
 int GLOBAL_PARAM_T::config_file_open(void)
 {
 	int         fd;
-#ifdef linux
+#ifdef __linux__
 	fd = myopen(wString(DEFAULT_CONF_FILENAME1), O_BINARY | O_RDONLY);
 	if (fd >= 0) {
 		printf("config '%s' open.\n", DEFAULT_CONF_FILENAME1);
@@ -538,7 +538,7 @@ wString MIME_LIST_T::check_file_extension_to_mime_type(const char* file_extensio
 void GLOBAL_PARAM_T::config_sanity_check()
 {
 	// struct stat sb;
-#ifdef linux
+#ifdef __linux__
 	char cwd[FILENAME_MAX];
 	char buf[FILENAME_MAX];
 	if (document_root[0] != '/') {

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MSVC compatibility shim for BearSSL sources.
  * Force-included via /FI to handle GCC-specific constructs.
  */

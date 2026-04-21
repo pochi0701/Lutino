@@ -30,10 +30,6 @@
 
 #include "bearssl_rand.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** \file bearssl_rsa.h
  *
  * # RSA
@@ -1358,9 +1354,5 @@ size_t br_rsa_i31_compute_privexp(void *d,
  * \return  the default implementation.
  */
 br_rsa_compute_privexp br_rsa_compute_privexp_get_default(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

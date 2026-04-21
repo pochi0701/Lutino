@@ -31,10 +31,6 @@
 #include "bearssl_block.h"
 #include "bearssl_hash.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** \file bearssl_aead.h
  *
  * # Authenticated Encryption with Additional Data
@@ -1051,9 +1047,5 @@ size_t br_ccm_get_tag(br_ccm_context *ctx, void *tag);
  * \return  1 on success (exact match of tag value), 0 otherwise.
  */
 uint32_t br_ccm_check_tag(br_ccm_context *ctx, const void *tag);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

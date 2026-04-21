@@ -10,7 +10,7 @@
 // ==========================================================================
 #ifndef	_LTN_TOOLS_H
 #define	_LTN_TOOLS_H
-#ifdef linux
+#ifdef __linux__
 #define O_BINARY                0
 #define INVALID_SOCKET          (-1)
 #define SOCKET_ERROR            (-1)
@@ -63,7 +63,7 @@ extern int      transport_recv(SOCKET socket, char* buffer, unsigned int length,
 extern int      transport_close(SOCKET& socket);
 extern wString  GetAuthorization(const wString& AuthorizedString);
 
-#ifdef linux
+#ifdef __linux__
 extern int      getTargetFile(const char* LinkFile, char* TargetFile);
 extern void     Sleep(unsigned int milliseconds);
 

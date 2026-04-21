@@ -35,10 +35,6 @@
 #include "bearssl_rand.h"
 #include "bearssl_x509.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** \file bearssl_ssl.h
  *
  * # SSL
@@ -4288,9 +4284,5 @@ int br_sslio_close(br_sslio_context *cc);
 #define BR_ALERT_NO_RENEGOTIATION          100
 #define BR_ALERT_UNSUPPORTED_EXTENSION     110
 #define BR_ALERT_NO_APPLICATION_PROTOCOL   120
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

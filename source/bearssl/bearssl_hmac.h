@@ -30,10 +30,6 @@
 
 #include "bearssl_hash.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** \file bearssl_hmac.h
  *
  * # HMAC
@@ -233,9 +229,5 @@ size_t br_hmac_out(const br_hmac_context *ctx, void *out);
 size_t br_hmac_outCT(const br_hmac_context *ctx,
 	const void *data, size_t len, size_t min_len, size_t max_len,
 	void *out);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

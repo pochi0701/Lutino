@@ -17,7 +17,7 @@
 #include <memory.h>
 //#include <unistd.h>
 #include <sys/types.h>
-#ifdef linux
+#ifdef __linux__
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -66,7 +66,7 @@ int getHeader (SOCKET sock, wString& lines, int& content_is_html, int& t_content
 int cirtUserAgent (char* ip, char* agents);
 char agent[64] = {};
 
-#ifndef linux
+#ifndef __linux__
 // **************************************************************************
 char* strcasestr (const char* p1, const char* p2)
 {

@@ -429,7 +429,7 @@ void scStringDate(CScriptVar* c, void* userdata)
 	IGNORE_PARAMETER(userdata);
 	auto t = time(NULL);
 	char s[128];
-#ifdef linux
+#ifdef __linux__
 	sprintf(s, "%ld", t);
 #else
 	sprintf(s, "%lld", t);
@@ -737,7 +737,7 @@ void scUnlink(CScriptVar* c, void* userdata)
 {
 	IGNORE_PARAMETER(userdata);
 	wString path = c->getParameter("path")->getString();
-#ifdef linux
+#ifdef __linux__
 #else
 #endif
 	int res = wString::delete_file(path);
@@ -781,7 +781,7 @@ void scRmdir(CScriptVar* c, void* userdata)
 {
 	IGNORE_PARAMETER(userdata);
 	wString path = c->getParameter("path")->getString();
-#ifdef linux
+#ifdef __linux__
 #else
 #endif
 	int res = wString::delete_folder(path);
@@ -803,7 +803,7 @@ void scCommand(CScriptVar* c, void* userdata)
 {
 	IGNORE_PARAMETER(userdata);
 	wString ppath = c->getParameter("path")->getString();
-#ifdef linux
+#ifdef __linux__
 #else
 	ppath = ppath.nkfcnv("Ws");
 #endif
@@ -896,7 +896,7 @@ void scMp3Id3Tag(CScriptVar* c, void* userdata)
 	IGNORE_PARAMETER(userdata);
 	mp3* mp3instance = new mp3();
 	wString path = c->getParameter("path")->getString();
-#ifdef linux
+#ifdef __linux__
 #else
 	path = path.nkfcnv("Ws");
 #endif
@@ -912,7 +912,7 @@ void scShutDown(CScriptVar* c, void* userdata)
 	if (strlen(global_param.system_password) > 0 && pw == global_param.system_password) {
 		//ループ抜ける
 		loop_flag = 0;
-#ifndef linux
+#ifndef __linux__
 		///問い合わせしない
 		//Form1->ExitFlag = 1;
 		//閉じる(POSTしないとこのスレッドで終了しようとするのでスレッド待ちで無限ループ）

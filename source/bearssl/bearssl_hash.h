@@ -29,10 +29,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** \file bearssl_hash.h
  *
  * # Hash Functions
@@ -1338,9 +1334,5 @@ void br_ghash_pwr8(void *y, const void *h, const void *data, size_t len);
  * \return  the `pwr8` GHASH implementation, or `0`.
  */
 br_ghash br_ghash_pwr8_get(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

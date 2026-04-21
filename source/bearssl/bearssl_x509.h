@@ -32,10 +32,6 @@
 #include "bearssl_hash.h"
 #include "bearssl_rsa.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** \file bearssl_x509.h
  *
  * # X.509 Certificate Chain Processing
@@ -1389,9 +1385,5 @@ size_t br_encode_ec_pkcs8_der(void *dest,
  * \brief PEM banner for an RSA or EC private key in PKCS#8 format.
  */
 #define BR_ENCODE_PEM_PKCS8        "PRIVATE KEY"
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

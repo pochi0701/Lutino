@@ -253,7 +253,7 @@ extern int  Initialize(void);
 extern int  Finalize(void);
 
 // バッチ処理
-#ifdef linux
+#ifdef __linux__
 extern void* batch(void* ptr);
 #else
 extern unsigned int __stdcall batch(void* ptr);

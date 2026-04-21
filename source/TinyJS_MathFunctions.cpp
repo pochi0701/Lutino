@@ -278,7 +278,7 @@ void scMathSqr(CScriptVar* c, void* userdata) {
 void scMathSqrt(CScriptVar* c, void* userdata) {
 	IGNORE_PARAMETER(c);
 	IGNORE_PARAMETER(userdata);
-#ifndef linux
+#ifndef __linux__
 	scReturnDouble(sqrt(scGetDouble("a")));
 #else
 	scReturnDouble(sqrtf(scGetDouble("a")));

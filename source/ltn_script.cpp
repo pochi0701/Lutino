@@ -17,7 +17,7 @@
 #include <memory.h>
 #include <sys/types.h>
 #include <signal.h>
-#ifdef linux
+#ifdef __linux__
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -38,7 +38,7 @@
 // バッチ処理
 // =============================================================
 #define SCRIPT_SIZE 10000
-#ifdef linux
+#ifdef __linux__
 void* batch(void* ptr)
 #else
 unsigned int __stdcall batch(void* ptr)
@@ -47,7 +47,7 @@ unsigned int __stdcall batch(void* ptr)
     IGNORE_PARAMETER(ptr);
     char script_filename[128];
     //char cur_dir[256];
-//#ifdef linux
+//#ifdef __linux__
 //    getcwd (cur_dir, sizeof (cur_dir));
 //#else
 //    GetCurrentDirectory (256, cur_dir);

@@ -16,7 +16,7 @@
 #include <string.h>
 #include <memory.h>
 #include <sys/types.h>
-#ifdef linux
+#ifdef __linux__
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -730,7 +730,7 @@ int line_receive (int accept_socket, char* line_buf_p, int line_max)
 			}
 		}
 		if (recv_len < 0) { // 受信失敗チェック
-#ifdef linux
+#ifdef __linux__
 			debug_log_output ("header read error cnt = %d error=%s\n", recv_len, strerror (errno));
 #else
 			debug_log_output ("header read error cnt = %d socket=%d error=%d\n", recv_len, accept_socket, WSAGetLastError ());

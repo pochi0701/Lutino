@@ -31,10 +31,6 @@
 #include "bearssl_block.h"
 #include "bearssl_hash.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** \file bearssl_rand.h
  *
  * # Pseudo-Random Generators
@@ -389,9 +385,5 @@ void br_aesctr_drbg_generate(br_aesctr_drbg_context *ctx,
  */
 void br_aesctr_drbg_update(br_aesctr_drbg_context *ctx,
 	const void *seed, size_t seed_len);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

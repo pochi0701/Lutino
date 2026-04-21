@@ -1,7 +1,7 @@
-﻿#include <stdio.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <vector>
-#ifdef linux
+#ifdef __linux__
 #include <regex>
 #else
 #include <regex>

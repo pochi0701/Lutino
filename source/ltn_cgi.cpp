@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#ifdef linux
+#ifdef __linux__
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -205,7 +205,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* quer
 		script1.cat_sprintf("var _SERVER.SCRIPT_NAME=\"%s\";", wString::escape(request_uri).c_str());
 		script1.cat_sprintf("var _SERVER.REFERER=\"%s\";", wString::escape(referer).c_str());
 		//OS
-#ifdef linux
+#ifdef __linux__
 		script1.cat_sprintf("var _SERVER.OS=\"LINUX\";");
 #else
 		script1.cat_sprintf("var _SERVER.OS=\"WINDOWS\";");
