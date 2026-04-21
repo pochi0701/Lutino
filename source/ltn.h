@@ -54,6 +54,7 @@ public:
 		*server_name = 0;
 		//flag_auto_detect = 0;
 		server_port = 0;
+		server_tls_port = 0;
 		*system_password = 0;
 		*document_root = 0;
 		*server_root = 0;
@@ -94,6 +95,8 @@ public:
 	/// HTTP Server系
 	/// <summary>HTTP Server Port</summary>
 	int server_port;
+	/// <summary>HTTPS Server Port</summary>
+	int server_tls_port;
 	/// <summary>システムパスワード</summary>
 	char system_password[30];
 	/// <summary>document root</summary>
@@ -192,6 +195,7 @@ typedef struct {
 	SOCKET  accept_socket;							// SOCKET
 	char* access_host;								// アクセスしてきたIP
 	struct  sockaddr_in  caddr;
+	int use_tls;
 } ACCESS_INFO;
 // 2004/08/02 Add test
 // 2004/08/11 Add test

@@ -47,6 +47,110 @@
 #include "libnkf.hpp"
 #include <ipmib.h>
 #include <iphlpapi.h>
+
+namespace {
+struct HttpUrlParts {
+	bool    use_tls = false;
+	wString host;
+	wString target;
+	int     port = HTTP_SERVER_PORT;
+};
+
+bool parse_http_url(const wString& url, HttpUrlParts& info)
+{
+	if (url.starts_with("https://")) {
+		info.use_tls = true;
+		info.port = 443;
+	}
+	else if (url.starts_with("http://")) {
+		info.use_tls = false;
+		info.port = HTTP_SERVER_PORT;
+	}
+	else {
+		return false;
+	}
+
+	int host_pos = url.Pos("://");
+	if (host_pos < 0) {
+		return false;
+	}
+	host_pos += 3;
+
+	int path_pos = url.Pos("/", host_pos);
+	wString authority;
+	if (path_pos >= 0) {
+		info.target = url.substr(path_pos, url.length() - path_pos);
+		authority = url.substr(host_pos, path_pos - host_pos);
+	}
+	else {
+		info.target = "/";
+		authority = url.substr(host_pos, url.length() - host_pos);
+	}
+
+	int port_pos = authority.Pos(":");
+	if (port_pos >= 0) {
+		info.port = atoi(authority.c_str() + port_pos + 1);
+		info.host = authority.substr(0, port_pos);
+	}
+	else {
+		info.host = authority;
+	}
+
+	return info.host.length() > 0;
+}
+
+SOCKET open_http_socket(const HttpUrlParts& info)
+{
+	auto socket = wString::sock_connect(info.host.c_str(), info.port);
+	if (SERROR(socket)) {
+		return INVALID_SOCKET;
+	}
+	if (info.use_tls && !transport_attach_tls_client(socket, info.host.c_str())) {
+		sClose(socket);
+		return INVALID_SOCKET;
+	}
+	return socket;
+}
+
+bool read_http_response(SOCKET socket, wString& response)
+{
+	char buffer[4096];
+	response.clear();
+	while (loop_flag) {
+		auto recv_len = transport_recv(socket, buffer, sizeof(buffer), 0);
+		if (recv_len > 0) {
+			response.set_binary(buffer, recv_len);
+		}
+		else if (recv_len == 0) {
+			return true;
+		}
+		else {
+			return response.length() > 0;
+		}
+	}
+	return response.length() > 0;
+}
+
+int get_http_status_code(const wString& response)
+{
+	auto pos = response.Pos(" ");
+	if (pos < 0) {
+		return -1;
+	}
+	return atoi(response.c_str() + pos + 1);
+}
+
+bool split_http_response(const wString& response, wString& body)
+{
+	auto pos = response.Pos(HTTP_DELIMITER);
+	if (pos == wString::npos) {
+		return false;
+	}
+	body = response.substr(pos + 4);
+	return true;
+}
+}
+
 #ifndef strrstr
 ///---------------------------------------------------------------------------
 /// <summary>
@@ -2405,9 +2509,9 @@ void wString::init_header (size_t content_length, int expire, const char* mime_t
 /// <param name="endflag">指定するとHTTPヘッダ終了(\r\n\r\n)</param>
 void wString::send_header (SOCKET socket, int endflag)
 {
-	send (socket, String, len, 0);
+	transport_send (socket, String, len, 0);
 	if (endflag) {
-		send (socket, HTTP_END, (int)strlen (HTTP_END), 0);
+		transport_send (socket, HTTP_END, (int)strlen (HTTP_END), 0);
 	}
 }
 wString wString::headerPrintMem (void)
@@ -2658,104 +2762,44 @@ wString wString::get_list_string (int pos)
 /// <returns>読み込んだ文字列。失敗したときは長さ０</returns>
 wString wString::http_get (const wString& url, off_t offset)
 {
-	//int         recv_len;                       //読み取り長さ
 	wString     buf;
-	wString     ptr;
-	wString     host;                           //ホスト名
-	wString     target;                         //ファイル名
-	int         hostPos;
-	int         locPos;
-	int         portPos;
+	wString     request;
+	wString     body;
+	HttpUrlParts target_info;
 	SOCKET      server_socket;                  //サーバーソケット
-	int         server_port = HTTP_SERVER_PORT;
-	//出力ファイルの設定
-	// ================
-	// 実体転送開始
-	// ================
-	//buf = (char*)malloc(HTTP_BUF_SIZE);
-	//ptr = buf;
-	//準備
-	//アドレスから、ホスト名とターゲットを取得
-	ptr.set_length (HTTP_STR_BUF_SIZE + 1);
-	buf = url;
-	//ptr = 0;
-	hostPos = buf.Pos ("://") + 3;
-	locPos = buf.Pos ("/", hostPos);
-	if (locPos >= 0) {
-		target = buf.substr (locPos, buf.len - locPos);
-		host = buf.substr (hostPos, locPos - hostPos);
-	}
-	else {
-		target = "";
-		host = buf.substr (hostPos, buf.len - hostPos);
-	}
-	portPos = host.Pos (":");
-	if (portPos >= 0) {
-		server_port = atoi (host.c_str () + portPos + 1);
-		//host = host.substr (0, portPos - hostPos);
-		host = host.substr (0, portPos);
-	}
-	//ソケット作成と接続
-	server_socket = sock_connect (host.String, server_port);
-	if (!SERROR (server_socket)) {
-		//HTTP1.0 GET発行
-		ptr.sprintf ("GET %s HTTP/1.0\r\n"
-					 "Accept: */*\r\n"
-					 "User-Agent: %s%s\r\nHost: %s\r\nRange: bytes=%lu-\r\nConnection: close\r\n\r\n",
-					 target.String,
-					 //"Mozilla/4.0 (compatible; MSIE 5.5; Windows 98)",
-					 USERAGENT,
-					 MACADDR,
-					 host.String,
-					 offset);
-		//ptr.len = strlen(ptr.String);
-		//サーバに繋がった
-		if (send (server_socket, ptr.String, ptr.len, 0) != SOCKET_ERROR) {
-
-			//初回分からヘッダを削除
-			auto recv_len = recv (server_socket, ptr.String, ptr.capacity () - 1, 0);
-			ptr.String[recv_len] = 0;
-			ptr.len = recv_len;
-
-			//見つからない
-			hostPos = atoi (ptr.String + (ptr.Pos (" ") + 1));
-			if (hostPos < 200 || 300 <= hostPos) {
-				sClose (server_socket);
-				return wString ();
-			}
-			//content_length = atoi(buf.String+buf.Pos("Content-Length:" )+16);
-
-			buf = ptr;
-			wString work (8000);
-			//転送する
-			while (loop_flag) {
-				recv_len = recv (server_socket, work.String, work.capacity (), 0);
-				if (recv_len <= 0) {
-					break;
-				}
-				//エラーにならない。
-				work.len = recv_len;
-				//work.String[recv_len] = 0;
-				buf += work;
-			}
-			//\r\n\r\nを探して、それ移行をカット
-			hostPos = buf.Pos(HTTP_DELIMITER);//sizeof( HTTP_DELIMITER );//実体の先頭
-			if(hostPos != wString::npos){
-				buf = buf.substr(hostPos+4);
-			}
-		}
-		else {
-			sClose (server_socket);
-			return wString ();
-		}
-		sClose (server_socket);
-	}
-	else {
+	if (!parse_http_url(url, target_info)) {
 		return wString ();
 	}
-	wString tmp (buf);
-	//終了
-	return tmp;
+	server_socket = open_http_socket(target_info);
+	if (SERROR(server_socket)) {
+		return wString();
+	}
+
+	request.sprintf("GET %s HTTP/1.0\r\n"
+					"Accept: */*\r\n"
+					"User-Agent: %s%s\r\nHost: %s\r\nRange: bytes=%llu-\r\nConnection: close\r\n\r\n",
+					target_info.target.c_str(),
+					USERAGENT,
+					MACADDR,
+					target_info.host.c_str(),
+					static_cast<unsigned long long>(offset));
+	if (transport_send(server_socket, request.c_str(), request.length(), 0) == SOCKET_ERROR) {
+		transport_close(server_socket);
+		return wString();
+	}
+	if (!read_http_response(server_socket, buf)) {
+		transport_close(server_socket);
+		return wString();
+	}
+	transport_close(server_socket);
+	auto status = get_http_status_code(buf);
+	if (status < 200 || 300 <= status) {
+		return wString();
+	}
+	if (!split_http_response(buf, body)) {
+		return wString();
+	}
+	return body;
 }
 ///---------------------------------------------------------------------------
 /// <summary>
@@ -2767,128 +2811,63 @@ wString wString::http_get (const wString& url, off_t offset)
 /// <returns>読み込んだ文字列。失敗したときは長さ０</returns>
 wString wString::http_rest (const wString& methods, const wString& url, const wString& data)
 {
-	//static char* methods[5]={"HEAD","GET","POST","PUT","DELETE"};
-	//int         recv_len;                       //読み取り長さ
 	wString     buf;
 	wString     ptr;
-	wString     host;                           //ホスト名
-	wString     target;                         //ファイル名
-	int         work1;
-	int         work2;
-	int         work3;
+	HttpUrlParts target_info;
 	SOCKET      server_socket;                  //サーバーソケット
-	int         server_port = HTTP_SERVER_PORT;
-	//出力ファイルの設定
-	// ================
-	// 実体転送開始
-	// ================
-	//buf = (char*)malloc(HTTP_BUF_SIZE);
-	//ptr = buf;
-	//準備
-	//アドレスから、ホスト名とターゲットを取得
-	buf = url;
-	//ptr = 0;
-	work1 = buf.Pos ("://") + 3;
-	work2 = buf.Pos ("/", work1);
-	work3 = buf.Pos (":", work1);
-	target = buf.substr (work2, buf.len - work2);
-	if (work3 >= 0) {
-		host = buf.substr (work1, work3 - work1);
-		server_port = atoi (buf.c_str () + work3 + 1);
-	}
-	else {
-		host = buf.substr (work1, work2 - work1);
-	}
-	//ソケット作成と接続
-	server_socket = sock_connect (host.String, server_port);
-	if (!SERROR (server_socket)) {
-		//HTTP1.0 GET発行
-		if (methods == "GET") {
-			ptr.sprintf ("%s %s HTTP/1.0\r\n"
-						 "Accept: */*\r\n"
-						 "User-Agent: %s%s\r\n"
-						 "Host: %s\r\n"
-						 "Connection: close\r\n\r\n",
-						 methods.c_str (),
-						 target.String,
-						 //"Mozilla/4.0 (compatible; MSIE 5.5; Windows 98)",
-						 USERAGENT,
-						 MACADDR,
-						 host.String);
-		}
-		else {
-			ptr.sprintf ("%s %s HTTP/1.0\r\n"
-						 "Accept: */*\r\n"
-						 "User-Agent: %s%s\r\n"
-						 "Host: %s\r\n"
-						 "Content-Length: %d\r\n"
-						 "Content-Type: text/plain;charset=UTF-8\r\n"
-						 "Connection: close\r\n\r\n",
-						 methods.c_str (),
-						 target.String,
-						 //"Mozilla/4.0 (compatible; MSIE 5.5; Windows 98)",
-						 USERAGENT,
-						 MACADDR,
-						 host.String,
-						 data.length ());
-			//送出データ追加
-			ptr += data;
-		}
-		//サーバに繋がった
-		if (send (server_socket, ptr.String, ptr.len, 0) != SOCKET_ERROR) {
-			ptr.set_length (HTTP_STR_BUF_SIZE + 1);
-			char buff[1024];
-			ptr = "";
-			int recv_len;
-			//初回分からヘッダを削除
-			for (;;) {
-				recv_len = recv (server_socket, buff, sizeof (buff) - 1, 0);
-				if (recv_len > 0) {
-					buff[recv_len] = 0;
-					ptr += buff;
-				}
-				else if (recv_len == 0) {
-					break;
-				}
-				else {
-					return wString ();
-				}
-			}
-			//見つからない
-			work1 = atoi (ptr.String + (ptr.Pos (" ") + 1));
-			if (work1 < 200 || 300 <= work1) {
-				sClose (server_socket);
-				return wString ();
-			}
-			//content_length = atoi(buf.String+buf.Pos("Content-Length:" )+16);
-
-			//\r\n\r\nを探す
-			work1 = ptr.Pos (HTTP_DELIMITER) + 4;//sizeof( HTTP_DELIMITER );//実体の先頭
-			recv_len -= work1;
-			buf = ptr.substr (work1, ptr.length () - recv_len);
-			//転送する
-			while (loop_flag) {
-				recv_len = recv (server_socket, ptr.String, ptr.capacity () - 1, 0);
-				if (recv_len <= 0) {
-					break;
-				}
-				//エラーにならない。
-				ptr.len = recv_len;
-				ptr.String[recv_len] = 0;
-				buf += ptr;
-			}
-		}
-		else {
-			sClose (server_socket);
-			return wString ();
-		}
-		sClose (server_socket);
-	}
-	else {
+	if (!parse_http_url(url, target_info)) {
 		return wString ();
 	}
-	//終了
-	return wString (buf);
+	server_socket = open_http_socket(target_info);
+	if (SERROR(server_socket)) {
+		return wString();
+	}
+
+	if (methods == "GET") {
+		ptr.sprintf("%s %s HTTP/1.0\r\n"
+					"Accept: */*\r\n"
+					"User-Agent: %s%s\r\n"
+					"Host: %s\r\n"
+					"Connection: close\r\n\r\n",
+					methods.c_str(),
+					target_info.target.c_str(),
+					USERAGENT,
+					MACADDR,
+					target_info.host.c_str());
+	}
+	else {
+		ptr.sprintf("%s %s HTTP/1.0\r\n"
+					"Accept: */*\r\n"
+					"User-Agent: %s%s\r\n"
+					"Host: %s\r\n"
+					"Content-Length: %d\r\n"
+					"Content-Type: text/plain;charset=UTF-8\r\n"
+					"Connection: close\r\n\r\n",
+					methods.c_str(),
+					target_info.target.c_str(),
+					USERAGENT,
+					MACADDR,
+					target_info.host.c_str(),
+					data.length());
+		ptr += data;
+	}
+	if (transport_send(server_socket, ptr.c_str(), ptr.length(), 0) == SOCKET_ERROR) {
+		transport_close(server_socket);
+		return wString();
+	}
+	if (!read_http_response(server_socket, buf)) {
+		transport_close(server_socket);
+		return wString();
+	}
+	transport_close(server_socket);
+	auto status = get_http_status_code(buf);
+	if (status < 200 || 300 <= status) {
+		return wString();
+	}
+	if (!split_http_response(buf, ptr)) {
+		return wString();
+	}
+	return ptr;
 }
 ///---------------------------------------------------------------------------
 /// <summary>
@@ -2949,23 +2928,24 @@ SOCKET wString::sock_connect (const char* host, const int port)
 bool wString::check_url (const wString& url)
 {
 	wString buf;
-	//int     recv_len;
 	bool    access_flag = false;
-	wString host_name;
-	wString file_path;
-	int     ptr;
-	// TODO:先頭がhttp://で始まる場合は、できないのでできるようにする。
-	//前処理
-	ptr = url.Pos ("/");
-	// はじめに出てきた"/"の前後で分断
-	host_name = url.substr (0, ptr);
-	file_path = url.substr (ptr, url.length () - ptr);
-	//見つからなかった時
-	if (file_path.length () == 0) {
-		file_path = "/";
+	HttpUrlParts target_info;
+	if (url.starts_with("http://") || url.starts_with("https://")) {
+		if (!parse_http_url(url, target_info)) {
+			return false;
+		}
 	}
-	SOCKET server_socket = sock_connect (host_name.c_str (), HTTP_SERVER_PORT);//( PF_INET , SOCK_STREAM , 0 );
-	if (!SERROR (server_socket)) {
+	else {
+		auto ptr = url.Pos("/");
+		target_info.host = url.substr(0, ptr);
+		target_info.target = url.substr(ptr, url.length() - ptr);
+		target_info.port = HTTP_SERVER_PORT;
+		if (target_info.target.length() == 0) {
+			target_info.target = "/";
+		}
+	}
+	SOCKET server_socket = open_http_socket(target_info);
+	if (!SERROR(server_socket)) {
 		buf.sprintf ("HEAD %s HTTP/1.0\r\n"
 					 "User%cAgent: "
 					 USERAGENT
@@ -2973,23 +2953,23 @@ bool wString::check_url (const wString& url)
 					 "Host: %s\r\n"
 					 "Connection: close\r\n"
 					 "\r\n",
-					 file_path.c_str (),
+					 target_info.target.c_str (),
 					 '-',
-					 host_name.c_str ()
+					 target_info.host.c_str ()
 		);
-		int dd = send (server_socket, buf.c_str (), buf.length (), 0);
+		int dd = transport_send(server_socket, buf.c_str(), buf.length(), 0);
 		if (dd != SOCKET_ERROR) {
 			buf.set_length (1024);
-			auto recv_len = recv (server_socket, buf.c_str (), buf.capacity () - 1, 0);
+			auto recv_len = transport_recv(server_socket, buf.c_str(), buf.capacity() - 1, 0);
 			buf.reset_length (recv_len);
 			//見つからない
-			ptr = atoi (buf.String + (buf.Pos (" ") + 1));
+			auto ptr = atoi (buf.String + (buf.Pos (" ") + 1));
 			// 受信データありならば(ファイル有り）、データを解析する。
 			if (200 <= ptr && ptr < 300) {
 				access_flag = true;
 			}
 		}
-		sClose (server_socket);
+		transport_close(server_socket);
 	}
 	return access_flag;
 }
@@ -3001,67 +2981,33 @@ bool wString::check_url (const wString& url)
 /// <returns>取得した場合コンテンツ長さ、エラー時-1</returns>
 int wString::http_size (const wString& url)
 {
-
-	//int         recv_len;                       //読み取り長さ
 	wString     buf;
-	int         work1;
-	int         work2;
-	int         work3;
-	wString     host;
-	wString     target;
+	HttpUrlParts target_info;
 	int         content_length = -1;
 	SOCKET      server_socket;                          //サーバーソケット
-	int         server_port = HTTP_SERVER_PORT;
-	//出力ファイルの設定
-	// ================
-	// 実体転送開始
-	// ================
-	//準備
-	//アドレスから、ホスト名とターゲットを取得
-	work2 = url.Pos ("://") + 3;
-	work1 = url.Pos ("/", work2);
-	work3 = url.Pos (":", work1);
-	target = url.substr (work1, url.length () - work1);
-	if (work3 >= 0) {
-		host = url.substr (work2, work3 - work2);
-		server_port = atoi (url.c_str () + work3 + 1);
+	if (!parse_http_url(url, target_info)) {
+		return -1;
 	}
-	else {
-		host = url.substr (work2, work1 - work2);
-	}
-	//strcpy( target, work1);
-	//*work1 = 0;
-	//strcpy( host, work2 );
-
-	//ソケット作成と接続
-	server_socket = sock_connect (host.c_str (), server_port);
-	if (!SERROR (server_socket)) {
-		//HTTP1.0 GET発行
+	server_socket = open_http_socket(target_info);
+	if (!SERROR(server_socket)) {
 		buf.sprintf ("HEAD %s HTTP/1.0\r\n"
 					 "Accept: */*\r\n"
 					 "User-Agent: %s%s\r\n"
 					 "Host: %s\r\n"
-					 //                       "%s",
 					 "Connection: close\r\n\r\n",
-					 target.uri_encode ().c_str (),
-					 //"Mozilla/4.0 (compatible; MSIE 5.5; Windows 98)",
+					 target_info.target.uri_encode ().c_str (),
 					 USERAGENT,
 					 MACADDR,
-					 host.c_str ()
-					 //                        GetAuthorization(void),
+					 target_info.host.c_str ()
 		);
-		//サーバに繋がった
-		if (send (server_socket, buf.c_str (), buf.length (), 0) != SOCKET_ERROR) {
-			//初回分からヘッダを削除
+		if (transport_send(server_socket, buf.c_str(), buf.length(), 0) != SOCKET_ERROR) {
 			buf.set_length (HTTP_STR_BUF_SIZE);
-			auto recv_len = recv (server_socket, buf.c_str (), buf.capacity () - 1, 0);
-			//\r\n\r\nを探す
+			auto recv_len = transport_recv(server_socket, buf.c_str(), buf.capacity() - 1, 0);
 			buf.reset_length (recv_len);      //糸止め
-			work1 = atoi (buf.String + (buf.Pos (" ") + 1));
+			auto work1 = atoi (buf.String + (buf.Pos (" ") + 1));
 			int pos = buf.Pos ("Content-Length:");
 			if (pos >= 0) {
 				if (200 <= work1 && work1 < 300) {
-					//コンテンツ長さ TODO Content-Lengthがない場合
 					content_length = atoi (buf.c_str () + pos + 16);
 				}
 			}
@@ -3075,7 +3021,7 @@ int wString::http_size (const wString& url)
 				}
 			}
 		}
-		sClose (server_socket);
+		transport_close(server_socket);
 	}
 	//終了
 	return content_length;
@@ -3439,7 +3385,7 @@ int wString::line_receive (SOCKET accept_socket)
 	clear ();
 	// １行受信実行
 	while (1) {
-		int recv_len = recv (accept_socket, &byte_buf, 1, 0);
+		int recv_len = transport_recv (accept_socket, &byte_buf, 1, 0);
 		if (recv_len == 0) {
 			if (len) {
 				return len;

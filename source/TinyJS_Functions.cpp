@@ -64,7 +64,7 @@ void js_print(CScriptVar* v, void* userdata)
 		js->outBuffer += str;
 	}
 	else {
-		num = send(js->socket, str.c_str(), str.length(), 0);
+		num = transport_send(js->socket, str.c_str(), str.length(), 0);
 	}
 	if (num < 0) {
 		debug_log_output("Script Write Error at js_print");

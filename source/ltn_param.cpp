@@ -109,6 +109,7 @@ void GLOBAL_PARAM_T::global_param_init(void)
 	gethostname(server_name, sizeof(server_name));
 	// デフォルトHTTP 待ち受けPort.
 	server_port = DEFAULT_SERVER_PORT;
+	server_tls_port = DEFAULT_SERVER_TLS_PORT;
 	// Document Root
 	strncpy(document_root, DEFAULT_DOCUMENT_ROOT, sizeof(document_root)-1);
 	// DebugLog
@@ -255,6 +256,10 @@ void GLOBAL_PARAM_T::config_file_read(void)
 				// server_port
 				else if (strcasecmp("server_port", key) == 0) {
 					server_port = atoi(value);
+				}
+				// server_tls_port
+				else if (strcasecmp("server_tls_port", key) == 0) {
+					server_tls_port = atoi(value);
 				}
 				// document_root
 				else if (strcasecmp("document_root", key) == 0) {

@@ -1,4 +1,4 @@
-// Lutino.cpp : ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÌƒGƒ“ƒgƒŠ ƒ|ƒCƒ“ƒg‚ð’è‹`‚µ‚Ü‚·B
+ï»¿// Lutino.cpp : ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®ã‚¨ãƒ³ãƒˆãƒª ãƒã‚¤ãƒ³ãƒˆã‚’å®šç¾©ã—ã¾ã™ã€‚
 //
 #define _CRT_SECURE_NO_WARNINGS
 #include "framework.h"
@@ -7,13 +7,13 @@
 #include "shellapi.h"
 #include "ltn.h"
 
-// ƒ^ƒXƒNƒgƒŒƒC‚ÌƒAƒCƒRƒ“‚É‘Î‚µ‚ÄƒNƒŠƒbƒN‚È‚Ç‚ð‚·‚é‚ÆŽÀs‚³‚ê‚éƒƒbƒZ[ƒW’è”’Ç‰Á
+// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã®ã‚¢ã‚¤ã‚³ãƒ³ã«å¯¾ã—ã¦ã‚¯ãƒªãƒƒã‚¯ãªã©ã‚’ã™ã‚‹ã¨å®Ÿè¡Œã•ã‚Œã‚‹ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å®šæ•°è¿½åŠ 
 #define WM_TASKTRAY (WM_APP + 1)
 
-// ƒOƒ[ƒoƒ‹•Ï”
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 HICON hIcon;
 
-// Mutex‚Ìƒnƒ“ƒhƒ‹
+// Mutexã®ãƒãƒ³ãƒ‰ãƒ«
 HANDLE m_hMutex = NULL;
 
 HANDLE  threadHandle;
@@ -23,12 +23,12 @@ HWND g_hMainWnd = NULL;
 
 #define MAX_LOADSTRING 100
 
-// ƒOƒ[ƒoƒ‹•Ï”:
-HINSTANCE hInst;                                // Œ»Ý‚ÌƒCƒ“ƒ^[ƒtƒFƒCƒX
-WCHAR szTitle[MAX_LOADSTRING];                  // ƒ^ƒCƒgƒ‹ ƒo[‚ÌƒeƒLƒXƒg
-WCHAR szWindowClass[MAX_LOADSTRING];            // ƒƒCƒ“ ƒEƒBƒ“ƒhƒE ƒNƒ‰ƒX–¼
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°:
+HINSTANCE hInst;                                // ç¾åœ¨ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ã‚¤ã‚¹
+WCHAR szTitle[MAX_LOADSTRING];                  // ã‚¿ã‚¤ãƒˆãƒ« ãƒãƒ¼ã®ãƒ†ã‚­ã‚¹ãƒˆ
+WCHAR szWindowClass[MAX_LOADSTRING];            // ãƒ¡ã‚¤ãƒ³ ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ ã‚¯ãƒ©ã‚¹å
 
-// ‚±‚ÌƒR[ƒh ƒ‚ƒWƒ…[ƒ‹‚ÉŠÜ‚Ü‚ê‚éŠÖ”‚ÌéŒ¾‚ð“]‘—‚µ‚Ü‚·:
+// ã“ã®ã‚³ãƒ¼ãƒ‰ ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã«å«ã¾ã‚Œã‚‹é–¢æ•°ã®å®£è¨€ã‚’è»¢é€ã—ã¾ã™:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -40,7 +40,7 @@ extern int Lutinomain(void* argv);
 void LtnStart()
 {
 	threadHandle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)Lutinomain, NULL, 0, &id);
-	//ltn_run_flag = true;   // Lutino‹N“®ƒtƒ‰ƒOON
+	//ltn_run_flag = true;   // Lutinoèµ·å‹•ãƒ•ãƒ©ã‚°ON
 	char work[256];
 	while (global_param.server_port == 0) {
 		Sleep(100);
@@ -73,7 +73,7 @@ void LtnStop(void)
 	}
 	CloseHandle(threadHandle);
 	threadHandle = (HANDLE)NULL;
-	//ltn_run_flag = false;   //Lutino‹N“®ƒtƒ‰ƒOOFF
+	//ltn_run_flag = false;   //Lutinoèµ·å‹•ãƒ•ãƒ©ã‚°OFF
 }
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -83,18 +83,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
-	// TODO: ‚±‚±‚ÉƒR[ƒh‚ð‘}“ü‚µ‚Ä‚­‚¾‚³‚¢B
+	// TODO: ã“ã“ã«ã‚³ãƒ¼ãƒ‰ã‚’æŒ¿å…¥ã—ã¦ãã ã•ã„ã€‚
 
-	// ƒCƒ“ƒXƒ^ƒ“ƒX‚ÉŠÖ˜A•t‚¢‚½ƒAƒCƒRƒ““Ç‚Ýž‚Ý
-	//  (AddSystemTrayIcon()‚ÅŽg—p‚·‚é‚½‚ß)
+	// ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã«é–¢é€£ä»˜ã„ãŸã‚¢ã‚¤ã‚³ãƒ³èª­ã¿è¾¼ã¿
+	//  (AddSystemTrayIcon()ã§ä½¿ç”¨ã™ã‚‹ãŸã‚)
 	hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_LUTINO));
 
-	// ƒOƒ[ƒoƒ‹•¶Žš—ñ‚ð‰Šú‰»‚·‚é
+	// ã‚°ãƒ­ãƒ¼ãƒãƒ«æ–‡å­—åˆ—ã‚’åˆæœŸåŒ–ã™ã‚‹
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadStringW(hInstance, IDC_LUTINO, szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(hInstance);
 
-	// ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‰Šú‰»‚ÌŽÀs:
+	// ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³åˆæœŸåŒ–ã®å®Ÿè¡Œ:
 	if (!InitInstance(hInstance, nCmdShow))
 	{
 		return FALSE;
@@ -104,7 +104,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	MSG msg;
 
-	// ƒƒCƒ“ ƒƒbƒZ[ƒW ƒ‹[ƒv:
+	// ãƒ¡ã‚¤ãƒ³ ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒ«ãƒ¼ãƒ—:
 	while (GetMessage(&msg, nullptr, 0, 0))
 	{
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -118,9 +118,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 }
 
 //
-//  ŠÖ”: MyRegisterClass()
+//  é–¢æ•°: MyRegisterClass()
 //
-//  –Ú“I: ƒEƒBƒ“ƒhƒE ƒNƒ‰ƒX‚ð“o˜^‚µ‚Ü‚·B
+//  ç›®çš„: ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ ã‚¯ãƒ©ã‚¹ã‚’ç™»éŒ²ã—ã¾ã™ã€‚
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
@@ -152,19 +152,19 @@ BOOL AddSystemTrayIcon(HWND hWnd)
 	nid.hIcon = hIcon;
 	nid.uCallbackMessage = WM_TASKTRAY;
 	lstrcpy(nid.szTip, TEXT("Lutino"));
-	nid.uID = 1;  // ƒAƒCƒRƒ“ID‚ð’Ç‰Á
+	nid.uID = 1;  // ã‚¢ã‚¤ã‚³ãƒ³IDã‚’è¿½åŠ 
 	return Shell_NotifyIcon(NIM_ADD, &nid);
 }
 
 //
-//   ŠÖ”: InitInstance(HINSTANCE, int)
+//   é–¢æ•°: InitInstance(HINSTANCE, int)
 //
-//   –Ú“I: ƒCƒ“ƒXƒ^ƒ“ƒX ƒnƒ“ƒhƒ‹‚ð•Û‘¶‚µ‚ÄAƒƒCƒ“ ƒEƒBƒ“ƒhƒE‚ðì¬‚µ‚Ü‚·
+//   ç›®çš„: ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ ãƒãƒ³ãƒ‰ãƒ«ã‚’ä¿å­˜ã—ã¦ã€ãƒ¡ã‚¤ãƒ³ ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ä½œæˆã—ã¾ã™
 //
-//   ƒRƒƒ“ƒg:
+//   ã‚³ãƒ¡ãƒ³ãƒˆ:
 //
-//        ‚±‚ÌŠÖ”‚ÅAƒOƒ[ƒoƒ‹•Ï”‚ÅƒCƒ“ƒXƒ^ƒ“ƒX ƒnƒ“ƒhƒ‹‚ð•Û‘¶‚µA
-//        ƒƒCƒ“ ƒvƒƒOƒ‰ƒ€ ƒEƒBƒ“ƒhƒE‚ðì¬‚¨‚æ‚Ñ•\Ž¦‚µ‚Ü‚·B
+//        ã“ã®é–¢æ•°ã§ã€ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°ã§ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ ãƒãƒ³ãƒ‰ãƒ«ã‚’ä¿å­˜ã—ã€
+//        ãƒ¡ã‚¤ãƒ³ ãƒ—ãƒ­ã‚°ãƒ©ãƒ  ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ä½œæˆãŠã‚ˆã³è¡¨ç¤ºã—ã¾ã™ã€‚
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
@@ -181,16 +181,16 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //1a104ad7cabe496336ce4cd00c4b73607140a3441ee52164efa1b3f3af958ff1aabb43a5305f0d
 //3134b7832086008a6f99729c17f1558a13a75e0722484eb3e7f5240e575b72c9ca93eea7
 #endif
-	//ƒtƒ‹ƒAƒNƒZƒX(u•Ê‚Ìƒ†[ƒU[‚Æ‚µ‚ÄŽÀsv‚É‘Î‰ž)
+	//ãƒ•ãƒ«ã‚¢ã‚¯ã‚»ã‚¹(ã€Œåˆ¥ã®ãƒ¦ãƒ¼ã‚¶ãƒ¼ã¨ã—ã¦å®Ÿè¡Œã€ã«å¯¾å¿œ)
 	SECURITY_DESCRIPTOR sd;
 
 	if (0 == ::InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION)) {
-		// ƒGƒ‰[
+		// ã‚¨ãƒ©ãƒ¼
 		return FALSE;
 	}
 
 	if (0 == ::SetSecurityDescriptorDacl(&sd, TRUE, 0, FALSE)) {
-		// ƒGƒ‰[
+		// ã‚¨ãƒ©ãƒ¼
 		return FALSE;
 	}
 	SECURITY_ATTRIBUTES secAttribute;
@@ -201,18 +201,18 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	m_hMutex = ::CreateMutex(&secAttribute, FALSE, _T("abcdefg"));
 
 	if (m_hMutex == NULL) {
-		// ƒ~ƒ…[ƒeƒbƒNƒX‚ÌŽæ“¾‚ÉŽ¸”s
+		// ãƒŸãƒ¥ãƒ¼ãƒ†ãƒƒã‚¯ã‚¹ã®å–å¾—ã«å¤±æ•—
 		return FALSE;
 	}
 
-	// ‹N“®‚µ‚Ä‚¢‚½‚ç‚·‚®‚ÉI—¹‚³‚¹‚é
+	// èµ·å‹•ã—ã¦ã„ãŸã‚‰ã™ãã«çµ‚äº†ã•ã›ã‚‹
 	if (::GetLastError() == ERROR_ALREADY_EXISTS) {
-		MessageBox(NULL, _T("Šù‚É‚±‚ÌƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ð‹N“®’†‚Å‚·B•¡”‹N“®‚Í‚Å‚«‚Ü‚¹‚ñB"), _T("‹N“®§ŒÀ"), MB_OK | MB_ICONWARNING);
+		MessageBox(NULL, _T("æ—¢ã«ã“ã®ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã‚’èµ·å‹•ä¸­ã§ã™ã€‚è¤‡æ•°èµ·å‹•ã¯ã§ãã¾ã›ã‚“ã€‚"), _T("èµ·å‹•åˆ¶é™"), MB_OK | MB_ICONWARNING);
 		::CloseHandle(m_hMutex);
-		return FALSE;  // FALSE‚ð•Ô‚·‚ÆI—¹‚·‚éB
+		return FALSE;  // FALSEã‚’è¿”ã™ã¨çµ‚äº†ã™ã‚‹ã€‚
 	}
 
-	hInst = hInstance; // ƒOƒ[ƒoƒ‹•Ï”‚ÉƒCƒ“ƒXƒ^ƒ“ƒX ƒnƒ“ƒhƒ‹‚ðŠi”[‚·‚é
+	hInst = hInstance; // ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°ã«ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ ãƒãƒ³ãƒ‰ãƒ«ã‚’æ ¼ç´ã™ã‚‹
 
 	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
@@ -222,9 +222,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		return FALSE;
 	}
 
-	g_hMainWnd = hWnd; // ‚±‚±‚ÅƒOƒ[ƒoƒ‹•Ï”‚É‘ã“ü
+	g_hMainWnd = hWnd; // ã“ã“ã§ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°ã«ä»£å…¥
 
-	// ƒ^ƒXƒNƒgƒŒƒC‚ÉƒAƒCƒRƒ“‚ð’Ç‰Á
+	// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã«ã‚¢ã‚¤ã‚³ãƒ³ã‚’è¿½åŠ 
 	if (!AddSystemTrayIcon(hWnd))
 	{
 		DestroyWindow(hWnd);
@@ -248,42 +248,42 @@ void DellSystemTrayIcon(HWND hWnd)
 	NOTIFYICONDATA nid = { 0 };
 	nid.cbSize = sizeof(NOTIFYICONDATA);
 	nid.hWnd = hWnd;
-	nid.uID = 1;  // ƒAƒCƒRƒ“ID‚ð’Ç‰Á
+	nid.uID = 1;  // ã‚¢ã‚¤ã‚³ãƒ³IDã‚’è¿½åŠ 
 	Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 //
-//  ŠÖ”: WndProc(HWND, UINT, WPARAM, LPARAM)
+//  é–¢æ•°: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
-//  –Ú“I: ƒƒCƒ“ ƒEƒBƒ“ƒhƒE‚ÌƒƒbƒZ[ƒW‚ðˆ—‚µ‚Ü‚·B
+//  ç›®çš„: ãƒ¡ã‚¤ãƒ³ ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å‡¦ç†ã—ã¾ã™ã€‚
 //
-//  WM_COMMAND  - ƒAƒvƒŠƒP[ƒVƒ‡ƒ“ ƒƒjƒ…[‚Ìˆ—
-//  WM_PAINT    - ƒƒCƒ“ ƒEƒBƒ“ƒhƒE‚ð•`‰æ‚·‚é
-//  WM_DESTROY  - ’†Ž~ƒƒbƒZ[ƒW‚ð•\Ž¦‚µ‚Ä–ß‚é
+//  WM_COMMAND  - ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®å‡¦ç†
+//  WM_PAINT    - ãƒ¡ã‚¤ãƒ³ ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’æç”»ã™ã‚‹
+//  WM_DESTROY  - ä¸­æ­¢ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¡¨ç¤ºã—ã¦æˆ»ã‚‹
 //
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
-	// ƒ^ƒXƒNƒgƒŒƒC‚ÌƒAƒCƒRƒ“‚É‘Î‚·‚éˆ—
+	// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã®ã‚¢ã‚¤ã‚³ãƒ³ã«å¯¾ã™ã‚‹å‡¦ç†
 	case WM_TASKTRAY:
 	{
 		switch (lParam)
 		{
-		// ¶ƒNƒŠƒbƒN
-		// ‰EƒNƒŠƒbƒN
+		// å·¦ã‚¯ãƒªãƒƒã‚¯
+		// å³ã‚¯ãƒªãƒƒã‚¯
 		case WM_LBUTTONDOWN:
 		case WM_RBUTTONDOWN:
 		{
-			// ƒEƒBƒ“ƒhƒE‚ð”ñ•\Ž¦
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’éžè¡¨ç¤º
 			ShowWindow(hWnd, SW_HIDE);
 			POINT pt;
 			GetCursorPos(&pt);
 			HMENU hMenu = CreatePopupMenu();
-			AppendMenu(hMenu, MF_STRING, IDM_BROWSE, TEXT("•\Ž¦"));
-			AppendMenu(hMenu, MF_STRING, IDM_ABOUT, TEXT("ƒo[ƒWƒ‡ƒ“î•ñ"));
+			AppendMenu(hMenu, MF_STRING, IDM_BROWSE, TEXT("è¡¨ç¤º"));
+			AppendMenu(hMenu, MF_STRING, IDM_ABOUT, TEXT("ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±"));
 			AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-			AppendMenu(hMenu, MF_STRING, IDM_EXIT, TEXT("I—¹"));
+			AppendMenu(hMenu, MF_STRING, IDM_EXIT, TEXT("çµ‚äº†"));
 			SetForegroundWindow(hWnd);
 			TrackPopupMenu(hMenu, TPM_RIGHTALIGN | TPM_BOTTOMALIGN, pt.x, pt.y, 0, hWnd, NULL);
 			PostMessage(hWnd, WM_NULL, 0, 0);
@@ -296,7 +296,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 	{
 		int wmId = LOWORD(wParam);
-		// ‘I‘ð‚³‚ê‚½ƒƒjƒ…[‚Ì‰ðÍ:
+		// é¸æŠžã•ã‚ŒãŸãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®è§£æž:
 		switch (wmId)
 		{
 		case IDM_BROWSE:
@@ -319,24 +319,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	//{
 	//	PAINTSTRUCT ps;
 	//	HDC hdc = BeginPaint(hWnd, &ps);
-	//	// TODO: HDC ‚ðŽg—p‚·‚é•`‰æƒR[ƒh‚ð‚±‚±‚É’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢...
+	//	// TODO: HDC ã‚’ä½¿ç”¨ã™ã‚‹æç”»ã‚³ãƒ¼ãƒ‰ã‚’ã“ã“ã«è¿½åŠ ã—ã¦ãã ã•ã„...
 	//	EndPaint(hWnd, &ps);
 	//}
 	//break;
 	//case WM_CLOSE:
 	//{
-	//	// ƒ^ƒXƒNƒgƒŒƒC‚ÉƒAƒCƒRƒ“‚ð’Ç‰Á
+	//	// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã«ã‚¢ã‚¤ã‚³ãƒ³ã‚’è¿½åŠ 
 	//	AddSystemTrayIcon(hWnd);
-	//	// ƒ^ƒXƒNƒo[“à‚ÌƒAƒvƒŠƒAƒCƒRƒ“‚ð”ñ•\Ž¦
+	//	// ã‚¿ã‚¹ã‚¯ãƒãƒ¼å†…ã®ã‚¢ãƒ—ãƒªã‚¢ã‚¤ã‚³ãƒ³ã‚’éžè¡¨ç¤º
 	//	ShowWindow(FindWindow(TEXT("Lutino"), NULL), SW_HIDE);
 	//}
 	break;
 	case WM_DESTROY:
 	{
-		// ƒ^ƒXƒNƒgƒŒƒC‚©‚çƒAƒCƒRƒ“‚ðíœ
+		// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã‹ã‚‰ã‚¢ã‚¤ã‚³ãƒ³ã‚’å‰Šé™¤
 		DellSystemTrayIcon(hWnd);
 		PostQuitMessage(0);
-		LtnStop();  // Lutino‚ðI—¹
+		LtnStop();  // Lutinoã‚’çµ‚äº†
 	}
 	break;
 	default:
@@ -347,7 +347,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-// ƒo[ƒWƒ‡ƒ“î•ñƒ{ƒbƒNƒX‚ÌƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰[‚Å‚·B
+// ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±ãƒœãƒƒã‚¯ã‚¹ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ©ãƒ¼ã§ã™ã€‚
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	UNREFERENCED_PARAMETER(lParam);

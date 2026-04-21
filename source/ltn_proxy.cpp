@@ -38,6 +38,25 @@
 //#define MAX_LINE 100           /* 記憶する、HTTPヘッダの最大行数 */
 //#define LINE_BUF_SIZE (4096)     /* 行バッファ */
 const char* HTTP_RECV_CONTENT_LENGTH = "Content-Length: ";
+
+namespace {
+const char* find_absolute_url(const char* ptr)
+{
+	const char* matches[] = {
+		strstr(ptr, "\"http://"),
+		strstr(ptr, "'http://"),
+		strstr(ptr, "\"https://"),
+		strstr(ptr, "'https://")
+	};
+	const char* first = NULL;
+	for (const auto match : matches) {
+		if (match != NULL && (first == NULL || match < first)) {
+			first = match;
+		}
+	}
+	return first;
+}
+}
 extern int line_receive (int accept_socket, char* line_buf_p, int line_max);
 //extern int line_receive(const int accept_socket, wString& line_buf_p);
 // バッファリングしながら in_fd から out_fd へ データを転送
@@ -114,7 +133,7 @@ int HTTP_RECV_INFO::http_proxy_response (SOCKET accept_socket)
 			if (!strncasecmp (ln.c_str (), HTTP_RECV_CONTENT_LENGTH, strlen (HTTP_RECV_CONTENT_LENGTH))) {
 				continue;
 			}
-			send (accept_socket, ln.c_str (), ln.length (), 0);
+			transport_send (accept_socket, ln.c_str (), ln.length (), 0);
 		}
 		//debug_log_output("sent header");
 		//write(accept_socket, "debug:--\n", strlen("debug:--\n"));
@@ -147,14 +166,10 @@ int HTTP_RECV_INFO::http_proxy_response (SOCKET accept_socket)
 				ptr = strcasestr (ptr, " href");
 				if (ptr == NULL) break;
 				//"<a"がある
-				new_ptr = strstr (ptr, "\"http://");
+				new_ptr = find_absolute_url(ptr);
 				if (new_ptr == NULL) {
-					new_ptr = strstr (ptr, "'http://");
-					if (new_ptr == NULL) {
-						break;
-					}
+					break;
 				}
-				//"http://"がある
 				int pos = (int)(new_ptr - wb.c_str () + 1);
 				wb = wb.insert (pos, "/-.-");
 				ptr++;
@@ -174,16 +189,10 @@ int HTTP_RECV_INFO::http_proxy_response (SOCKET accept_socket)
 				ptr = strcasestr (ptr, " src");
 				if (ptr == NULL) break;
 				//"src"がある
-				new_ptr = strstr (ptr, "\"http://");
+				new_ptr = find_absolute_url(ptr);
 				if (new_ptr == NULL) {
-					new_ptr = strstr (ptr, "'http://");
-					if (new_ptr == NULL) {
-						break;
-					}
+					break;
 				}
-				//ptr = strstr( ptr, "\"http://");
-				//if( ptr == NULL ) break;
-				//"http://"がある
 				int pos = (int)(new_ptr - wb.c_str () + 1);
 				wb = wb.insert (pos, "/-.-");
 				ptr++;
@@ -203,14 +212,10 @@ int HTTP_RECV_INFO::http_proxy_response (SOCKET accept_socket)
 				ptr = strcasestr (ptr, " action=");
 				if (ptr == NULL) break;
 				//"action="がある
-				new_ptr = strstr (ptr, "\"http://");
+				new_ptr = find_absolute_url(ptr);
 				if (new_ptr == NULL) {
-					new_ptr = strstr (ptr, "'http://");
-					if (new_ptr == NULL) {
-						break;
-					}
+					break;
 				}
-				//"http://"がある
 				int pos = (int)(new_ptr - wb.c_str () + 1);
 				wb = wb.insert (pos, "/-.-");
 				ptr++;
@@ -221,7 +226,7 @@ int HTTP_RECV_INFO::http_proxy_response (SOCKET accept_socket)
 			}
 			//send( accept_socket , work_buf , strlen( work_buf ) , 0 );
 			//debug_log_output("sent html: %s", work_buf);
-			send (accept_socket, wb.c_str (), wb.length (), 0);
+			transport_send (accept_socket, wb.c_str (), wb.length (), 0);
 			debug_log_output ("sent html: %s", wb.c_str ());
 		}
 		//画像等
@@ -230,7 +235,7 @@ int HTTP_RECV_INFO::http_proxy_response (SOCKET accept_socket)
 		//for (int i=0; i<line; i++) {
 		//    send( accept_socket , line_buf[i] , strlen( line_buf[i] ) , 0 );
 		//}
-		send (accept_socket, lines.c_str (), lines.length (), 0);
+		transport_send (accept_socket, lines.c_str (), lines.length (), 0);
 		copy_all (sock, accept_socket);
 	}
 	sClose (sock);
@@ -245,6 +250,7 @@ SOCKET HTTP_RECV_INFO::send_header ()
 	wString base_url;                //ホスト名抜いたURL
 	wString p_auth;                  //認証文字列
 	int port = 80;                   //ポート(省略値:80)
+	bool use_tls = false;
 	int num;
 	p_uri_string = request_uri;
 
@@ -252,10 +258,19 @@ SOCKET HTTP_RECV_INFO::send_header ()
 	//  /-.-http://user:password@www.make-it.co.jp:8080/index.php?query=1
 	if (p_uri_string.find ("/-.-http://") == 0) {
 		p_uri_string = p_uri_string.substr (11);
-		//通常の場合(他で流用するため)
+	}
+	else if (p_uri_string.find ("/-.-https://") == 0) {
+		p_uri_string = p_uri_string.substr (12);
+		port = 443;
+		use_tls = true;
 	}
 	else if (p_uri_string.find ("http://") == 0) {
 		p_uri_string = p_uri_string.substr (7);
+	}
+	else if (p_uri_string.find ("https://") == 0) {
+		p_uri_string = p_uri_string.substr (8);
+		port = 443;
+		use_tls = true;
 	}
 	else {
 		return INVALID_SOCKET;
@@ -343,8 +358,12 @@ SOCKET HTTP_RECV_INFO::send_header ()
 		debug_log_output ("error: %s create sock: %d", strerror (errno), sock);
 		return INVALID_SOCKET;//-1;
 	}
+	if (use_tls && !transport_attach_tls_client(sock, p_target_host_name.c_str())) {
+		sClose(sock);
+		return INVALID_SOCKET;
+	}
 	//ヘッダ送信
-	send (sock, send_http_header_buf.c_str (), send_http_header_buf.length (), 0);
+	transport_send (sock, send_http_header_buf.c_str (), send_http_header_buf.length (), 0);
 	debug_log_output ("================= send to proxy\n");
 	debug_log_output ("%s", send_http_header_buf.c_str ());
 	debug_log_output ("=================\n");
@@ -430,7 +449,7 @@ int copy_all (SOCKET in_fd, SOCKET out_fd)
 	// ================
 	while (1) {
 		// ファイルからデータを読み込む。必ず読める前提
-		auto rlen = recv (in_fd, buf, BUFFERSIZE, 0);
+		auto rlen = transport_recv (in_fd, buf, BUFFERSIZE, 0);
 		//read end
 		if (rlen == 0) {
 			debug_log_output ("copy end");
@@ -443,7 +462,7 @@ int copy_all (SOCKET in_fd, SOCKET out_fd)
 		}
 		//読み込み正常終了
 		// SOCKET にデータを送信
-		auto wlen = send (out_fd, buf, rlen, 0);
+		auto wlen = transport_send (out_fd, buf, rlen, 0);
 
 		//write error
 		if (rlen != wlen) {

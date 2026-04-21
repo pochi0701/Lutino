@@ -54,8 +54,8 @@ typedef unsigned int DWORD;
 typedef unsigned int pid_t;
 typedef unsigned int ssize_t;
 typedef int socklen_t;
-#define STDOUT_FILENO 0
-#define STDIN_FILENO 1
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 #define strcasecmp strcmpi
 #define strncasecmp strnicmp
@@ -93,6 +93,7 @@ typedef int socklen_t;
 #define LISTEN_BACKLOG                  (32)
 #define SEND_BUFFER_SIZE                (1024*128)
 #define DEFAULT_SERVER_PORT             (8000)
+#define DEFAULT_SERVER_TLS_PORT         (8443)
 #define DEFAULT_DOCUMENT_ROOT           "/"
 #define DEFAULT_FLAG_DAEMON             TRUE
 //#define DEFAULT_FLAG_AUTO_DETECT        TRUE
@@ -197,4 +198,5 @@ enum class MIME_TYPE
 extern int                      loop_flag;
 //extern int                      ready_flag;                                   //Accept完了フラグ
 extern SOCKET                   listen_socket;                                // 待ち受けSocket
+extern SOCKET                   listen_socket_tls;                            // HTTPS待ち受けSocket
 #endif

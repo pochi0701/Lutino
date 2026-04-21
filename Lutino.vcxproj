@@ -83,7 +83,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;BR_AES_X86NI=0;BR_SSE2=0;BR_RDRAND=0;BR_POWER8=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ForcedIncludeFiles>$(ProjectDir)source\msvc_compat.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -97,7 +98,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;BR_AES_X86NI=0;BR_SSE2=0;BR_RDRAND=0;BR_POWER8=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ForcedIncludeFiles>$(ProjectDir)source\msvc_compat.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -109,7 +111,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;BR_AES_X86NI=0;BR_SSE2=0;BR_RDRAND=0;BR_POWER8=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ForcedIncludeFiles>$(ProjectDir)source\msvc_compat.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>Default</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
@@ -129,7 +132,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;BR_AES_X86NI=0;BR_SSE2=0;BR_RDRAND=0;BR_POWER8=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ForcedIncludeFiles>$(ProjectDir)source\msvc_compat.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>
       </MultiProcessorCompilation>
@@ -158,7 +162,9 @@
     <ClInclude Include="source\ltn_db.h" />
     <ClInclude Include="source\ltn_http.h" />
     <ClInclude Include="source\ltn_String.h" />
+    <ClInclude Include="source\ltn_tls.h" />
     <ClInclude Include="source\ltn_tools.h" />
+    <ClInclude Include="source\msvc_compat.h" />
     <ClInclude Include="source\Lutino.h" />
     <ClInclude Include="source\node.hpp" />
     <ClInclude Include="source\TinyJS.h" />
@@ -178,7 +184,12 @@
     <ClCompile Include="source\ltn_script.cpp" />
     <ClCompile Include="source\ltn_send_file.cpp" />
     <ClCompile Include="source\ltn_String.cpp" />
+    <ClCompile Include="source\ltn_tls.cpp" />
+    <ClCompile Include="source\ltn_transport.cpp" />
     <ClCompile Include="source\ltn_tools.cpp" />
+    <ClCompile Include="source\bearssl\*.cpp">
+      <DisableSpecificWarnings>4146;4244;4267;4334;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
     <ClCompile Include="source\Lutino.cpp" />
     <ClCompile Include="source\dirent.cpp" />
     <ClCompile Include="source\dregex.cpp" />

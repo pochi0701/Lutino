@@ -55,6 +55,12 @@ extern void     debug_log_output(const char* fmt, ...);
 
 //システム処理
 extern int      sClose(SOCKET& socket);
+extern bool     transport_attach_tls(SOCKET socket);
+extern bool     transport_attach_tls_client(SOCKET socket, const char* server_name);
+extern void     transport_shutdown_all(void);
+extern int      transport_send(SOCKET socket, const char* buffer, unsigned int length, int mode);
+extern int      transport_recv(SOCKET socket, char* buffer, unsigned int length, int mode);
+extern int      transport_close(SOCKET& socket);
 extern wString  GetAuthorization(const wString& AuthorizedString);
 
 #ifdef linux
