@@ -366,6 +366,52 @@ void scPregStringReplace(CScriptVar* c, void* userdata)
 	dregex::replace(&result, str, patterns, replaces);
 	c->getReturnVar()->setString(result);
 }
+//Match - global regex match function
+void scMatch(CScriptVar* c, void* userdata)
+{
+	IGNORE_PARAMETER(userdata);
+	wString pattern = c->getParameter("pattern")->getString();
+	wString text = c->getParameter("text")->getString();
+	int result = dregex::match(text, pattern);
+	c->getReturnVar()->setInt(result);
+}
+//Replace - global regex replace function
+void scReplace(CScriptVar* c, void* userdata)
+{
+	IGNORE_PARAMETER(userdata);
+	wString text = c->getParameter("text")->getString();
+	CScriptVar* arrp = c->getParameter("pattern");
+	vector<wString> patterns;
+	vector<wString> replaces;
+	
+	// Check if pattern is an array
+	int pn = arrp->getArrayLength();
+	if (pn > 0) {
+		// Pattern is an array
+		CScriptVar* arrr = c->getParameter("replacement");
+		int rn = arrr->getArrayLength();
+		if (pn == rn) {
+			for (int i = 0; i < pn; i++) {
+				patterns.push_back(arrp->getArrayIndex(i)->getString());
+				replaces.push_back(arrr->getArrayIndex(i)->getString());
+			}
+		}
+	}
+	else {
+		// Pattern is a single string
+		wString pattern = c->getParameter("pattern")->getString();
+		wString replacement = c->getParameter("replacement")->getString();
+		patterns.push_back(pattern);
+		replaces.push_back(replacement);
+	}
+	
+	// Perform replacement
+	wString result;
+	dregex::replace(&result, text, patterns, replaces);
+	
+	// Return the replaced text
+	c->getReturnVar()->setString(result);
+}
 //AddShashes
 void scAddShashes(CScriptVar* c, void* userdata)
 {
@@ -1171,6 +1217,8 @@ void registerFunctions(CTinyJS* tinyJS)
 	tinyJS->addNative("function String.replaceAll(before,after)", scStringReplaceAll, 0);
 	tinyJS->addNative("function String.preg_replace(pattern,replace)", scPregStringReplace, 0);
 	//tinyJS->addNative("function String.preg_match(pattern)",scPregStringMatch, 0 );
+	tinyJS->addNative("function match(pattern,text)", scMatch, 0);
+	tinyJS->addNative("function replace(text,pattern,replacement)", scReplace, 0);
 	tinyJS->addNative("function String.addSlashes()", scAddShashes, 0);
 	tinyJS->addNative("function getLocalAddress()", scGetLocalAddress, 0);
 	tinyJS->addNative("function getLocalPort()", scGetLocalPort, 0);

@@ -184,7 +184,7 @@
         let r = Math.rand();
 
         let parsed = Integer.parseInt("42");
- 
+  
         let aStr = "ABCD";
         let aChar = aStr.charAt(0);
 
@@ -492,6 +492,60 @@
         array.slice(0,3);
         let result07 = (array.length == 2 && array[0] == 'd');
         print((result01 && result02 && result03 && result04 && result05 && result06)?"OK":"NG");
+    }
+    print("<br>\ntest42 ");
+    {
+        // Test for regex match - basic pattern
+        let result = match("/hello/", "hello world");
+        print((result == 1)?"OK":"NG");
+    }
+    print("<br>\ntest43 ");
+    {
+        // Test for regex match - no match
+        let result = match("/goodbye/", "hello world");
+        print((result == 0)?"OK":"NG");
+    }
+    print("<br>\ntest44 ");
+    {
+        // Test for regex match - case insensitive
+        let result = match("/HELLO/i", "hello world");
+        print((result == 1)?"OK":"NG");
+    }
+    print("<br>\ntest45 ");
+    {
+        // Test for regex match - invalid pattern (should not crash)
+        let result = match("invalid", "test");
+        print((result == 0)?"OK":"NG");
+    }
+    print("<br>\ntest46 ");
+    {
+        // Test for regex replace - basic
+        var result = replace("hello world", "/world/", "universe");
+        print((result == "hello universe")?"OK":"NG");
+    }
+    print("<br>\ntest47 ");
+    {
+        // Test for regex replace - multiple patterns
+        var result = replace("hello world", ["/hello/", "/world/"], ["hi", "earth"]);
+        print((result == "hi earth")?"OK":"NG");
+    }
+    print("<br>\ntest48 ");
+    {
+        // Test for regex replace - case insensitive
+        var result = replace("HELLO world", "/hello/i", "hi");
+        print((result == "hi world")?"OK":"NG");
+    }
+    print("<br>\ntest49 ");
+    {
+        // Test for regex replace - invalid pattern (should return original)
+        var result = replace("hello world", "invalid", "replacement");
+        print((result == "hello world")?"OK":"NG");
+    }
+    print("<br>\ntest50 ");
+    {
+        // Test for regex - complex pattern with special chars
+        let result = match("/[a-z]+/", "abc");
+        print((result == 1)?"OK":"NG");
     }
 ?>
 </body>

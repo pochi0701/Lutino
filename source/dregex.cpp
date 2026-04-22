@@ -15,129 +15,115 @@
 #include "ltn_tools.h"
 using namespace std;
 
-// ------------------------------------------------------------
-// match 事前コンパイル・インスタンス不要版
+// Helper function: Extract regex pattern and flags from /pattern/flags format
+// Returns true if successful, false if format is invalid
+// Updates 'pattern_out' with the extracted pattern
+// Updates 'icase' with case-insensitive flag state
+static bool extract_pattern(const wString& input, wString& pattern_out, bool& icase)
+{
+	icase = false;
+	
+	// Validate input
+	if (input.empty() || input[0] != '/') {
+		debug_log_output("dregex::extract_pattern - ERROR: pattern must start with /");
+		return false;
+	}
+	
+	// Find the closing slash, protecting against infinite loops
+	size_t len = input.length();
+	size_t last_slash = input.rfind('/');
+	
+	if (last_slash == 0 || last_slash == string::npos) {
+		debug_log_output("dregex::extract_pattern - ERROR: pattern must end with /");
+		return false;
+	}
+	
+	// Extract flags from after the closing slash
+	for (size_t i = last_slash + 1; i < len; i++) {
+		char c = input[i];
+		if (c == 'i') {
+			icase = true;
+		}
+		// Other flags (x, m, s) are parsed but not used in std::regex currently
+		else if (c != 'x' && c != 'm' && c != 's') {
+			wString msg = "dregex::extract_pattern - ERROR: unknown flag '";
+			msg += c;
+			msg += "' in pattern";
+			debug_log_output(msg.c_str());
+			return false;
+		}
+	}
+	
+	// Extract pattern between first and last slash
+	if (last_slash <= 1) {
+		debug_log_output("dregex::extract_pattern - ERROR: empty pattern detected");
+		return false;
+	}
+	
+	pattern_out = input.substr(1, last_slash - 1);
+	return true;
+}
+
+// match - Pre-compiled instance-free version with infinite loop protection
 int dregex::match(const wString& text, const wString& pattern)
 {
-	//std::regex_constants::match_flag_type cflags = std::regex_constants::match_default;
-	wString tmp = pattern;
-	if (tmp[0] == '/') {
-		while (tmp[tmp.length() - 1] != '/') {
-			if (tmp[tmp.length() - 1] == 'i') {
-				//	cflags |= REG_ICASE;
-				tmp = tmp.substr(0, tmp.length() - 1);
-			}
-			else if (tmp[tmp.length() - 1] == 'x') {
-				//	cflags |= REG_EXTENDED;
-				tmp = tmp.substr(0, tmp.length() - 1);
-			}
-			else if (tmp[tmp.length() - 1] == 'm') {
-				//	cflags &= ~REG_NEWLINE;
-				tmp = tmp.substr(0, tmp.length() - 1);
-			}
-			else if (tmp[tmp.length() - 1] == 's') {
-				//	cflags |= REG_NEWLINE;
-				tmp = tmp.substr(0, tmp.length() - 1);
-			}
-			else {
-				tmp = tmp.substr(0, tmp.length() - 1);
-				//	//not pattern
-			//	return 0;
-			}
-		}
-		tmp = tmp.substr(1, tmp.length() - 2);
-	}
-	else {
-		// not pattern
+	wString extracted_pattern;
+	bool icase = false;
+	
+	if (!extract_pattern(pattern, extracted_pattern, icase)) {
 		return 0;
 	}
-
-	//if (regcomp(&re, (char*)tmp.c_str(), cflags)) {
-	//	return 1; // syntax error.
-	//}
-	//int res = regexec(&re, (char*)text.c_str(), 0, 0, 0);
-	//regfree(&re);
-	//return !(res == REG_NOMATCH);
-
-
-
-	//wString tmp = pattern;
+	
 	try {
-		std::regex re(tmp.c_str());
-		//マッチしたか？
-		return std::regex_match(text.c_str(), re);
+		std::regex::flag_type flags = icase ? std::regex::icase : std::regex::ECMAScript;
+		std::regex re(extracted_pattern.c_str(), flags);
+		return std::regex_search(text.c_str(), re);
 	}
 	catch (const regex_error& err)
 	{
 		IGNORE_PARAMETER(err);
-		debug_log_output("dregex::match match error");
+		debug_log_output("dregex::match - ERROR: regex compilation or execution error");
+		return 0;
+	}
+	catch (const exception& e)
+	{
+		IGNORE_PARAMETER(e);
+		debug_log_output("dregex::match - ERROR: unexpected exception occurred");
 		return 0;
 	}
 }
 
-// ------------------------------------------------------------
-
-// replace 本体
-// 最初に見つかったマッチ範囲とグループ1～9までの範囲、計10個を保持
-// グループを10個以上使うような複雑なパターンは避け、複数回行うべき
-#define nbmat (10)
-
-///
+// replace - Safe implementation with infinite loop protection
+// Processes multiple pattern/replacement pairs with proper error handling
 int dregex::replace(wString* result, const wString text, const vector<wString> pattern, const vector<wString> replacement)
 {
-	//regex_t re;
-	int repeatable = 1;
-	std::regex_constants::match_flag_type cflags = std::regex_constants::format_default;
-	//一回だけマッチ
-	if (repeatable == 0) {
-		cflags = std::regex_constants::format_first_only;
+	if (!result) {
+		debug_log_output("dregex::replace - ERROR: null result pointer");
+		return 0;
 	}
-	//
-	wString pat;
-	wString temptext;
+	
 	if (pattern.size() != replacement.size()) {
+		debug_log_output("dregex::replace - ERROR: pattern and replacement size mismatch");
+		*result = text;
 		return 1;
 	}
-	temptext = text;
-	//int num;
+	
+	wString temptext = text;
+	
 	for (size_t i = 0; i < pattern.size(); i++) {
-		//パターンから修飾子を取得
-		wString tmp = pattern[i];
-		if (tmp[0] == '/') {
-			while (tmp[tmp.length() - 1] != '/') {
-				if (tmp[tmp.length() - 1] == 'i') {
-					//cflags |= REG_ICASE;
-					tmp = tmp.substr(0, tmp.length() - 1);
-				}
-				else if (tmp[tmp.length() - 1] == 'x') {
-					//cflags |= REG_EXTENDED;
-					tmp = tmp.substr(0, tmp.length() - 1);
-				}
-				else if (tmp[tmp.length() - 1] == 'm') {
-					//cflags &= ~REG_NEWLINE;
-					tmp = tmp.substr(0, tmp.length() - 1);
-				}
-				else if (tmp[tmp.length() - 1] == 's') {
-					//cflags |= REG_NEWLINE;
-					tmp = tmp.substr(0, tmp.length() - 1);
-				}
-				else {
-					//not pattern
-					return 1;
-				}
-			}
-			tmp = tmp.substr(1, tmp.length() - 2);
-		}
-		else {
-			// not pattern
+		wString extracted_pattern;
+		bool icase = false;
+		
+		if (!extract_pattern(pattern[i], extracted_pattern, icase)) {
+			debug_log_output("dregex::replace - ERROR: failed to extract pattern at index");
+			*result = text;
 			return 0;
 		}
+		
 		try {
-			regex re(tmp.c_str());
-			//if (regcomp(&re, (char*)tmp.c_str(), cflags&~REG_NOSUB)){
-			//   return 1; // syntax error.
-			//}
-			//string text;
+			std::regex::flag_type flags = icase ? std::regex::icase : std::regex::ECMAScript;
+			std::regex re(extracted_pattern.c_str(), flags);
+			
 			string mytext = temptext.c_str();
 			string repl = replacement[i].c_str();
 			temptext = (std::regex_replace(mytext, re, repl)).c_str();
@@ -145,11 +131,19 @@ int dregex::replace(wString* result, const wString text, const vector<wString> p
 		catch (const regex_error& err)
 		{
 			IGNORE_PARAMETER(err);
+			debug_log_output("dregex::replace - ERROR: regex compilation or replacement error");
 			*result = text;
-			debug_log_output("dregex::replace replace error");
+			return 0;
+		}
+		catch (const exception& e)
+		{
+			IGNORE_PARAMETER(e);
+			debug_log_output("dregex::replace - ERROR: unexpected exception occurred");
+			*result = text;
 			return 0;
 		}
 	}
+	
 	*result = temptext;
 	return 1;
 }

@@ -844,6 +844,16 @@ unsigned int wString::length (void) const
 }
 
 /// <summary>
+/// 文字列が空かどうか判定
+/// </summary>
+/// <param name=""></param>
+/// <returns>空の場合true、それ以外false</returns>
+bool wString::empty (void) const
+{
+	return len == 0;
+}
+
+/// <summary>
 /// ファイル読み込み
 /// </summary>
 /// <param name="str">読み込むファイルのフルファイル名</param>

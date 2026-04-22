@@ -1,3 +1,11 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>関数テスト2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
 <?
 // print関数のテスト
 print("Hello, TinyJS!<br>\n" + "<br>\n");
@@ -39,4 +47,80 @@ print("dir_exists('c:\\/') = " + dir_exists("c:\\/") + "<br>\n" + "<br>\n");
 // その他
 print("randomUUID() = " + randomUUID() + "<br>\n" + "<br>\n");
 print("biosUUID() = " + biosUUID() + "<br>\n" + "<br>\n");
+
+// 正規表現関数のテスト
+print("<br>\n===== 正規表現テスト ====<br>\n" + "<br>\n");
+
+print("<h2>match()関数テスト</h2>\n");
+print("test01: ");
+{
+    let result = match("/hello/", "hello world");
+    print((result == 1)?"OK":"NG");
+}
+print("<br>\n");
+
+print("test02: ");
+{
+    let result = match("/goodbye/", "hello world");
+    print((result == 0)?"OK":"NG");
+}
+print("<br>\n");
+
+print("test03: ");
+{
+    let result = match("/HELLO/i", "hello world");
+    print((result == 1)?"OK":"NG");
+}
+print("<br>\n");
+
+print("test04: ");
+{
+    let result = match("invalid", "test");
+    print((result == 0)?"OK":"NG");
+}
+print("<br>\n");
+
+print("test05: ");
+{
+    let result = match("/[a-z]+/", "abc123");
+    print((result == 1)?"OK":"NG");
+}
+print("<br>\n");
+
+print("<h2>replace()関数テスト</h2>\n");
+
+print("test06: ");
+{
+    var result = replace("hello world", "/world/", "universe");
+    print((result == "hello universe")?"OK":"NG");
+}
+print("<br>\n");
+
+print("test07: ");
+{
+    var result = replace("hello world", "/goodbye/", "bye");
+    print((result == "hello world")?"OK":"NG");
+}
+print("<br>\n");
+
+print("test08: ");
+{
+    var result = replace("HELLO world", "/hello/i", "hi");
+    print((result == "hi world")?"OK":"NG");
+}
+print("<br>\n");
+
+print("test09: ");
+{
+    var result = replace("hello world", "invalid", "replacement");
+    print((result == "hello world")?"OK":"NG");
+}
+print("<br>\n");
+
+print("test10: ");
+{
+    var result = replace("hello world", ["/hello/", "/world/"], ["hi", "earth"]);
+    print((result == "hi earth")?"OK":"NG");
+}
+print("<br>\n");
 ?>

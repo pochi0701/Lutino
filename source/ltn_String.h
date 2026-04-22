@@ -80,6 +80,7 @@ public:
 	unsigned int    size(void) const;
 	unsigned int    length(void) const;
 	unsigned int    capacity(void) const;
+	bool            empty(void) const;
 	char*			c_str(void) const;
 	wString&		set_length(const unsigned int num);
 
