@@ -14,7 +14,7 @@
         }
         baseptr++;
         var base = base.substring(0,baseptr);
-        var dat = loadFromFile("http://neon.cx/market/download2.php?version="+version+"&contid="+contid+"&termid="+termid);
+        var dat = loadFromFile("https://birdland.co.jp/market/download2.php?version="+version+"&contid="+contid+"&termid="+termid);
         if( dat != "none" ){
           saveToFile(base+"lesson.tgz",dat);
           command("cd \""+base+"\" && tar zxvf \""+base+"lesson.tgz\"");

@@ -14,8 +14,8 @@ var tables = [
 "create table subcontent (no number,content_no number,sub_no number,name string,file string,done number,correct string,count string,execution string);",
 ];
 var sql01 = [
-"INSERT INTO course (no, name, path, detail, price, start_date, end_date) VALUES (0,'Lutinoの使い方紹介','school','使い方の説明','','https://www.birdland.co.jp/index.php?p=12','');",
-"INSERT INTO course (no, name, path, detail, price, start_date, end_date) VALUES (1,'ルチノーITレッスン','school','キーボード入力から初めてプログラムを１から学べます。','','https://www.birdland.co.jp/index.php?p=16','');",
+"INSERT INTO course (no, name, path, detail, purchase, url, start_date) VALUES (0,'Lutinoの使い方紹介','school','使い方の説明','','https://www.birdland.co.jp/index.php?p=12','');",
+"INSERT INTO course (no, name, path, detail, purchase, url, start_date) VALUES (1,'ルチノーITレッスン','school','キーボード入力から初めてプログラムを１から学べます。','','https://www.birdland.co.jp/index.php?p=16','');",
 ];
 var database = DBConnect("_SYSTEM");
 var ev;

@@ -17,6 +17,9 @@ List of Functions
 - Current configuration uses `server_tls_port` in `ltn.conf`.
 - The current first-stage implementation includes an embedded test certificate for development.
 
+## TinyJS built-in functions
+- Built-in function reference: `TINYJS_BUILTINS.md`
+
 ## Linux build / install with CMake
 ```sh
 cmake -S . -B build
