@@ -60,7 +60,8 @@ void LtnStop(void)
 	GetExitCodeThread(threadHandle, &dwParam);
 	if (dwParam == STILL_ACTIVE) {
 		loop_flag = 0;
-		closesocket(listen_socket);
+		transport_close(listen_socket);
+		transport_close(listen_socket_tls);
 		if (WaitForSingleObject(threadHandle, INFINITE) != WAIT_OBJECT_0) {
 			TerminateThread(threadHandle, id);
 			while (1) {
@@ -366,4 +367,3 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return (INT_PTR)FALSE;
 }
-
