@@ -27,7 +27,7 @@
   {
     "url": "http://%LOCALADDRESS%/",
     "image": "<div id=\"qrcodeCanvas1\"></div>",
-    "title":"QR"
+    "title":"Home"
   },
   {
     "url": "",
