@@ -20,6 +20,8 @@ cmake --build build
 cmake --install build
 ```
 
+In `cmake --install build`, `build` is the build directory specified by `-B` (the directory name is arbitrary).
+
 Default install root:
 
 ```text

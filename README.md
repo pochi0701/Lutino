@@ -1,54 +1,61 @@
-# Lightweight Web/Application Servers
-- Built-in JavaScript in the server-side language
-- SQL already implemented
-- Just download and start, no installation required, ready to go in 10 seconds.
-- HTTPS/TLS support implemented
-- TLS implementation uses vendored BearSSL source code
+# Lutino
 
-List of Functions
-1. Web Editor
-1. SQL (values returned in JSON)
-1. Markdown file support
-1. Video streaming available
+軽量な Web / Application Server です。サーバー側スクリプトとして TinyJS を内蔵し、組み込み SQL と HTTPS/TLS に対応しています。
 
-## TLS / HTTPS
-- Lutino now supports HTTPS alongside HTTP.
-- TLS is implemented with BearSSL source files vendored under `source\bearssl\`.
-- Current configuration uses `server_tls_port` in `ltn.conf`.
-- The current first-stage implementation includes an embedded test certificate for development.
+## Quick Start
 
-## TinyJS built-in functions
-- Built-in function reference: `TINYJS_BUILTINS.md`
+### Windows
+1. `Lutino.exe` と `ltn.conf` を同じ構成で配置します（このリポジトリの `html` / `database` / `system` / `skin` も利用）。
+2. `Lutino.exe` を起動します。
+3. `http://localhost:8000/` にアクセスします（既定設定）。
 
-## Linux build / install with CMake
+### Linux (CMake)
 ```sh
 cmake -S . -B build
 cmake --build build
 cmake --install build
 ```
 
-- The Linux CMake install replaces the old `make install` flow.
-- Default install root is `/usr/local/lutino`.
-- Installed assets include `lutino`, `ltn.conf`, `html`, `database`, `system`, and `skin`.
-- You can change the install root with `-DCMAKE_INSTALL_PREFIX=/your/path`.
-- You can also override content locations written into `ltn.conf`:
-  - `-DLUTINO_DOCUMENT_ROOT=/your/document/root`
-  - `-DLUTINO_SKIN_ROOT=/your/skin/root`
-  - `-DLUTINO_SYSTEM_ROOT=/your/system/root`
-  - `-DLUTINO_DATABASE_ROOT=/your/database/root`
-  - `-DLUTINO_WORK_ROOT=/your/work/root`
-- Detailed notes: `CMAKE_INSTALL.md`
+`cmake --install build` の `build` は、`cmake -B build` で指定した**ビルドディレクトリ**です（フォルダー名は任意）。
 
-Example:
-```sh
-cmake -S . -B build \
-  -DCMAKE_INSTALL_PREFIX=/opt/lutino \
-  -DLUTINO_DOCUMENT_ROOT=/srv/www/lutino-html
-cmake --build build
-cmake --install build
-```
+## 主な機能
+- TinyJS によるサーバーサイドスクリプト実行
+- 組み込み SQL（結果は JSON 形式で取得可能）
+- Web Editor
+- Markdown ファイル表示
+- 動画ストリーミング
+- HTTPS/TLS（BearSSL ベンダリング実装）
 
-## ver. 1.00
-Lutino has changed its name from wizd and Cybele.
-MFC removed.
+## 設定ファイル (`ltn.conf`)
+主な設定項目:
+- `server_port` : HTTP ポート（既定: `8000`）
+- `server_tls_port` : HTTPS ポート（既定: `8443`、`0` で無効）
+- `document_root` / `skin_root` : コンテンツのルート
+- `skin_name` / `skin_menu` : スキン設定
 
+## TinyJS
+- 組み込み関数リファレンス: `TINYJS_BUILTINS.md`
+- 現在反映済みの主な言語拡張:
+  - `let` / `const` / `typeof` / `instanceof`
+  - 厳密比較 `===` / `!==`
+  - 符号なしシフト `>>>` / `>>>=`
+  - `const` 再代入時の例外化
+  - `String.substring(lo, hi)` の `hi` 省略対応
+  - `Math.atanh(a)` の `std::atanh` 実装
+
+## TLS / HTTPS
+- HTTP に加えて HTTPS を利用できます。
+- TLS は `source\bearssl\` の BearSSL ソースを利用しています。
+- 開発用として埋め込みテスト証明書を使用する実装段階です。
+
+## Linux インストール補足
+- 旧 `make install` フローは Linux では CMake フローへ移行しています。
+- 既定のインストール先は `/usr/local/lutino` です。
+- `CMAKE_INSTALL_PREFIX` や `LUTINO_*_ROOT` で配置先を変更できます。
+- 詳細: `CMAKE_INSTALL.md`
+
+## History
+
+### ver. 1.00
+- プロジェクト名を `wizd` / `Cybele` から `Lutino` に変更
+- MFC 依存を削除
