@@ -153,7 +153,7 @@ inline void CREATE_LINK(CScriptVarLink*& LINK, CScriptVar* VAR)
 	}
 }
 
- // 論理オペレータOR
+// 論理オペレータOR
 SCRIPTVAR_FLAGS operator|(SCRIPTVAR_FLAGS L, SCRIPTVAR_FLAGS R)
 {
 	return static_cast<SCRIPTVAR_FLAGS>(static_cast<int>(L) | static_cast<int>(R));
@@ -189,6 +189,36 @@ const static unsigned char cmap[256] = {
 	   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,//E0
 	   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,//F0
 };
+
+inline wString getTypeOfString(CScriptVar* var)
+{
+	if (!var || var->isUndefined()) return "undefined";
+	if (var->isFunction()) return "function";
+	if (var->isString()) return "string";
+	if (var->isNumeric()) return "number";
+	if (var->isObject() || var->isArray() || var->isNull()) return "object";
+	return "undefined";
+}
+
+inline bool isInstanceOf(CScriptVar* instance, CScriptVar* constructor)
+{
+	if (!instance || !constructor || !instance->isObject()) return false;
+	CScriptVar* targetPrototype = nullptr;
+	if (CScriptVarLink* protoLink = constructor->findChild(TINYJS_PROTOTYPE_CLASS)) {
+		targetPrototype = protoLink->var;
+	}
+	else if (constructor->isObject()) {
+		targetPrototype = constructor;
+	}
+	if (!targetPrototype) return false;
+
+	CScriptVarLink* proto = instance->findChild(TINYJS_PROTOTYPE_CLASS);
+	while (proto) {
+		if (proto->var == targetPrototype) return true;
+		proto = proto->var->findChild(TINYJS_PROTOTYPE_CLASS);
+	}
+	return false;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 inline bool isWhitespace(unsigned char ch)
@@ -481,8 +511,12 @@ wString CScriptLex::getTokenStr(LEX_TYPES token)
 	case LEX_TYPES::LEX_RSHIFT: return ">>";
 	case LEX_TYPES::LEX_RSHIFTUNSIGNED: return ">>>";
 	case LEX_TYPES::LEX_RSHIFTEQUAL: return ">>=";
+	case LEX_TYPES::LEX_RSHIFTUNSIGNEDEQUAL: return ">>>=";
 	case LEX_TYPES::LEX_PLUSEQUAL: return "+=";
 	case LEX_TYPES::LEX_MINUSEQUAL: return "-=";
+	case LEX_TYPES::LEX_MULEQUAL: return "*=";
+	case LEX_TYPES::LEX_DIVEQUAL: return "/=";
+	case LEX_TYPES::LEX_MODEQUAL: return "%=";
 	case LEX_TYPES::LEX_PLUSPLUS: return "++";
 	case LEX_TYPES::LEX_MINUSMINUS: return "--";
 	case LEX_TYPES::LEX_ANDEQUAL: return "&=";
@@ -508,6 +542,8 @@ wString CScriptLex::getTokenStr(LEX_TYPES token)
 	case LEX_TYPES::LEX_R_NULL: return "null";
 	case LEX_TYPES::LEX_R_UNDEFINED: return "undefined";
 	case LEX_TYPES::LEX_R_NEW: return "new";
+	case LEX_TYPES::LEX_R_TYPEOF: return "typeof";
+	case LEX_TYPES::LEX_R_INSTANCEOF: return "instanceof";
 	default:
 		wString msg;
 		msg.sprintf("?[%d]", static_cast<int>(token));
@@ -628,6 +664,8 @@ void CScriptLex::getNextToken()
 		else if (tkStr == "null")      tk = LEX_TYPES::LEX_R_NULL;
 		else if (tkStr == "undefined") tk = LEX_TYPES::LEX_R_UNDEFINED;
 		else if (tkStr == "new")       tk = LEX_TYPES::LEX_R_NEW;
+		else if (tkStr == "typeof")    tk = LEX_TYPES::LEX_R_TYPEOF;
+		else if (tkStr == "instanceof")tk = LEX_TYPES::LEX_R_INSTANCEOF;
 	}
 	else if (isNumeric(static_cast<unsigned char>(currCh))) { // Numbers
 		bool isHex = false;
@@ -780,6 +818,10 @@ void CScriptLex::getNextToken()
 			else if (currCh == LEX_TYPES::LEX_G_THAN) { // >>>
 				tk = LEX_TYPES::LEX_RSHIFTUNSIGNED;
 				getNextCh();
+				if (currCh == LEX_TYPES::LEX_EQ) { // >>>=
+					tk = LEX_TYPES::LEX_RSHIFTUNSIGNEDEQUAL;
+					getNextCh();
+				}
 			}
 		}
 		else if (tk == LEX_TYPES::LEX_PLUS && currCh == LEX_TYPES::LEX_EQ) {
@@ -788,6 +830,18 @@ void CScriptLex::getNextToken()
 		}
 		else if (tk == LEX_TYPES::LEX_MINUS && currCh == LEX_TYPES::LEX_EQ) {
 			tk = LEX_TYPES::LEX_MINUSEQUAL;
+			getNextCh();
+		}
+		else if (tk == LEX_TYPES::LEX_MUL && currCh == LEX_TYPES::LEX_EQ) {
+			tk = LEX_TYPES::LEX_MULEQUAL;
+			getNextCh();
+		}
+		else if (tk == LEX_TYPES::LEX_DIV && currCh == LEX_TYPES::LEX_EQ) {
+			tk = LEX_TYPES::LEX_DIVEQUAL;
+			getNextCh();
+		}
+		else if (tk == LEX_TYPES::LEX_MOD && currCh == LEX_TYPES::LEX_EQ) {
+			tk = LEX_TYPES::LEX_MODEQUAL;
 			getNextCh();
 		}
 		else if (tk == LEX_TYPES::LEX_PLUS && currCh == LEX_TYPES::LEX_PLUS) {
@@ -917,8 +971,8 @@ CScriptVarLink::~CScriptVarLink()
 		var = nullptr;
 	}
 	else {
-	var->unref();
-}
+		var->unref();
+	}
 }
 
 void CScriptVarLink::replaceWith(CScriptVar* newVar)
@@ -1935,6 +1989,7 @@ CScriptVarLink* CTinyJS::functionCall(bool& execute, CScriptVarLink* function, C
 					argumentsArray->setArrayIndex(argIndex, value->var);
 				}
 			}
+
 			CLEAN(value);
 			argIndex++;
 			if (lex->tk != LEX_TYPES::LEX_R_PARENTHESIS) lex->match(LEX_TYPES::LEX_COMMA);
@@ -2036,6 +2091,63 @@ CScriptVarLink* CTinyJS::functionCall(bool& execute, CScriptVarLink* function, C
 	}
 }
 
+CScriptVarLink* CTinyJS::parsePostfixOps(bool& execute, CScriptVarLink* a, CScriptVarLink* alone)
+{
+	/* The parent if we're executing a method call */
+	CScriptVar* parent = 0;
+	while (lex->tk == LEX_TYPES::LEX_L_PARENTHESIS || lex->tk == LEX_TYPES::LEX_DOT || lex->tk == LEX_TYPES::LEX_L_BRAKET) {
+		if (lex->tk == LEX_TYPES::LEX_L_PARENTHESIS) { // ------------------------------------- Function Call
+			a = functionCall(execute, a, parent);
+		}
+		else if (lex->tk == LEX_TYPES::LEX_DOT) { // ------------------------------------- Record Access
+			lex->match(LEX_TYPES::LEX_DOT);
+			if (execute) {
+				CScriptVarLink* current = a;
+				const wString& name = lex->tkStr;
+				CScriptVarLink* child = current->var->findChild(name);
+				if (!child) child = findInParentClasses(current->var, name);
+				if (!child) {
+					/* if we haven't found this defined yet, use the built-in
+					   'length' properly */
+					if (current->var->isArray() && name == "length") {
+						int ll = static_cast<int>(current->var->getArrayLength());
+						child = new CScriptVarLink(new CScriptVar(ll));
+					}
+					else if (current->var->isString() && name == "length") {
+						int ll = static_cast<int>(current->var->getString().size());
+						child = new CScriptVarLink(new CScriptVar(ll));
+					}
+					else {
+						child = current->var->addChild(name);
+					}
+				}
+				parent = current->var;
+				//不明な変数にchildを作らない
+				if (alone && current == alone) {
+					wString errorMsg = "Object variable not defined '";
+					errorMsg = errorMsg + current->name + "' must be defined";
+					throw new CScriptException(errorMsg.c_str());
+				}
+				a = child;
+			}
+			lex->match(LEX_TYPES::LEX_ID);
+		}
+		else if (lex->tk == LEX_TYPES::LEX_L_BRAKET) { // ------------------------------------- Array Access
+			lex->match(LEX_TYPES::LEX_L_BRAKET);
+			CScriptVarLink* index = base(execute);
+			lex->match(LEX_TYPES::LEX_R_BRAKET);
+			if (execute) {
+				CScriptVarLink* child = a->var->findChildOrCreate(index->var->getString());
+				parent = a->var;
+				a = child;
+			}
+			CLEAN(index);
+		}
+		else ASSERT(0);
+	}
+	return a;
+}
+
 /// <summary>
 /// 与えられた条件に基づいてJavaScriptの変数やオブジェクトを解析し、対応するCScriptVarLinkを返すメソッド
 /// </summary>
@@ -2047,7 +2159,7 @@ CScriptVarLink* CTinyJS::factor(bool& execute)
 		lex->match(LEX_TYPES::LEX_L_PARENTHESIS);
 		CScriptVarLink* a = base(execute);
 		lex->match(LEX_TYPES::LEX_R_PARENTHESIS);
-		return a;
+		return parsePostfixOps(execute, a);
 	}
 	if (lex->tk == LEX_TYPES::LEX_R_TRUE) {
 		lex->match(LEX_TYPES::LEX_R_TRUE);
@@ -2068,79 +2180,26 @@ CScriptVarLink* CTinyJS::factor(bool& execute)
 	if (lex->tk == LEX_TYPES::LEX_ID) {
 		CScriptVarLink* a = execute ? findInScopes(lex->tkStr) : new CScriptVarLink(new CScriptVar());
 		//printf("0x%08X for %s at %s\n", (unsigned int)a, lex->tkStr.c_str(), lex->getPosition().c_str());
-		/* The parent if we're executing a method call */
-		CScriptVar* parent = 0;
-
-		const void* alone = NULL;
+		CScriptVarLink* alone = NULL;
 		if (execute && !a) {
 			/* Variable doesn't exist! JavaScript says we should create it
 			* (we won't add it here. This is done in the assignment operator)*/
 			a = new CScriptVarLink(new CScriptVar(), lex->tkStr);
-			alone = static_cast<void*>(a);
+			alone = a;
 		}
 		lex->match(LEX_TYPES::LEX_ID);
-		while (lex->tk == LEX_TYPES::LEX_L_PARENTHESIS || lex->tk == LEX_TYPES::LEX_DOT || lex->tk == LEX_TYPES::LEX_L_BRAKET) {
-			if (lex->tk == LEX_TYPES::LEX_L_PARENTHESIS) { // ------------------------------------- Function Call
-				a = functionCall(execute, a, parent);
-			}
-			else if (lex->tk == LEX_TYPES::LEX_DOT) { // ------------------------------------- Record Access
-				lex->match(LEX_TYPES::LEX_DOT);
-				if (execute) {
-					const wString& name = lex->tkStr;
-					CScriptVarLink* child = a->var->findChild(name);
-					if (!child) child = findInParentClasses(a->var, name);
-					if (!child) {
-						/* if we haven't found this defined yet, use the built-in
-						   'length' properly */
-						if (a->var->isArray() && name == "length") {
-							int ll = static_cast<int>(a->var->getArrayLength());
-							child = new CScriptVarLink(new CScriptVar(ll));
-						}
-						else if (a->var->isString() && name == "length") {
-							int ll = static_cast<int>(a->var->getString().size());
-
-							child = new CScriptVarLink(new CScriptVar(ll));
-						}
-						else {
-							child = a->var->addChild(name);
-						}
-					}
-					parent = a->var;
-					//不明な変数にchildを作らない                  
-					if (a == alone) {
-						wString errorMsg = "Object variable not defined '";
-						errorMsg = errorMsg + a->name + "' must be defined";
-						throw new CScriptException(errorMsg.c_str());
-					}
-					a = child;
-				}
-				lex->match(LEX_TYPES::LEX_ID);
-			}
-			else if (lex->tk == LEX_TYPES::LEX_L_BRAKET) { // ------------------------------------- Array Access
-				lex->match(LEX_TYPES::LEX_L_BRAKET);
-				CScriptVarLink* index = base(execute);
-				lex->match(LEX_TYPES::LEX_R_BRAKET);
-				if (execute) {
-					CScriptVarLink* child = a->var->findChildOrCreate(index->var->getString());
-					parent = a->var;
-					a = child;
-				}
-				CLEAN(index);
-			}
-			else ASSERT(0);
-		}
-		return a;
+		return parsePostfixOps(execute, a, alone);
 	}
 	if (lex->tk == LEX_TYPES::LEX_INT || lex->tk == LEX_TYPES::LEX_FLOAT) {
 		CScriptVar* a = new CScriptVar(lex->tkStr,
 			((lex->tk == LEX_TYPES::LEX_INT) ? SCRIPTVAR_FLAGS::SCRIPTVAR_INTEGER : SCRIPTVAR_FLAGS::SCRIPTVAR_DOUBLE));
 		lex->match(lex->tk);
-		return new CScriptVarLink(a);
+		return parsePostfixOps(execute, new CScriptVarLink(a));
 	}
 	if (lex->tk == LEX_TYPES::LEX_STR) {
 		CScriptVar* a = new CScriptVar(lex->tkStr, SCRIPTVAR_FLAGS::SCRIPTVAR_STRING);
 		lex->match(LEX_TYPES::LEX_STR);
-		return new CScriptVarLink(a);
+		return parsePostfixOps(execute, new CScriptVarLink(a));
 	}
 	if (lex->tk == LEX_TYPES::LEX_L_BRACE) {
 		CScriptVar* contents = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_OBJECT);
@@ -2243,6 +2302,20 @@ CScriptVarLink* CTinyJS::unary(bool& execute)
 			CScriptVar zero(0);
 			CScriptVar* res = a->var->mathsOp(&zero, LEX_TYPES::LEX_EQUAL);
 			CREATE_LINK(a, res);
+		}
+	}
+	else if (lex->tk == LEX_TYPES::LEX_TILDA) {
+		lex->match(LEX_TYPES::LEX_TILDA); // bitwise not
+		a = unary(execute);
+		if (execute) {
+			a->var->setInt(~a->var->getInt());
+		}
+	}
+	else if (lex->tk == LEX_TYPES::LEX_R_TYPEOF) {
+		lex->match(LEX_TYPES::LEX_R_TYPEOF);
+		a = unary(execute);
+		if (execute) {
+			CREATE_LINK(a, new CScriptVar(getTypeOfString(a->var), SCRIPTVAR_FLAGS::SCRIPTVAR_STRING));
 		}
 	}
 	else if (lex->tk == LEX_TYPES::LEX_PLUSPLUS) {
@@ -2374,13 +2447,19 @@ CScriptVarLink* CTinyJS::condition(bool& execute)
 	while (lex->tk == LEX_TYPES::LEX_EQUAL || lex->tk == LEX_TYPES::LEX_NEQUAL ||
 		lex->tk == LEX_TYPES::LEX_TYPEEQUAL || lex->tk == LEX_TYPES::LEX_NTYPEEQUAL ||
 		lex->tk == LEX_TYPES::LEX_LEQUAL || lex->tk == LEX_TYPES::LEX_GEQUAL ||
-		lex->tk == LEX_TYPES::LEX_L_THAN || lex->tk == LEX_TYPES::LEX_G_THAN) {
+		lex->tk == LEX_TYPES::LEX_L_THAN || lex->tk == LEX_TYPES::LEX_G_THAN ||
+		lex->tk == LEX_TYPES::LEX_R_INSTANCEOF) {
 		LEX_TYPES op = lex->tk;
 		lex->match(lex->tk);
 		b = shift(execute);
 		if (execute) {
-			CScriptVar* res = a->var->mathsOp(b->var, op);
-			CREATE_LINK(a, res);
+			if (op == LEX_TYPES::LEX_R_INSTANCEOF) {
+				CREATE_LINK(a, new CScriptVar(isInstanceOf(a->var, b->var)));
+			}
+			else {
+				CScriptVar* res = a->var->mathsOp(b->var, op);
+				CREATE_LINK(a, res);
+			}
 		}
 		CLEAN(b);
 	}
@@ -2473,7 +2552,11 @@ CScriptVarLink* CTinyJS::ternary(bool& execute)
 CScriptVarLink* CTinyJS::base(bool& execute)
 {
 	CScriptVarLink* lhs = ternary(execute);
-	if (lex->tk == LEX_TYPES::LEX_EQ || lex->tk == LEX_TYPES::LEX_PLUSEQUAL || lex->tk == LEX_TYPES::LEX_MINUSEQUAL) {
+	if (lex->tk == LEX_TYPES::LEX_EQ ||
+		lex->tk == LEX_TYPES::LEX_PLUSEQUAL || lex->tk == LEX_TYPES::LEX_MINUSEQUAL ||
+		lex->tk == LEX_TYPES::LEX_MULEQUAL || lex->tk == LEX_TYPES::LEX_DIVEQUAL || lex->tk == LEX_TYPES::LEX_MODEQUAL ||
+		lex->tk == LEX_TYPES::LEX_LSHIFTEQUAL || lex->tk == LEX_TYPES::LEX_RSHIFTEQUAL || lex->tk == LEX_TYPES::LEX_RSHIFTUNSIGNEDEQUAL ||
+		lex->tk == LEX_TYPES::LEX_ANDEQUAL || lex->tk == LEX_TYPES::LEX_OREQUAL || lex->tk == LEX_TYPES::LEX_XOREQUAL) {
 		/* If we're assigning to this and we don't have a parent,
 		* add it to the symbol table root as per JavaScript. */
 		if (execute && !lhs->owned) {
@@ -2500,6 +2583,36 @@ CScriptVarLink* CTinyJS::base(bool& execute)
 			else if (op == LEX_TYPES::LEX_MINUSEQUAL) {
 				CScriptVar* res = lhs->var->mathsOp(rhs->var, LEX_TYPES::LEX_MINUS);
 				lhs->replaceWith(res);
+			}
+			else if (op == LEX_TYPES::LEX_MULEQUAL) {
+				CScriptVar* res = lhs->var->mathsOp(rhs->var, LEX_TYPES::LEX_MUL);
+				lhs->replaceWith(res);
+			}
+			else if (op == LEX_TYPES::LEX_DIVEQUAL) {
+				CScriptVar* res = lhs->var->mathsOp(rhs->var, LEX_TYPES::LEX_DIV);
+				lhs->replaceWith(res);
+			}
+			else if (op == LEX_TYPES::LEX_MODEQUAL) {
+				CScriptVar* res = lhs->var->mathsOp(rhs->var, LEX_TYPES::LEX_MOD);
+				lhs->replaceWith(res);
+			}
+			else if (op == LEX_TYPES::LEX_LSHIFTEQUAL) {
+				lhs->var->setInt(lhs->var->getInt() << rhs->var->getInt());
+			}
+			else if (op == LEX_TYPES::LEX_RSHIFTEQUAL) {
+				lhs->var->setInt(lhs->var->getInt() >> rhs->var->getInt());
+			}
+			else if (op == LEX_TYPES::LEX_RSHIFTUNSIGNEDEQUAL) {
+				lhs->var->setInt(((unsigned int)lhs->var->getInt()) >> rhs->var->getInt());
+			}
+			else if (op == LEX_TYPES::LEX_ANDEQUAL) {
+				lhs->var->setInt(lhs->var->getInt() & rhs->var->getInt());
+			}
+			else if (op == LEX_TYPES::LEX_OREQUAL) {
+				lhs->var->setInt(lhs->var->getInt() | rhs->var->getInt());
+			}
+			else if (op == LEX_TYPES::LEX_XOREQUAL) {
+				lhs->var->setInt(lhs->var->getInt() ^ rhs->var->getInt());
 			}
 			else ASSERT(0);
 		}
@@ -2865,12 +2978,12 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
 		forIter = nullptr;
 		forBody = nullptr;
 
-        // Pop `for` scope so that header `let/const` do not leak outside
-        if (execute) {
-            scopes.pop_back();
-            delete forScope;
-            forScope = nullptr;
-        }
+		// Pop `for` scope so that header `let/const` do not leak outside
+		if (execute) {
+			scopes.pop_back();
+			delete forScope;
+			forScope = nullptr;
+		}
 	}
 	else if (lex->tk == LEX_TYPES::LEX_R_RETURN) {
 		lex->match(LEX_TYPES::LEX_R_RETURN);

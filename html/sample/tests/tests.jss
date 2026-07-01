@@ -547,6 +547,63 @@
         let result = match("/[a-z]+/", "abc");
         print((result == 1)?"OK":"NG");
     }
+    print("<br>\ntest51 ");
+    {
+        // compound assignment operators
+        let a = 6;
+        a *= 3;
+        a /= 2;
+        a %= 5;
+
+        let b = 5;
+        b <<= 2;
+        b >>= 1;
+        b >>>= 1;
+
+        let c = 6;
+        c &= 3;
+        c |= 8;
+        c ^= 3;
+
+        print((a == 4 && b == 5 && c == 9)?"OK":"NG");
+    }
+    print("<br>\ntest52 ");
+    {
+        // typeof + isNaN/isFinite
+        let u;
+        let o = {};
+        function f(x) { return x; }
+
+        // TinyJS本体の /0 は 0 扱いになるため、NaN は sqrt(-1) で作る
+        let vNaN = Math.sqrt(-1);
+
+        let result =
+            (typeof u == "undefined") &&
+            (typeof 1 == "number") &&
+            (typeof "abc" == "string") &&
+            (typeof o == "object") &&
+            (typeof f == "function") &&
+            isNaN(vNaN) &&
+            !isNaN(1) &&
+            isFinite(123.5) &&
+            !isFinite(vNaN);
+        print(result?"OK":"NG");
+    }
+    print("<br>\ntest53 ");
+    {
+        // instanceof
+        let Base = {};
+        let Other = {};
+        let obj = new Base();
+        print(((obj instanceof Base) && !(obj instanceof Other))?"OK":"NG");
+    }
+    print("<br>\ntest54 ");
+    {
+        // bitwise not
+        let a = ~0;
+        let b = ~5;
+        print((a == -1 && b == -6)?"OK":"NG");
+    }
 ?>
 </body>
 </html>

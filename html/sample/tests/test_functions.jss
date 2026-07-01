@@ -2,125 +2,102 @@
 <html lang="ja">
 <head>
     <meta charset="utf-8">
-    <title>関数テスト2</title>
+    <title>TinyJS 関数テスト</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
 <?
-// print関数のテスト
-print("Hello, TinyJS!<br>\n" + "<br>\n");
+var total = 0;
+var pass = 0;
 
-// Math.rand()のテスト
-print("Math.rand() = " + Math.rand() + "<br>\n");
-
-// Math.randInt(min, max)のテスト
-print("Math.randInt(1, 10) = " + Math.randInt(1, 10) + "<br>\n" + "<br>\n");
-
-// 文字列関数のテスト
-var str = "Hello, World!";
-var str2 = "    hello    ";
-print("str.indexOf('World') = " + str.indexOf("World") + "<br>\n" + "<br>\n");
-print("str.substring(0,5) = " + str.substring(0,5) + "<br>\n" + "<br>\n");
-print("str.substr(7,5) = " + str.substr(7,5) + "<br>\n" + "<br>\n");
-print("str.startsWith('Hello') = " + str.startsWith("Hello") + "<br>\n" + "<br>\n");
-print("str.endsWith('!') = " + str.endsWith("!") + "<br>\n" + "<br>\n");
-print("str.charAt(1) = " + str.charAt(1) + "<br>\n" + "<br>\n");
-print("str.charCodeAt(1) = " + str.charCodeAt(1) + "<br>\n" + "<br>\n");
-print("String.fromCharCode(65) = " + String.fromCharCode(65) + "<br>\n" + "<br>\n");
-print("str.split(',') = " + str.split(",").join("|") + "<br>\n" + "<br>\n");
-print("str.replace('World','TinyJS') = " + str.replace("World","TinyJS") + "<br>\n" + "<br>\n");
-print("str.replaceAll('l','L') = " + str.replaceAll("l","L") + "<br>\n" + "<br>\n");
-print("str.trim() = " + str2.trim() + "<br>\n" + "<br>\n");
-print("str.toLowerCase() = " + str.toLowerCase() + "<br>\n" + "<br>\n");
-print("str.toUpperCase() = " + str.toUpperCase() + "<br>\n" + "<br>\n");
-
-// 配列関数のテスト
-var arr = [1,2,3,4,5];
-print("arr.contains(3) = " + arr.contains(3) + "<br>\n" + "<br>\n");
-arr.remove(3 + "<br>\n");
-print("arr.join(',') = " + arr.join(",") + "<br>\n" + "<br>\n");
-
-// ファイル・ディレクトリ関数（パスは環境に合わせて変更してください）
-print("file_exists('/index.jss') = " + file_exists("/index.jss") + "<br>\n" + "<br>\n");
-print("dir_exists('c:\\/') = " + dir_exists("c:\\/") + "<br>\n" + "<br>\n");
-
-// その他
-print("randomUUID() = " + randomUUID() + "<br>\n" + "<br>\n");
-print("biosUUID() = " + biosUUID() + "<br>\n" + "<br>\n");
-
-// 正規表現関数のテスト
-print("<br>\n===== 正規表現テスト ====<br>\n" + "<br>\n");
-
-print("<h2>match()関数テスト</h2>\n");
-print("test01: ");
-{
-    let result = match("/hello/", "hello world");
-    print((result == 1)?"OK":"NG");
+function t(label, ok) {
+    total++;
+    print("<br>\n" + label + " " + (ok ? "OK" : "NG"));
+    if (ok) pass++;
 }
-print("<br>\n");
 
-print("test02: ");
-{
-    let result = match("/goodbye/", "hello world");
-    print((result == 0)?"OK":"NG");
-}
-print("<br>\n");
+print("<h2>TinyJS Native Function Tests</h2>");
 
-print("test03: ");
-{
-    let result = match("/HELLO/i", "hello world");
-    print((result == 1)?"OK":"NG");
-}
-print("<br>\n");
+// Basic globals / utility
+t("charToInt", charToInt("A") == 65);
+t("Integer.parseInt", Integer.parseInt("123") == 123);
+t("Integer.valueOf", Integer.valueOf("A") == 65);
+t("encodeURI", encodeURI("a b") == "a%20b");
+t("btoa/atob", atob(btoa("hello")) == "hello");
+t("dirname", dirname("/a/b/c.txt") == "/a/b");
+t("basename", basename("/a/b/c.txt") == "c.txt");
+t("isNaN", isNaN(Math.sqrt(-1)) == 1);
+t("isFinite", isFinite(123.5) == 1);
 
-print("test04: ");
-{
-    let result = match("invalid", "test");
-    print((result == 0)?"OK":"NG");
-}
-print("<br>\n");
+// String methods
+var s = "Hello, World!";
+t("String.indexOf", s.indexOf("World") == 7);
+t("String.substring", s.substring(0, 5) == "Hello");
+t("String.substr", s.substr(7, 5) == "World");
+t("String.startsWith", s.startsWith("Hello") == 1);
+t("String.endsWith", s.endsWith("!") == 1);
+t("String.charAt", s.charAt(1) == "e");
+t("String.charCodeAt", s.charCodeAt(1) == 101);
+t("String.fromCharCode", String.fromCharCode(65) == "A");
+t("String.split+Array.join", s.split(",").join("|") == "Hello| World!");
+t("String.replace", s.replace("World", "TinyJS") == "Hello, TinyJS!");
+var sReplaceAll = "a-b-c";
+var sCase = "AbC";
+var sTrim = "  hi  ";
+var sLTrim = "  hi";
+var sRTrim = "hi  ";
+var sSlash = "a\"b";
+t("String.replaceAll", sReplaceAll.replaceAll("-", "_") == "a_b_c");
+t("String.replaceAll literal", "a-b-c".replaceAll("-", "_") == "a_b_c");
+t("String.toLowerCase", sCase.toLowerCase() == "abc");
+t("String.toUpperCase", sCase.toUpperCase() == "ABC");
+t("String.trim", sTrim.trim() == "hi");
+t("String.ltrim", sLTrim.ltrim() == "hi");
+t("String.rtrim", sRTrim.rtrim() == "hi");
+t("String.addSlashes", sSlash.addSlashes() == "a\\\"b");
 
-print("test05: ");
-{
-    let result = match("/[a-z]+/", "abc123");
-    print((result == 1)?"OK":"NG");
-}
-print("<br>\n");
+// Regex helpers
+t("match hit", match("/hello/", "hello world") == 1);
+t("match miss", match("/goodbye/", "hello world") == 0);
+t("match ignoreCase", match("/HELLO/i", "hello world") == 1);
+t("replace single", replace("hello world", "/world/", "tiny") == "hello tiny");
+t("replace array", replace("hello world", ["/hello/", "/world/"], ["hi", "earth"]) == "hi earth");
 
-print("<h2>replace()関数テスト</h2>\n");
+// Array methods
+var a = [1,2,3];
+t("Array.contains", a.contains(2) == 1);
+t("Array.indexOf", a.indexOf(3) == 2);
+a.push(4);
+t("Array.push", a.join(",") == "1,2,3,4");
+var p = a.pop();
+t("Array.pop", p == 4 && a.join(",") == "1,2,3");
+a.unshift(0);
+t("Array.unshift", a.join(",") == "0,1,2,3");
+var sh = a.shift();
+t("Array.shift", sh == 0 && a.join(",") == "1,2,3");
+var sl = a.slice(1,3);
+t("Array.slice", sl.join(",") == "2,3");
+var sp = a.splice(1,1);
+t("Array.splice", sp.join(",") == "2" && a.join(",") == "1,3");
+a.remove(3);
+t("Array.remove", a.join(",") == "1");
 
-print("test06: ");
-{
-    var result = replace("hello world", "/world/", "universe");
-    print((result == "hello universe")?"OK":"NG");
-}
-print("<br>\n");
+// Object helpers / JSON
+var obj = {x:1, y:2};
+var keys = Object.keys(obj).join(",");
+t("Object.keys", keys.indexOf("x") >= 0 && keys.indexOf("y") >= 0);
+var clone = obj.clone();
+clone.x = 9;
+t("Object.clone", obj.x == 1 && clone.x == 9);
+var jsonObj = JSON.stringify({a:1});
+t("JSON.stringify", jsonObj.indexOf("\"a\"") >= 0 && jsonObj.indexOf("1") >= 0);
 
-print("test07: ");
-{
-    var result = replace("hello world", "/goodbye/", "bye");
-    print((result == "hello world")?"OK":"NG");
-}
-print("<br>\n");
+// Environment-dependent but safe shape checks
+t("Date", Date().length > 0);
+t("randomUUID", randomUUID().length > 0);
+t("biosUUID", biosUUID().length > 0);
+t("file_exists returns number", file_exists("C:\\\\") == 0 || file_exists("C:\\\\") == 1);
+t("dir_exists returns number", dir_exists("C:\\\\") == 0 || dir_exists("C:\\\\") == 1);
 
-print("test08: ");
-{
-    var result = replace("HELLO world", "/hello/i", "hi");
-    print((result == "hi world")?"OK":"NG");
-}
-print("<br>\n");
-
-print("test09: ");
-{
-    var result = replace("hello world", "invalid", "replacement");
-    print((result == "hello world")?"OK":"NG");
-}
-print("<br>\n");
-
-print("test10: ");
-{
-    var result = replace("hello world", ["/hello/", "/world/"], ["hi", "earth"]);
-    print((result == "hi earth")?"OK":"NG");
-}
-print("<br>\n");
+print("<br>\n<br>\nTotal: " + total + " Passed: " + pass + " Failed: " + (total-pass));
 ?>

@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <time.h>
+#include <cmath>
 #include "dregex.h"
 #include "ltn.h"
 #include "ltn_tools.h"
@@ -383,7 +384,7 @@ void scReplace(CScriptVar* c, void* userdata)
 	CScriptVar* arrp = c->getParameter("pattern");
 	vector<wString> patterns;
 	vector<wString> replaces;
-	
+
 	// Check if pattern is an array
 	int pn = arrp->getArrayLength();
 	if (pn > 0) {
@@ -404,11 +405,11 @@ void scReplace(CScriptVar* c, void* userdata)
 		patterns.push_back(pattern);
 		replaces.push_back(replacement);
 	}
-	
+
 	// Perform replacement
 	wString result;
 	dregex::replace(&result, text, patterns, replaces);
-	
+
 	// Return the replaced text
 	c->getReturnVar()->setString(result);
 }
@@ -577,27 +578,21 @@ void scArrayRemove(CScriptVar* c, void* userdata)
 {
 	IGNORE_PARAMETER(userdata);
 	CScriptVar* obj = c->getParameter("obj");
-	vector<int> removedIndices;
-	CScriptVarLink* v;
-	// remove
-	v = c->getParameter("this")->firstChild;
-	while (v) {
-		if (v->var->equals(obj)) {
-			removedIndices.push_back(v->getIntName());
+	CScriptVar* arr = c->getParameter("this");
+	int len = arr->getArrayLength();
+
+	std::vector<CScriptVar*> kept;
+	kept.reserve(len);
+	for (int i = 0; i < len; i++) {
+		CScriptVar* v = arr->getArrayIndex(i);
+		if (!v->equals(obj)) {
+			kept.push_back(v->deepCopy());
 		}
-		v = v->nextSibling;
 	}
-	// renumber
-	v = c->getParameter("this")->firstChild;
-	while (v) {
-		int n = v->getIntName();
-		int newn = n;
-		for (size_t i = 0; i < removedIndices.size(); i++)
-			if (n >= removedIndices[i])
-				newn--;
-		if (newn != n)
-			v->setIntName(newn);
-		v = v->nextSibling;
+
+	arr->removeAllChildren();
+	for (int i = 0; i < (int)kept.size(); i++) {
+		arr->setArrayIndex(i, kept[i]);
 	}
 }
 
@@ -1142,26 +1137,29 @@ void scArraySplice(CScriptVar* c, void*) {
 	CScriptVar* result = c->getReturnVar();
 	result->setArray();
 	for (int i = 0; i < deleteCount; ++i) {
-		result->setArrayIndex(i, arr->getArrayIndex(start + i));
+		result->setArrayIndex(i, arr->getArrayIndex(start + i)->deepCopy());
 	}
 	// Collect new items to insert
-	int numArgs = c->getChildren() - 3; // after start, deleteCount
+	CScriptVar* args = c->getParameter("arguments");
+	int argc = args->getArrayLength();
+	int numArgs = argc - 2; // after start, deleteCount
+	if (numArgs < 0) numArgs = 0;
 	std::vector<CScriptVar*> newItems;
 	for (int i = 0; i < numArgs; ++i) {
 		wString tmp;
-		tmp.sprintf("%d", 2 + i);
+		tmp.sprintf("%d", i + 2);
 		newItems.push_back(c->getParameter(tmp.c_str()));
 	}
 	// Build new array content
 	std::vector<CScriptVar*> newArr;
 	for (int i = 0; i < start; ++i) {
-		newArr.push_back(arr->getArrayIndex(i));
+		newArr.push_back(arr->getArrayIndex(i)->deepCopy());
 	}
 	for (auto* v : newItems) {
-		newArr.push_back(v);
+		newArr.push_back(v->deepCopy());
 	}
 	for (int i = start + deleteCount; i < len; ++i) {
-		newArr.push_back(arr->getArrayIndex(i));
+		newArr.push_back(arr->getArrayIndex(i)->deepCopy());
 	}
 	// Set new array content
 	int newLen = (int)newArr.size();
@@ -1177,6 +1175,20 @@ void scDie(CScriptVar* c, void* userdata)
 	IGNORE_PARAMETER(userdata);
 	wString msg = c->getParameter("msg")->getString();
 	throw new CScriptException(msg);
+}
+
+void scIsNaN(CScriptVar* c, void* userdata)
+{
+	IGNORE_PARAMETER(userdata);
+	double val = c->getParameter("v")->getDouble();
+	c->getReturnVar()->setInt(std::isnan(val) ? 1 : 0);
+}
+
+void scIsFinite(CScriptVar* c, void* userdata)
+{
+	IGNORE_PARAMETER(userdata);
+	double val = c->getParameter("v")->getDouble();
+	c->getReturnVar()->setInt(std::isfinite(val) ? 1 : 0);
 }
 
 // ----------------------------------------------- Register Functions
@@ -1197,6 +1209,8 @@ void registerFunctions(CTinyJS* tinyJS)
 	tinyJS->addNative("function Math.randInt(min, max)", scMathRandInt, 0);
 	tinyJS->addNative("function Integer.parseInt(str)", scIntegerParseInt, 0); // wString to int
 	tinyJS->addNative("function Integer.valueOf(str)", scIntegerValueOf, 0); // value of a single character
+	tinyJS->addNative("function isNaN(v)", scIsNaN, 0);
+	tinyJS->addNative("function isFinite(v)", scIsFinite, 0);
 	tinyJS->addNative("function encodeURI(uri)", scEncodeURI, 0);
 	tinyJS->addNative("function atob(str)", scAtob, 0);
 	tinyJS->addNative("function btoa(str)", scBtoa, 0);

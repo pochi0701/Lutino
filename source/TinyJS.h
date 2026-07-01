@@ -98,8 +98,12 @@ enum class  LEX_TYPES
 	LEX_RSHIFT,
 	LEX_RSHIFTUNSIGNED,
 	LEX_RSHIFTEQUAL,
+	LEX_RSHIFTUNSIGNEDEQUAL,
 	LEX_PLUSEQUAL,
 	LEX_MINUSEQUAL,
+	LEX_MULEQUAL,
+	LEX_DIVEQUAL,
+	LEX_MODEQUAL,
 	LEX_PLUSPLUS,
 	LEX_MINUSMINUS,
 	LEX_ANDEQUAL,
@@ -126,6 +130,8 @@ enum class  LEX_TYPES
 	LEX_R_NULL,
 	LEX_R_UNDEFINED,
 	LEX_R_NEW,
+	LEX_R_TYPEOF,
+	LEX_R_INSTANCEOF,
 
 	LEX_R_LIST_END /* always the last entry */
 };
@@ -413,6 +419,7 @@ private:
 
 	// parsing - in order of precedence
 	CScriptVarLink* functionCall(bool& execute, CScriptVarLink* function, CScriptVar* parent);
+	CScriptVarLink* parsePostfixOps(bool& execute, CScriptVarLink* a, CScriptVarLink* alone = 0);
 	CScriptVarLink* factor(bool& execute);
 	CScriptVarLink* unary(bool& execute);
 	CScriptVarLink* term(bool& execute);

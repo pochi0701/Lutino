@@ -229,7 +229,7 @@ void scMathTanh(CScriptVar* c, void* userdata) {
 void scMathATanh(CScriptVar* c, void* userdata) {
 	IGNORE_PARAMETER(c);
 	IGNORE_PARAMETER(userdata);
-	scReturnDouble(atan(scGetDouble("a")));
+	scReturnDouble(std::atanh(scGetDouble("a")));
 }
 
 //Math.E() - returns E Neplero value

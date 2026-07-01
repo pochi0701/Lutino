@@ -197,13 +197,11 @@ private:
 public:
 	int                    flag;
 	condition              cond;
-	condition              join_cond;
 	//コンストラクタ
-	view(condition& _cond, condition& _join_cond)
+	view(condition& _cond)
 	{
 		flag = 0;
 		cond.copy(_cond);
-		join_cond.copy(_join_cond);
 	}
 	//デストラクタ。クリティカルセクション抜ける
 	~view(void)
@@ -411,10 +409,10 @@ public:
 	/// <param name="tbl">結合対象となるTable型のポインタ。</param>
 	/// <param name="type">LEFT、RIGHT、INNERのいずれかのJOIN_TYPE。結合方法を指定します。</param>
 	/// <returns>常に0を返します。結合処理の結果はメンバー変数に反映されます。</returns>
-	int Join(Table* tbl, JOIN_TYPE type)
+	int Join(Table* tbl, JOIN_TYPE type, condition& join_condition)
 	{
 		vector<char> mat;
-		conditionMatTables(tbl, join_cond, mat);
+		conditionMatTables(tbl, join_condition, mat);
 		const unsigned int ROWNUM = (int)tbl->node[0]->size();
 		//ノード追加
 		vector<int> node;
@@ -436,18 +434,25 @@ public:
 			}
 		}
 		else if (type == JOIN_TYPE::RIGHT) {
-			//マトリックスの参照具合が違う
+			vector<char> matchedRight;
+			matchedRight.resize(ROWNUM);
 			for (unsigned int i = 0; i < Node.size(); i++) {
-				flag = true;
 				for (unsigned int j = 0; j < ROWNUM; j++) {
 					if (mat[cnt++]) {
 						node.push_back(makeno(Node[i], j, ROWNUM));
-						flag = false;
+						matchedRight[j] = 1;
 					}
 				}
-				// 条件不一致時は右側にNULL相当を追加
-				if (flag) {
-					node.push_back(makeno(Node[i], ROWNUM, ROWNUM));
+			}
+			// 既存ノード側は全NULLにした疑似ノード番号を作る
+			int nullLeftNode = 0;
+			for (unsigned int i = 0; i < RowNum.size(); i++) {
+				nullLeftNode = makeno(nullLeftNode, RowNum[i], RowNum[i]);
+			}
+			// マッチしなかった右側行を残す
+			for (unsigned int j = 0; j < ROWNUM; j++) {
+				if (!matchedRight[j]) {
+					node.push_back(makeno(nullLeftNode, j, ROWNUM));
 				}
 			}
 
@@ -843,6 +848,17 @@ CMDS getToken(unsigned char* sql, unsigned char* token)
 		break;
 	case '+':
 	case '-':
+		// 先頭符号は数値のときだけPRMとして扱う（例: -10, +3.14）
+		if (strchr("0123456789.", p[1]) != NULL) {
+			*q++ = *p++;
+			while (*p && strchr("0123456789.", *p) != NULL) *q++ = *p++;
+			ret = CMDS::TXPRM;
+		}
+		else {
+			*q++ = *p++;
+			ret = CMDS::TXOP;
+		}
+		break;
 	case '0':
 	case '1':
 	case '2':
@@ -1644,7 +1660,6 @@ void Database::Save(void)
 int Database::SQL(const wString& sqltext, wString& retStr)
 {
 	condition        cond;
-	condition		 join_cond; // JOIN条件用
 	unsigned char    token[256];
 	unsigned char    token2[256];
 	unsigned char    sql[2048] = {};
@@ -1653,12 +1668,17 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 	//　テーブル名
 	vector<wString>  tables;
 	vector<JOIN_TYPE> join_types; // JOINの種類
+	vector<condition> join_conds; // JOINごとのON条件
 	vector<wString>  values;
 	vector<wString>  order;
 	orderType        orderTyp = orderType::ASC;
 	vector<int>      limit;
 	Table* tbl;
 	view* vw;
+	if (sqltext.length() >= sizeof(sql)) {
+		err("SQL too long");
+		return -1;
+	}
 	strcpy(reinterpret_cast<char*>(sql), reinterpret_cast<char*>(sqltext.c_str()));
 	CMDS ret = getToken(sql, token);
 	if (ret == CMDS::TXNONE || ret == CMDS::TXOTHER) {
@@ -1684,7 +1704,6 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 				if (chkToken(sql, token, ret, CMDS::TXARG)) { err("SELECT NO ARG ERROR");   return -1; }//ARG
 				//エイリアス登録
 				cond.clmalias[reinterpret_cast<char*>(token)] = reinterpret_cast<char*>(token2);
-				join_cond.clmalias[reinterpret_cast<char*>(token)] = reinterpret_cast<char*>(token2);
 				ret = getToken(sql, token);
 			}
 			if (ret == CMDS::TXFROM)               break;
@@ -1695,12 +1714,12 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 			if (chkToken(sql, token2, ret, CMDS::TXARG)) { err("SELECT NO TABLE ERROR"); return -1; }//table
 			tables.push_back(reinterpret_cast<char*>(token2));
 			join_types.push_back(JOIN_TYPE::NONE); // 最初のテーブルはJOINなし
+			join_conds.push_back(condition());
 			ret = getToken(sql, token);
 			if (ret == CMDS::TXAS) {
 				if (chkToken(sql, token, ret, CMDS::TXARG)) { err("SELECT NO ARG ERROR");   return -1; }//ARG
 				//テーブルエイリアス登録
 				cond.tblalias[reinterpret_cast<char*>(token)] = reinterpret_cast<char*>(token2);
-				join_cond.tblalias[reinterpret_cast<char*>(token)] = reinterpret_cast<char*>(token2);
 				ret = getToken(sql, token);
 			}
 			if (ret != CMDS::TXCM)                 break;
@@ -1710,6 +1729,7 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 		while (ret == CMDS::TXJOIN || ret == CMDS::TXLEFT || ret == CMDS::TXRIGHT || ret == CMDS::TXINNER) {
 			// SELECT JOIN TYPE
 			JOIN_TYPE join_type;
+			condition join_cond;
 			switch (ret) {
 			case CMDS::TXLEFT:join_type = JOIN_TYPE::LEFT; break;
 			case CMDS::TXRIGHT:join_type = JOIN_TYPE::RIGHT; break;
@@ -1722,12 +1742,12 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 			if (chkToken(sql, token2, ret, CMDS::TXARG)) { err("JOIN NO TABLE ERROR"); return -1; }
 			tables.push_back(reinterpret_cast<char*>(token2));
 			join_types.push_back(join_type);
+			join_conds.push_back(condition());
 
 			ret = getToken(sql, token);
 			if (ret == CMDS::TXAS) {
 				if (chkToken(sql, token, ret, CMDS::TXARG)) { err("JOIN NO ARG ERROR");   return -1; }
 				cond.tblalias[reinterpret_cast<char*>(token)] = reinterpret_cast<char*>(token2);
-				join_cond.tblalias[reinterpret_cast<char*>(token)] = reinterpret_cast<char*>(token2);
 				ret = getToken(sql, token);
 			}
 			// ON句の処理
@@ -1745,7 +1765,9 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 					join_cond.put(reinterpret_cast<char*>(token), ret);
 				}
 			}
-			ret = getToken(sql, token);
+			join_cond.clmalias = cond.clmalias;
+			join_cond.tblalias = cond.tblalias;
+			join_conds.back().copy(join_cond);
 		}
 		// --- ここまで JOIN句の処理 ---
 
@@ -1801,7 +1823,7 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 			}
 		}
 		//テーブル取得
-		vw = new view(cond, join_cond);
+		vw = new view(cond);
 		for (unsigned int i = 0; i < tables.size(); i++) {
 			if (join_types[i] == JOIN_TYPE::NONE)
 			{
@@ -1818,7 +1840,7 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 		for (unsigned int i = 0; i < tables.size(); i++) {
 			if (join_types[i] != JOIN_TYPE::NONE)
 			{
-				vw->Join(tblList[tables[i]], join_types[i]);
+				vw->Join(tblList[tables[i]], join_types[i], join_conds[i]);
 			}
 		}
 
@@ -2670,6 +2692,7 @@ int _DBDisConnect(wString& key)
 /// <returns>SQLクエリの実行結果、またはエラーメッセージを含むwString。キーが見つからない場合は"ERROR KEY NOT FOUND"を返します。</returns>
 wString _DBSQL(const wString& key, wString& sql)
 {
+	static int cntt = 0;
 	if (connects->count(key) > 0) {
 		std::lock_guard<std::mutex> lock(mtx);
 		wString retStr;
@@ -2694,6 +2717,7 @@ wString _DBSQL(const wString& key, wString& sql)
 				return retStr;
 			}
 			else {
+				int a = cntt++;
 				return "OK";
 			}
 		default:
