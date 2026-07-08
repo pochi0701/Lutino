@@ -780,6 +780,20 @@ int wString::rfind (char ch, int index) const
 		return static_cast<int>((ptr - String));
 	}
 }
+
+/********************************************************************************/
+// sentence文字列内のunique_charが連続しているところを、unique_char1文字だけにする。
+/********************************************************************************/
+void wString::duplex_character_to_unique(char unique_char)
+{
+	wString fromStr;
+	wString toStr;
+	fromStr = unique_char;
+	fromStr += unique_char;
+	toStr = unique_char;
+	replace_character(fromStr, toStr);
+	return;
+}
 //---------------------------------------------------------------------------
 // 位置
 //---------------------------------------------------------------------------
@@ -1660,6 +1674,27 @@ void wString::replace_character_len (const char* sentence, int slen, const char*
 		memcpy (const_cast<char*>(p), rep, rlen);
 	}
 	return;
+}
+/// <summary>
+/// sentence文字列内のkey文字列をrep文字列で置換する。ｎ回
+/// </summary>
+/// <param name="sentence">置換元文字列</param>
+/// <param name="key">置換文字列</param>
+/// <param name="rep">置換後の文字列</param>
+bool wString::replace_character(wString key, wString rep)
+{
+	int klen = key.length();
+	int rlen = rep.length();
+	if (klen == 0 || len == 0) {
+		return false;
+	}
+	auto p = find(key);
+	//前詰め置換そのままコピーすればいい
+	while (p != wString::npos) {
+		replace(p, klen, rep);
+		p = find(key, rlen);
+	}
+	return true;
 }
 ///---------------------------------------------------------------------------
 /// <summary>
@@ -3490,6 +3525,77 @@ bool wString::cut_after_character (const char cut_char)
 	len = ptr;
 	return true;
 }
+//************************************************************************
+// sentence文字列の、cut_charが最後に出てきた所から後ろをCUT
+// もし、cut_charがsentence文字列に入っていなかった場合、文字列全部削除。
+//************************************************************************
+bool wString::cut_after_last_character(const char cut_char)
+{
+	int ptr = rfind(cut_char);
+	if( ptr == wString::npos) {
+		return false;
+	}
+
+	String[ptr] = 0;
+	len = ptr;
+	return true;
+}
+
+//*********************************************************
+// sentence文字列より、最初に出て来たcut_charの前後を分割。
+//
+//      sentence        (IN) 分割対象の文字列を与える。
+//      cut_char        (IN) 分割対象の文字を入れる。
+//      split1          (OUT)カットされた前の部分が入る。sentenceと同等のサイズが望ましい。
+//      split2          (OUT)カットされた後ろの部分が入る。sentenceと同等のサイズが望ましい。
+//
+//
+// return
+//              0:                      正常終了。
+//              それ以外：      エラー。分割失敗などなど。
+//*********************************************************
+bool wString::sentence_split(char cut_char, wString& split1, wString& split2)
+{
+	split1.clear();
+	split2.clear();
+	char* p = String;
+	char* ptr = nullptr;
+	// エラーチェック。
+	if (len == 0 ) {
+		return false;       // 引数にNULLまじり。
+	}
+	int pos = find(cut_char);
+	// 分割文字発見できず。
+	if (pos == wString::npos) {
+		return false;
+	}
+	ptr = p+pos;//分割文字の位置をポインタに変換
+	//比較しながら複写
+	while (*p) {
+		//分割文字より前半
+		if (p < ptr) {
+			split1 += *p++;
+			//分割文字より後半
+		}
+		else if (p > ptr) {
+			split2 += *p++;
+			//分割文字位置
+		}
+		else {
+			p++;
+		}
+	}
+	return 0; // 正常終了。
+}
+
+
+
+
+
+
+
+
+
 //////////////////////////////////////////////////////////////////////////
 /// <summary>
 /// pos位置に指定文字を挿入(バイナリ単位）
@@ -3782,3 +3888,4 @@ wString wString::bios_uuid()
 #endif
 	return tmp;
 }
+

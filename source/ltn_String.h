@@ -75,6 +75,7 @@ public:
 	int             Pos(const char* pattern, int pos = 0) const;
 	unsigned int    copy(char* str, unsigned int slen, int index) const;
 	wString&        replace(int index, unsigned int len, const wString& repstr);
+	void            duplex_character_to_unique(char unique_char);
 	wString         dump(void) const;
 
 	unsigned int    size(void) const;
@@ -171,6 +172,9 @@ public:
 	int             line_receive(SOCKET accept_socket);
 	bool            cut_before_character(const char cut_char);
 	bool            cut_after_character(const char cut_char);
+	bool            cut_after_last_character(const char cut_char);
+	bool            sentence_split(char cut_char, wString& split1, wString& split2);
+	bool            replace_character(wString key, wString rep);
 	wString         insert(int pos, const wString& fill);
 	//
 	char*			strtok_csv (char* str, int& ptr);
