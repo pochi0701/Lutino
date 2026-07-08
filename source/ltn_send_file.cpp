@@ -43,7 +43,7 @@
 #include "ltn_String.h"
 #include "define.h"
 
-int  http_file_send(SOCKET accept_socket, char* filename, unsigned int content_length, unsigned int range_start_pos, unsigned int seed);
+int  http_file_send(SOCKET accept_socket, wString& filename, unsigned int content_length, unsigned int range_start_pos, unsigned int seed);
 long FileSize(const char* file_name);
 #ifdef cript
 //0d23e5e944062f9ecb9471fbaf79f1e0b33c1a174f22366a077d59b25350d616eb827d74eedbc2
@@ -61,7 +61,7 @@ size_t HTTP_RECV_INFO::http_header_response(SOCKET accept_socket)
 	size_t  t_content_length;
 	int     send_header_data_len;
 	wString send_http_header_buf;
-	off_t   content_size = FileSize(static_cast<char*>(send_filename));
+	off_t   content_size = FileSize(static_cast<char*>(send_filename.c_str()));
 
 	// -------------------------------
 	// ファイルサイズチェック
@@ -181,7 +181,7 @@ int HTTP_RECV_INFO::http_file_response(SOCKET accept_socket)
 /// <param name="seed">種サイズ</param>
 /// <returns></returns>
 int http_file_send(SOCKET accept_socket,
-	char* filename,
+	wString& filename,
 	unsigned int content_length,
 	unsigned int range_start_pos,
 	unsigned int seed)
@@ -191,9 +191,9 @@ int http_file_send(SOCKET accept_socket,
 	// ---------------------
 	// ファイルオープン
 	// ---------------------
-	auto in_fd = myopen(wString(filename), O_RDONLY | O_BINARY, S_IREAD);
+	auto in_fd = myopen(filename, O_RDONLY | O_BINARY, S_IREAD);
 	if (in_fd < 0) {
-		debug_log_output("open() error.:%d:[%s]",errno,filename);
+		debug_log_output("open() error.:%d:[%s]",errno,filename.c_str());
 		return (-1);
 	}
 	// ------------------------------------------

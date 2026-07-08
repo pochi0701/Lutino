@@ -49,7 +49,7 @@ int HTTP_RECV_INFO::http_cgi_response(SOCKET accept_socket)
 	char* script_exec_name;
 	char ext[4];
 	//WINDOWSでドライブから始まる場合
-	if (send_filename[1] != ':') {
+	if (send_filename.length()>=2 && send_filename[1] != ':') {
 		// TODO server_rootを使うべきだが以下のコードは出来てない
 		char cwd[FILENAME_MAX];
 		debug_log_output("WARNING: send_filename[1] != ':', send_filename = '%s'", send_filename);
@@ -57,12 +57,12 @@ int HTTP_RECV_INFO::http_cgi_response(SOCKET accept_socket)
 			debug_log_output("getcwd() failed. err = %s", strerror(errno));
 			return -1;
 		}
-		strncpy(script_filename, send_filename, sizeof(send_filename));
+		send_filename = script_filename;
 		//2004/07/13 Update end
 		path_sanitize(script_filename, sizeof(script_filename));
 	}
 	else {
-		strncpy(script_filename, send_filename, sizeof(script_filename));
+		strncpy(script_filename, send_filename.c_str(), sizeof(script_filename));
 	}
 	wString w_query_string;
 	int qpos = request_uri.find('?');

@@ -3072,6 +3072,56 @@ int wString::http_size (const wString& url)
 	return content_length;
 }
 #endif
+
+bool wString::path_sanitize(wString& orig_dir)
+{
+	if (orig_dir.empty()) {
+		orig_dir = "/";
+		return true;
+	}
+
+	std::vector<wString> stack;
+	size_t i = 0;
+	const size_t n = orig_dir.size();
+
+	while (i < n) {
+		// skip leading '/'
+		while (i < n && orig_dir[i] == '/') i++;
+
+		if (i >= n) break;
+
+		// extract one component
+		size_t start = i;
+		while (i < n && orig_dir[i] != '/') i++;
+		wString part = orig_dir.substr(start, i - start);
+
+		if (part == "..") {
+			if (stack.empty()) {
+				// 上位ディレクトリに行けない → 不正
+				orig_dir.clear();
+				return false;
+			}
+			stack.pop_back();
+		}
+		else if (part != ".") {
+			stack.push_back(part);
+		}
+	}
+
+	// 再構築
+	if (stack.empty()) {
+		orig_dir = "/";
+	}
+	else {
+		wString out;
+		for (auto& s : stack) {
+			out += "/";
+			out += s;
+		}
+		orig_dir = out;
+	}
+	return true;
+}
 //---------------------------------------------------------------------------
 // linux用ファイル名に変換
 //---------------------------------------------------------------------------

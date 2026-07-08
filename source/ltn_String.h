@@ -76,6 +76,7 @@ public:
 	unsigned int    copy(char* str, unsigned int slen, int index) const;
 	wString&        replace(int index, unsigned int len, const wString& repstr);
 	void            duplex_character_to_unique(char unique_char);
+	bool            path_sanitize(wString& orig_dir);
 	wString         dump(void) const;
 
 	unsigned int    size(void) const;

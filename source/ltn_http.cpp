@@ -154,21 +154,19 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		// action=/system/xxx.jss等の場合
 		if (http_recv_info.action.find('/') >= 0)
 		{
-			strcpy(http_recv_info.send_filename, global_param.document_root);
-			strcat(http_recv_info.send_filename, http_recv_info.action.c_str());
+			http_recv_info.send_filename = global_param.document_root;
+			http_recv_info.send_filename += http_recv_info.action;
 			//(aliasを加味して）
 			for (int i = 0; i < MAX_COUNT_ALIAS; i++) {
-				if (*global_param.alias_key[i] && strstr(http_recv_info.send_filename, global_param.alias_key[i])) {
+				if (*global_param.alias_key[i] && http_recv_info.send_filename.find(global_param.alias_key[i]) != wString::npos) {
 					//aliasで置換する
-					//snprintf(work_buf, sizeof(work_buf), "%s%s", global_param.document_org, global_param.alias_key[i]);
-					//replace_character(send_filename, work_buf, global_param.alias_rep[i]);
-					replace_character(http_recv_info.send_filename, global_param.alias_key[i], global_param.alias_rep[i]);
+					http_recv_info.send_filename.replace_character(wString(global_param.alias_key[i]), wString(global_param.alias_rep[i]));
 				}
 			}
 		}
 		else {
 			skin_filename += http_recv_info.action;
-			strcpy(http_recv_info.send_filename, skin_filename.c_str());
+			http_recv_info.send_filename = skin_filename;
 		}
 		{
 			int qpos = http_recv_info.request_uri.find('?');
@@ -224,10 +222,10 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 				http_recv_info.request_uri.sprintf ("/menu.jss?%s", tmp.c_str ());
 			}
 			else {
-				http_recv_info.request_uri.sprintf ("/menu.jss?root=%s", http_recv_info.send_filename);
+				http_recv_info.request_uri.sprintf ("/menu.jss?root=%s", http_recv_info.send_filename.c_str());
 			}
 			//send file nameの設定
-			sprintf (http_recv_info.send_filename, "%s%smenu.jss", global_param.skin_root, global_param.skin_name);
+			http_recv_info.send_filename.sprintf("%s%smenu.jss", global_param.skin_root, global_param.skin_name);
 			http_recv_info.http_cgi_response (accept_socket);
 			debug_log_output ("File menu convert done.\n");
 			return;
@@ -293,9 +291,9 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 	read_filename.sprintf ("%sindex.html", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
 		request_uri += "index.html";
-		strcpy (send_filename, read_filename.c_str ());
+		send_filename = read_filename;
 		// ファイルの拡張子より、Content-type を決定
-		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
+		filename_to_extension (send_filename.c_str(), file_extension, sizeof(file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
 		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
@@ -304,9 +302,9 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 	read_filename.sprintf ("%sindex.htm", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
 		request_uri += "index.htm";
-		strcpy (send_filename, read_filename.c_str ());
+		send_filename = read_filename;
 		// ファイルの拡張子より、Content-type を決定
-		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
+		filename_to_extension (send_filename.c_str(), file_extension, sizeof(file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
 		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
@@ -315,9 +313,9 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 	read_filename.sprintf ("%sindex.php", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
 		request_uri += "index.php";
-		strcpy (send_filename, read_filename.c_str ());
+		send_filename = read_filename;
 		// ファイルの拡張子より、Content-type を決定
-		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
+		filename_to_extension (send_filename.c_str(), file_extension, sizeof(file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
 		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
@@ -326,9 +324,9 @@ FILETYPES HTTP_RECV_INFO::http_index (void)
 	read_filename.sprintf ("%sindex.jss", document_path.c_str ());
 	if (wString::file_exists(read_filename)) {
 		request_uri += "index.jss";
-		strcpy (send_filename, read_filename.c_str ());
+		send_filename = read_filename;
 		// ファイルの拡張子より、Content-type を決定
-		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
+		filename_to_extension (send_filename.c_str(), file_extension, sizeof(file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
 		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
@@ -577,25 +575,24 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 	// ファイルチェック
 	// -------------------------
 	// 要求パスのフルパス生成。
-	strncpy (send_filename, global_param.document_root, sizeof (send_filename) - 1);
+	send_filename = global_param.document_root;
 	strncpy (work_data, recv_uri, sizeof (work_data) - 1);
 
 	// recv_uri保護のための変更
 	rtrim (work_data, '/');
 	replace_character (work_data, "/", DELIMITER);
-	strncat (send_filename, work_data, sizeof (send_filename) - 1);
+	send_filename += work_data;
 	//uri_decode
-	uri_decode (work_buf, sizeof (work_buf), send_filename, sizeof (send_filename));
-	strncpy (send_filename, work_buf, sizeof (send_filename) - 1);
+	send_filename = send_filename.uri_decode();
 
 
 	//(aliasを加味して）
 	for (int i = 0; i < MAX_COUNT_ALIAS; i++) {
-		if (*global_param.alias_key[i] && strstr (send_filename, global_param.alias_key[i])) {
+		if (*global_param.alias_key[i] && send_filename.find(global_param.alias_key[i])!= wString::npos) {
 			//aliasで置換する
 			//snprintf(work_buf, sizeof(work_buf), "%s%s", global_param.document_org, global_param.alias_key[i]);
 			//replace_character(send_filename, work_buf, global_param.alias_rep[i]);
-			replace_character (send_filename, global_param.alias_key[i], global_param.alias_rep[i]);
+			send_filename.replace_character (wString(global_param.alias_key[i]), wString(global_param.alias_rep[i]));
 		}
 	}
 
@@ -610,7 +607,7 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 		// -------------------------------------------
 		// ファイルの拡張子より、Content-type を決定
 		// -------------------------------------------
-		filename_to_extension (send_filename, file_extension, sizeof (file_extension));
+		filename_to_extension (send_filename.c_str(), file_extension, sizeof(file_extension));
 		//debug_log_output ("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 		// 拡張子から、mime_typeを導く。
 		mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
@@ -658,9 +655,9 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 		//cut_before_last_character(work_data, '/');
 		// 2004/10/13 Add end
 		// skin置き場にあるモノとして、フルパス生成。
-		strncpy (send_filename, global_param.skin_root, sizeof (send_filename) - 1);
-		strncat (send_filename, global_param.skin_name, sizeof (send_filename) - 1);
-		strncat (send_filename, work_data, sizeof (send_filename) - 1);
+		send_filename = global_param.skin_root;
+		send_filename += global_param.skin_name;
+		send_filename += work_data;
 		// '/' が重なってるところの重複を排除。
 		//		duplex_character_to_unique(send_filename, '/');
 		// 2004/10/13 Delete start
@@ -682,7 +679,7 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 			// -------------------------------------------
 			// ファイルの拡張子より、Content-type を決定
 			// -------------------------------------------
-			filename_to_extension (send_filename, file_extension, sizeof (file_extension));
+			filename_to_extension (send_filename.c_str(), file_extension, sizeof(file_extension));
 			//debug_log_output("send_filename='%s', file_extension='%s'\n", send_filename, file_extension);
 			mime_type = MIME_LIST_T::check_file_extension_to_mime_type (file_extension);
 			if (strcasecmp (file_extension, "cgi") == 0 ||
