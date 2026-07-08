@@ -50,7 +50,7 @@ private:
     wString content_type;	         // PUTのためのContent_type
     wString cookie;                  // cookie;
 public:
-    char   recv_uri[QUERY_MAX];      // 受信したURI(decoded)
+    wString recv_uri;                // 受信したURI(decoded)
     wString user_agent;              // 受信したUser-Agent
     wString recv_host;               // 受信したホスト名
     off_t  range_start_pos;          // Rangeデータ 開始位置
@@ -67,24 +67,9 @@ public:
 	HTTP_RECV_INFO()
 	{
         clear();
-		//*recv_range = 0;
-		//*content_length = 0;
-		//*content_type = 0;
-		//cookie.clear();
-		//*recv_uri = 0;
-		//*user_agent = 0;
-		//*recv_host = 0;
-		//range_start_pos = 0;
-		//range_end_pos = 0;
-		//*mime_type = 0;
-		//*send_filename = 0;
-		//*action = 0;
-		//*request_uri = 0;
-		//boundary.clear();
-		//method = QUERY_METHOD::NONE;
 	};
     // JavaScript実行
-    void jss(SOCKET accpet_socket, char* script_filename, char* query_string);
+    void jss(SOCKET accpet_socket, wString& script_filename, char* query_string);
     // CGI解析＆返信
     int http_cgi_response(SOCKET accept_socket);
     // HTTP HEADER受信
@@ -114,7 +99,7 @@ public:
         content_length.clear();
         content_type.clear();
         cookie.clear();
-        *recv_uri = 0;
+        recv_uri.clear();
         user_agent.clear();
         recv_host.clear();
         range_start_pos = 0;

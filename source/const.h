@@ -20,7 +20,7 @@
 #endif
 
 #define DELIMITER          "/"
-#define USERAGENT          "Birdland/LutinoV1.10"
+#define USERAGENT          "Birdland/LutinoV1.20"
 #define HTTP_SERVER_PORT   (80)
 #define MACADDR            (MAC_ADDR)
 

@@ -106,7 +106,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 	}
 #endif
 
-	if (path_sanitize (http_recv_info.recv_uri, sizeof (http_recv_info.recv_uri)) == NULL) {
+	if (!http_recv_info.recv_uri.path_sanitize ()) {
 		// BAD REQUEST!
 		http_recv_info.http_not_found_response (accept_socket);
 		debug_log_output ("%s(%d) BAD REQUEST. Path sanitize %s\n", __FILE__, __LINE__,http_recv_info.recv_uri);
@@ -114,7 +114,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		return;
 	}
 	//PROXY判定
-	if (!strncmp (http_recv_info.recv_uri, "/-.-", 4)) {
+	if (http_recv_info.recv_uri.starts_with("/-.-")) {
 		// proxy
 		if (http_recv_info.http_proxy_response (accept_socket) < 0) {
 			http_recv_info.http_not_found_response (accept_socket);
@@ -135,7 +135,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 	// ディレクトリだが終端が '/' ではない
 	if (result == FILETYPES::_OPENDIR) { 
 		char buffer[FILENAME_MAX];
-		sprintf (buffer, "%s/", http_recv_info.recv_uri);
+		sprintf (buffer, "%s/", http_recv_info.recv_uri.c_str());
 		http_recv_info.http_redirect_response (accept_socket, buffer);
 	}
 	// file?action=/skin_root/skin_name/action.jss
@@ -178,7 +178,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		http_recv_info.request_uri = skin_filename;
 		http_recv_info.http_cgi_response (accept_socket);
 		//debug_log_output ("%s end!\n", http_recv_info.action);
-		debug_log_output ("HTTP Process action done. From %s:%s\n", access_host, http_recv_info.recv_uri);
+		debug_log_output ("HTTP Process action done. From %s:%s\n", access_host, http_recv_info.recv_uri.c_str());
 		return;
 	}
 	// ファイルが見つからない
@@ -201,7 +201,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		// ---------------------------------------------
 		//debug_log_output("HTTP CGI response start!\n");
 		http_recv_info.http_cgi_response (accept_socket);
-		debug_log_output ("HTTP Process CGI done. From %s:%s\n", access_host, http_recv_info.recv_uri);
+		debug_log_output ("HTTP Process CGI done. From %s:%s\n", access_host, http_recv_info.recv_uri.c_str());
 
 		//debug_log_output("HTTP CGI response end!\n");
 		return;
@@ -216,7 +216,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		wString tmp (http_recv_info.request_uri);
 		int pos = tmp.Pos ("?");
 		if (pos >= 0) {
-			strcpy (http_recv_info.recv_uri, "/menu.jss");
+			http_recv_info.recv_uri = "/menu.jss";
 			tmp = tmp.substr (pos + 1, tmp.length () - pos - 1);
 			if (tmp.length ()) {
 				http_recv_info.request_uri.sprintf ("/menu.jss?%s", tmp.c_str ());
@@ -246,7 +246,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 				//debug_log_output ("HTTP CGI response start! %d\n", accept_socket);
 				http_recv_info.http_cgi_response (accept_socket);
 				//debug_log_output ("HTTP CGI response end!\n");
-				debug_log_output ("HTTP Process CGI done. From %s:%s\n", access_host, http_recv_info.recv_uri);
+				debug_log_output ("HTTP Process CGI done. From %s:%s\n", access_host, http_recv_info.recv_uri.c_str());
 				return;
 			}
 			else {
@@ -263,7 +263,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 		cut_after_character (access_host, ':');
 	}
 	//sClose(accept_socket);
-	debug_log_output ("HTTP Process done. From %s:%s\n", access_host, http_recv_info.recv_uri);
+	debug_log_output ("HTTP Process done. From %s:%s\n", access_host, http_recv_info.recv_uri.c_str());
 	transport_close(accept_socket);
 	accept_socket = -1;
 	return;
@@ -440,18 +440,18 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 			line = line.uri_decode ();
 			//debug_log_output("URI(decoded):'%s'\n", line.c_str());
 			// 構造体に保存
-			strncpy (recv_uri, line.c_str (), sizeof (recv_uri) - 1);
+			recv_uri = line;
 			//絶対URIの場合はスキームとホスト部を取り除く
-			if (strncmp (recv_uri, "http://", 7) == 0) {
-				const char* ptr = strstr (recv_uri + 7, "/");
+			if (recv_uri.starts_with("http://")) {
+				const char* ptr = strstr (recv_uri.c_str() + 7, "/");
 				if (ptr) {
-					strcpy (recv_uri, ptr);
+					recv_uri = ptr;
 				}
 			}
-			else if (strncmp (recv_uri, "https://", 8) == 0) {
-				const char* ptr = strstr (recv_uri + 8, "/");
+			else if (recv_uri.starts_with("https://")) {
+				const char* ptr = strstr (recv_uri.c_str() + 8, "/");
 				if (ptr) {
-					strcpy (recv_uri, ptr);
+					recv_uri = ptr;
 				}
 			}
 			continue;
@@ -567,8 +567,7 @@ int HTTP_RECV_INFO::http_header_receive (SOCKET accept_socket)
 /// <returns>チェックしたファイルタイプ</returns>
 FILETYPES HTTP_RECV_INFO::http_file_check (void)
 {
-	char 	work_buf[1024];
-	char 	work_data[FILENAME_MAX] = {};
+	wString work_data;
 	char	file_extension[16];
 	//debug_log_output ("http_file_check() start.");
 	// -------------------------
@@ -576,11 +575,11 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 	// -------------------------
 	// 要求パスのフルパス生成。
 	send_filename = global_param.document_root;
-	strncpy (work_data, recv_uri, sizeof (work_data) - 1);
+	work_data = recv_uri;
 
 	// recv_uri保護のための変更
-	rtrim (work_data, '/');
-	replace_character (work_data, "/", DELIMITER);
+	work_data.rtrim_chr('/');
+	work_data.replace_character("\\", DELIMITER);
 	send_filename += work_data;
 	//uri_decode
 	send_filename = send_filename.uri_decode();
@@ -645,34 +644,15 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 		//debug_log_output("global_param.skin_root='%s'", global_param.skin_root);
 		//debug_log_output("global_param.skin_name='%s'", global_param.skin_name);
 		// 2004/10/13 Add start
-		strncpy (work_data, recv_uri, sizeof (work_data) - 1);
-		if (work_data[0] == '/') {
-			char work[2048];
-			strcpy (work, work_data + 1);
-			strcpy (work_data, work);
+		work_data = recv_uri;
+		if (work_data.starts_with("/")) {
+			work_data = work_data.substr(1);
 		}
-		//replace_character(work_data,"/","\\");
-		//cut_before_last_character(work_data, '/');
-		// 2004/10/13 Add end
+
 		// skin置き場にあるモノとして、フルパス生成。
 		send_filename = global_param.skin_root;
 		send_filename += global_param.skin_name;
 		send_filename += work_data;
-		// '/' が重なってるところの重複を排除。
-		//		duplex_character_to_unique(send_filename, '/');
-		// 2004/10/13 Delete start
-		//		duplex_character_to_unique(send_filename, DELIMITER[0]);
-		// 2004/10/13 Delete end
-		//debug_log_output ("SkinDir:send_filename='%s'\n", send_filename);
-		// ------------------------------------------------------------
-		// Skin置き場にファイルあるかチェック。
-		// ------------------------------------------------------------
-		// 2004/07/0? Delete start
-		//		result = stat(send_filename, &send_filestat);
-		//		debug_log_output("stat: result=%d, st_mode=%04X, S_ISREG=%d\n", result, send_filestat.st_mode, S_ISREG(send_filestat.st_mode));
-		// 2004/07/0? Delete end
-		// ファイル実体と検知。
-		//		if ( ( result == 0 ) && (S_ISREG(send_filestat.st_mode) == 1 ) )
 		if (wString::file_exists (send_filename)) {       // パスが示すファイルが存在する
 			// ファイル実体と検知
 			//debug_log_output("'%s' is File!!", send_filename);

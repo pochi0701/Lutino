@@ -1234,17 +1234,15 @@ void wString::rtrim_chr (char* sentence, unsigned char cut_char)
 /// 文字列の行末に、cut_charがあったとき、削除
 /// </summary>
 /// <param name="cut_char">対象文字列</param>
-/// <returns>削除文字列</returns>
-wString wString::rtrim_chr (unsigned char cut_char)
+void wString::rtrim_chr (unsigned char cut_char)
 {
-	wString temp (*this);
-	if (temp.len) {
+	if (len) {
 		//末尾の空白等を抜く
-		while (temp.len && reinterpret_cast<unsigned char*>(temp.String)[temp.len - 1] == cut_char) {
-			temp.String[--temp.len] = 0;
+		while (len && String[len - 1] == cut_char) {
+			String[--len] = 0;
 		}
 	}
-	return temp;
+	return;
 }
 /// <summary>
 /// 
@@ -3073,32 +3071,57 @@ int wString::http_size (const wString& url)
 }
 #endif
 
-bool wString::path_sanitize(wString& orig_dir)
+bool wString::path_sanitize()
 {
-	if (orig_dir.empty()) {
-		orig_dir = "/";
+	if (empty()) {
+		*this = "/";
 		return true;
 	}
 
+	wString drive;   // Windows の "C:" を保持する
+	size_t pos = 0;
+	const size_t n = this->size();
+
+	// --- Windows ドライブレター判定 ---
+	// 例: "C:/Users/user"
+	if (n >= 2 && (*this)[1] == ':' &&
+		(((*this)[0] >= 'A' && (*this)[0] <= 'Z') ||
+			((*this)[0] >= 'a' && (*this)[0] <= 'z')))
+	{
+		drive = this->substr(0, 2);  // "C:"
+		pos = 2;
+
+		// ドライブの後が "/" ならスキップ
+		if (pos < n && (*this)[pos] == '/')
+			pos++;
+	}
+
+	// --- パス部分の正規化 ---
 	std::vector<wString> stack;
-	size_t i = 0;
-	const size_t n = orig_dir.size();
 
-	while (i < n) {
+	while (pos < n) {
 		// skip leading '/'
-		while (i < n && orig_dir[i] == '/') i++;
+		while (pos < n && (*this)[pos] == '/') pos++;
 
-		if (i >= n) break;
+		if (pos >= n) break;
 
 		// extract one component
-		size_t start = i;
-		while (i < n && orig_dir[i] != '/') i++;
-		wString part = orig_dir.substr(start, i - start);
+		size_t start = pos;
+		while (pos < n && (*this)[pos] != '/') pos++;
+		wString part = this->substr(start, pos - start);
 
 		if (part == "..") {
 			if (stack.empty()) {
-				// 上位ディレクトリに行けない → 不正
-				orig_dir.clear();
+				// Windows の場合は "C:" があるのでそこまでは戻れる
+				if (!drive.empty()) {
+					// 例: C:/.. → C:
+					// ただし C: から上には行けない
+					// stack が空なら何もしない
+					continue;
+				}
+
+				// Linux の場合は不正
+				this->clear();
 				return false;
 			}
 			stack.pop_back();
@@ -3108,20 +3131,30 @@ bool wString::path_sanitize(wString& orig_dir)
 		}
 	}
 
-	// 再構築
+	// --- 再構築 ---
+	wString out;
+
+	if (!drive.empty()) {
+		out = drive;  // "C:"
+	}
+
 	if (stack.empty()) {
-		orig_dir = "/";
+		// Windows: "C:/"
+		// Linux:   "/"
+		out += "/";
 	}
 	else {
-		wString out;
 		for (auto& s : stack) {
 			out += "/";
 			out += s;
 		}
-		orig_dir = out;
 	}
+
+	*this = out;
 	return true;
 }
+
+
 //---------------------------------------------------------------------------
 // linux用ファイル名に変換
 //---------------------------------------------------------------------------

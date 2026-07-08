@@ -45,7 +45,7 @@ bool split(const char* cut_char, wString& split1, wString& split2);
 int HTTP_RECV_INFO::http_cgi_response(SOCKET accept_socket)
 {
 	char* query_string;
-	char script_filename[1024] = {};
+	wString script_filename;
 	char* script_exec_name;
 	char ext[4];
 	//WINDOWSでドライブから始まる場合
@@ -57,12 +57,13 @@ int HTTP_RECV_INFO::http_cgi_response(SOCKET accept_socket)
 			debug_log_output("getcwd() failed. err = %s", strerror(errno));
 			return -1;
 		}
-		send_filename = script_filename;
+		script_filename = send_filename;
 		//2004/07/13 Update end
-		path_sanitize(script_filename, sizeof(script_filename));
+		script_filename.path_sanitize();
 	}
 	else {
-		strncpy(script_filename, send_filename.c_str(), sizeof(script_filename));
+		script_filename = send_filename;
+		script_filename.path_sanitize();
 	}
 	wString w_query_string;
 	int qpos = request_uri.find('?');
@@ -106,18 +107,20 @@ int HTTP_RECV_INFO::http_cgi_response(SOCKET accept_socket)
 /// <param name="accept_socket">結合ソケット</param>
 /// <param name="script_filename">対象フルファイル名</param>
 /// <param name="query_string">クエリー文字列</param>
-void HTTP_RECV_INFO::jss(SOCKET accept_socket, char* script_filename, char* query_string)
+void HTTP_RECV_INFO::jss(SOCKET accept_socket, wString& script_filename, char* query_string)
 {
 	//実行
 	struct sockaddr_in saddr = {};
 	socklen_t socklen;
-	char next_cwd[FILENAME_MAX] = {};
+	wString next_cwd;
+	//char next_cwd[FILENAME_MAX] = {};
 
 	//指定フォルダにcd
-	strncpy(next_cwd, script_filename, sizeof(next_cwd));
-	cut_after_last_character(next_cwd, '/');
+	next_cwd = script_filename;
+	//strncpy(next_cwd, script_filename, sizeof(next_cwd));
+	next_cwd.cut_after_last_character('/');
 	struct stat results;
-	if (stat(wString(script_filename).nkfcnv("Ws").c_str(), &results) != 0)
+	if (stat(script_filename.nkfcnv("Ws").c_str(), &results) != 0)
 	{
 		debug_log_output("Cannot stat file! '%s'\n", script_filename);
 		return;

@@ -176,48 +176,48 @@ void replace_character(char* sentence, const char* key, const char* rep)
 	//myfree(buf);
 	return;
 }
-/// <summary>
-/// entence文字列内の最初のkey文字列をrep文字列で置換する。
-/// </summary>
-/// <param name="sentence">対象文字列</param>
-/// <param name="key">置換元文字</param>
-/// <param name="rep">置換先文字</param>
-void replace_character_first(char* sentence, const char* key, const char* rep)
-{
-	auto klen = (int)strlen(key);
-	auto rlen = (int)strlen(rep);
-	auto slen = (int)strlen(sentence);
-	int num;
-	if (klen == 0 || slen == 0) {
-		return;
-	}
-	auto p = strstr(sentence, key);
-	if (p == 0)
-	{
-		return;
-	}
-	if (klen == rlen) {
-		memcpy(p, rep, rlen);
-		//前詰め置換そのままコピーすればいい
-	}
-	else if (klen > rlen)
-	{
-		num = klen - rlen;
-		strcpy(p, (p + num));
-		memcpy(p, rep, rlen);
-		//置換文字が長いので後詰めする
-	}
-	else
-	{
-		num = rlen - klen;
-		//pからrlen-klenだけのばす
-		for (auto str = sentence + slen + num; str - num >= p; str--) {
-			*str = *(str - num);
-		}
-		memcpy(p, rep, rlen);
-	}
-	return;
-}
+///// <summary>
+///// entence文字列内の最初のkey文字列をrep文字列で置換する。
+///// </summary>
+///// <param name="sentence">対象文字列</param>
+///// <param name="key">置換元文字</param>
+///// <param name="rep">置換先文字</param>
+//void replace_character_first(char* sentence, const char* key, const char* rep)
+//{
+//	auto klen = (int)strlen(key);
+//	auto rlen = (int)strlen(rep);
+//	auto slen = (int)strlen(sentence);
+//	int num;
+//	if (klen == 0 || slen == 0) {
+//		return;
+//	}
+//	auto p = strstr(sentence, key);
+//	if (p == 0)
+//	{
+//		return;
+//	}
+//	if (klen == rlen) {
+//		memcpy(p, rep, rlen);
+//		//前詰め置換そのままコピーすればいい
+//	}
+//	else if (klen > rlen)
+//	{
+//		num = klen - rlen;
+//		strcpy(p, (p + num));
+//		memcpy(p, rep, rlen);
+//		//置換文字が長いので後詰めする
+//	}
+//	else
+//	{
+//		num = rlen - klen;
+//		//pからrlen-klenだけのばす
+//		for (auto str = sentence + slen + num; str - num >= p; str--) {
+//			*str = *(str - num);
+//		}
+//		memcpy(p, rep, rlen);
+//	}
+//	return;
+//}
 //***************************************************************************
 // sentence文字列より、cut_charから後ろを削除
 //      見つからなければ何もしない。
@@ -309,34 +309,34 @@ void    cut_after_n_length(char* sentence, unsigned int n)
 	*work_p = '\0';
 	return;
 }
-/// <summary>
-/// sentence文字列の、cut_charを抜く。
-/// </summary>
-/// <param name="sentence">対象文字列</param>
-/// <param name="cut_char">カットする文字</param>
-void    cut_character(char* sentence, char cut_char)
-{
-	char* work1;
-	char* work2;
-	if (sentence == NULL || *sentence == 0) {
-		return;
-	}
-	work1 = sentence;
-	work2 = sentence;
-	// 処理ループ。
-	while (*work1) {
-		// 削除対象のキャラクターがいたら、それを飛ばす。
-		if (*work1 == cut_char) {
-			work1++;
-		}
-		else {
-			*work2++ = *work1++;
-		}
-	}
-	// '\0' をコピー。
-	*work2 = '\0';
-	return;
-}
+///// <summary>
+///// sentence文字列の、cut_charを抜く。
+///// </summary>
+///// <param name="sentence">対象文字列</param>
+///// <param name="cut_char">カットする文字</param>
+//void    cut_character(char* sentence, char cut_char)
+//{
+//	char* work1;
+//	char* work2;
+//	if (sentence == NULL || *sentence == 0) {
+//		return;
+//	}
+//	work1 = sentence;
+//	work2 = sentence;
+//	// 処理ループ。
+//	while (*work1) {
+//		// 削除対象のキャラクターがいたら、それを飛ばす。
+//		if (*work1 == cut_char) {
+//			work1++;
+//		}
+//		else {
+//			*work2++ = *work1++;
+//		}
+//	}
+//	// '\0' をコピー。
+//	*work2 = '\0';
+//	return;
+//}
 /// <summary>
 /// 文字列の左端文字削除
 /// </summary>
@@ -590,69 +590,69 @@ void filename_to_extension(char* filename, char* extension_buf, unsigned int ext
 //	return cnt;
 //	// 2004/10/01 Update end
 //}
-// **************************************************************************
-// URIデコードを行います.
-//  機能 : URIデコードを行う
-//  引数 : dst 変換した文字の書き出し先.
-//                dst_len 変換した文字の書き出し先の最大長.
-//                src 変換元の文字.
-//                src_len 変換元の文字の長さ.
-// 返値 : デコードした文字の数(そのままも含む)
-// **************************************************************************
-int uri_decode(char* dst, unsigned int dst_len, const char* src, unsigned int src_len)
-{
-	unsigned int    idx_src;
-	unsigned int    idx_dst;
-	int             cnt;
-	char            work[3] = {};
-	//const char    *ptr_stop;
-	char* strtol_end_ptr;
-	int             code;
-	// 引数チェック
-	if ((dst == NULL) || (dst_len < 1) || (src == NULL) || (src_len < 1)) {
-		return 0;
-	}
-	cnt = 0;
-	// =================
-	// メインループ
-	// =================
-	for (idx_src = idx_dst = 0; (idx_src < src_len) && (idx_dst < dst_len) && (src[idx_src] != '\0'); idx_dst++, cnt++) {
-		if (src[idx_src] == '%') {
-			if (idx_src + 2 > src_len) {
-				break;
-			}
-			work[0] = src[idx_src + 1];
-			work[1] = src[idx_src + 2];
-			work[2] = '\0';
-			code = strtol(work, &strtol_end_ptr, 16);
-			//ptr_stop = &src[idx_src + (strtol_end_ptr - work) + 1];
-			if (code == LONG_MIN || code == LONG_MAX) {
-				break;
-			}
-			if (strtol_end_ptr != NULL) {
-				if (*strtol_end_ptr != '\0') {
-					break;
-				}
-			}
-			dst[idx_dst] = (char)code;
-			idx_src += 3;
-		}
-		else if (src[idx_src] == '+') {
-			dst[idx_dst] = ' ';
-			idx_src += 1;
-			//ptr_stop++;
-		}
-		else {
-			dst[idx_dst] = src[idx_src];
-			idx_src += 1;
-			//ptr_stop++;
-		}
-		if (idx_dst + 1 < dst_len) {
-			dst[idx_dst + 1] = '\0';
-		}
-	}
-	return cnt;
-}
+//// **************************************************************************
+//// URIデコードを行います.
+////  機能 : URIデコードを行う
+////  引数 : dst 変換した文字の書き出し先.
+////                dst_len 変換した文字の書き出し先の最大長.
+////                src 変換元の文字.
+////                src_len 変換元の文字の長さ.
+//// 返値 : デコードした文字の数(そのままも含む)
+//// **************************************************************************
+//int uri_decode(char* dst, unsigned int dst_len, const char* src, unsigned int src_len)
+//{
+//	unsigned int    idx_src;
+//	unsigned int    idx_dst;
+//	int             cnt;
+//	char            work[3] = {};
+//	//const char    *ptr_stop;
+//	char* strtol_end_ptr;
+//	int             code;
+//	// 引数チェック
+//	if ((dst == NULL) || (dst_len < 1) || (src == NULL) || (src_len < 1)) {
+//		return 0;
+//	}
+//	cnt = 0;
+//	// =================
+//	// メインループ
+//	// =================
+//	for (idx_src = idx_dst = 0; (idx_src < src_len) && (idx_dst < dst_len) && (src[idx_src] != '\0'); idx_dst++, cnt++) {
+//		if (src[idx_src] == '%') {
+//			if (idx_src + 2 > src_len) {
+//				break;
+//			}
+//			work[0] = src[idx_src + 1];
+//			work[1] = src[idx_src + 2];
+//			work[2] = '\0';
+//			code = strtol(work, &strtol_end_ptr, 16);
+//			//ptr_stop = &src[idx_src + (strtol_end_ptr - work) + 1];
+//			if (code == LONG_MIN || code == LONG_MAX) {
+//				break;
+//			}
+//			if (strtol_end_ptr != NULL) {
+//				if (*strtol_end_ptr != '\0') {
+//					break;
+//				}
+//			}
+//			dst[idx_dst] = (char)code;
+//			idx_src += 3;
+//		}
+//		else if (src[idx_src] == '+') {
+//			dst[idx_dst] = ' ';
+//			idx_src += 1;
+//			//ptr_stop++;
+//		}
+//		else {
+//			dst[idx_dst] = src[idx_src];
+//			idx_src += 1;
+//			//ptr_stop++;
+//		}
+//		if (idx_dst + 1 < dst_len) {
+//			dst[idx_dst + 1] = '\0';
+//		}
+//	}
+//	return cnt;
+//}
 
 #ifndef __linux__
 /// <summary>
@@ -724,16 +724,6 @@ void make_datetime_string(char* sentence)
 //*******************************************************************
 void debug_log_initialize()
 {
-	//// 引数チェック
-	//if (set_debug_log_filename == NULL) {
-	//	return;
-	//}
-	//if (strlen(set_debug_log_filename) == 0) {
-	//	return;
-	//}
-	//// デバッグログファイル名をセット。
-	//strncpy(debug_log_filename, set_debug_log_filename, sizeof(debug_log_filename));
-	// デバッグログ 初期化完了フラグを0に。
 	debug_log_initialize_flag = 0;
 	return;
 }

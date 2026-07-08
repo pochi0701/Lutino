@@ -29,7 +29,7 @@ typedef int SOCKET;
 // ==========================================================================
 int myopen(const wString& filename, int amode, int option = 0);
 // uriエンコード／デコード
-extern int      uri_decode(char* dst, unsigned int dst_len, const char* src, unsigned int src_len);
+//extern int      uri_decode(char* dst, unsigned int dst_len, const char* src, unsigned int src_len);
 
 // テキスト処理イロイロ。
 extern char*    seekCRLFCRLF(char* start, char* end);
@@ -41,7 +41,7 @@ extern void     rtrim(char* sentence, char cut_char = ' ');
 extern int      sentence_split(char* sentence, char cut_char, char* split1, char* split2);
 extern void     duplex_character_to_unique(char* sentence, char unique_char);
 extern void     replace_character(char* sentence, const char* key, const char* rep);
-extern void     replace_character_first(char* sentence, const char* key, const char* rep);
+//extern void     replace_character_first(char* sentence, const char* key, const char* rep);
 extern void     make_datetime_string(char* sentence);
 extern void     filename_to_extension(char* filename, char* extension_buf, unsigned int extension_buf_size);
 //extern wString  insertStr(int pos, const wString& fill);
