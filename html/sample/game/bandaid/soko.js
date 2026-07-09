@@ -2,6 +2,14 @@
 var WIDTH=420;
 var HEIGHT=290;
 
+// URLパラメータからレベルを取得 (?level=N、デフォルト1、範囲1-90)
+function getLevel() {
+    var m = window.location.search.match(/[?&]level=(\d+)/);
+    var n = m ? parseInt(m[1]) : 1;
+    return (n >= 1 && n <= 90) ? n : 1;
+}
+var currentLevel = getLevel();
+
 var xmlHttp;
 var mX;
 var mY;
@@ -39,7 +47,9 @@ var img;
 
         // mousemove イベント
         document.addEventListener('mousemove', function(event) {
-            mouseMove(event.clientX, event.clientY);
+            var canvas = document.getElementById('mainWindow');
+            var rect = canvas.getBoundingClientRect();
+            mouseMove(event.clientX - rect.left, event.clientY - rect.top);
         });
 
         // mousedown イベント
@@ -49,6 +59,9 @@ var img;
         
 function loadText(){
     GoalCHK = 0;
+    // ステージラベルを更新
+    var lbl = document.getElementById('stage-label');
+    if (lbl) lbl.textContent = 'STAGE ' + currentLevel;
     if (window.XMLHttpRequest){
         xmlHttp = new XMLHttpRequest();
     }else{
@@ -59,88 +72,97 @@ function loadText(){
         }
     }
     xmlHttp.onreadystatechange = checkStatus;
-    xmlHttp.open("GET", "./screen/screen.2", true);
+    xmlHttp.open("GET", "./screen/screen." + currentLevel, true);
     xmlHttp.send(null);
 }
 //読み込み完了した
 function checkStatus(){
-    var i;
-    var j;
+    var i, j;
     if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
-        xml = xmlHttp.responseText.split("\n");
-        mX = Math.floor(xml[0]);
-        mY = Math.floor(xml[1]);
-        //alert(mY);
-        
+        var raw = xmlHttp.responseText.split("\n");
+
+        // フォーマット自動検出:
+        // Format A (screen.1,2): 先頭2行が数値(幅・高さ)
+        // Format B (screen.3+) : マップデータが直接始まる
+        var n0 = parseInt(raw[0], 10);
+        var n1 = parseInt(raw[1], 10);
+        var mapLines;
+        if (!isNaN(n0) && !isNaN(n1) && n0 > 0 && n0 < 200 && n1 > 0 && n1 < 200) {
+            mX = n0; mY = n1;
+            mapLines = raw.slice(2, 2 + mY);
+        } else {
+            // 末尾の空行を除去してmX/mYを計算
+            mapLines = raw.slice();
+            while (mapLines.length > 0 && mapLines[mapLines.length - 1].trim() === '') {
+                mapLines.pop();
+            }
+            mY = mapLines.length;
+            mX = 0;
+            for (i = 0; i < mY; i++) {
+                if (mapLines[i].length > mX) mX = mapLines[i].length;
+            }
+        }
+
+        // フィールド初期化(壁で埋める)
+        mB = 0;
         Fd = new Array(mY);
         for (i = 0; i < mY; i++) {
             Fd[i] = new Array(mX);
+            for (j = 0; j < mX; j++) Fd[i][j] = 1;
         }
-        
-        for( i = 0; i < mY; i++){
-            for( j= 0; j < mX; j++){
-                Fd[i][j] = 1;
-            }
-        }
-        
-        for( i = 0; i < mY; i++){
-            var s2 = xml[i+2];
-            for( j= 0; j < mX; j++){
+
+        // マップ解析
+        // 値: 0=道 1=壁 2=ボール 3=プレイヤー 4=ゴール 5=ボール+ゴール(*)  6=プレイヤー+ゴール(+)
+        for (i = 0; i < mY; i++) {
+            var s2 = mapLines[i] || '';
+            for (j = 0; j < mX; j++) {
                 var tch = s2.charAt(j);
                 switch(tch){
-                    case ' '://ROAD
-                    Fd[i][j] = 0;
-                    break;
-                    case '#'://WALL
-                    Fd[i][j] = 1;
-                    break;
-                    case '$'://BALL
-                    Fd[i][j] = 2;
-                    mB++;
-                    break;
-                    case '@'://ME
-                    Fd[i][j] = 3;
-                    X = i;
-                    Y = j;
-                    break;
-                    case '.'://GOAL
-                    Fd[i][j] = 4;
-                    break;
+                    case ' ': Fd[i][j] = 0; break;
+                    case '#': Fd[i][j] = 1; break;
+                    case '$': Fd[i][j] = 2; mB++; break;
+                    case '@': Fd[i][j] = 3; X = i; Y = j; break;
+                    case '.': Fd[i][j] = 4; break;
+                    case '*': Fd[i][j] = 5; mB++; break; // ボール+ゴール
+                    case '+': Fd[i][j] = 6; X = i; Y = j; break; // プレイヤー+ゴール
                 }
             }
         }
-        
+
+        // ゴール・ボール位置を配列に登録
         gl = new Array(mB);
         bg = new Array(mB);
-        for(i = 0 ; i < mB ; i++ ){
-            gl[i] =  new Cood(0,0);
-            bg[i] =  new Cood(0,0);
+        for (i = 0; i < mB; i++) {
+            gl[i] = new Cood(0,0);
+            bg[i] = new Cood(0,0);
         }
-        var j1 = 0;
-        var k1 = 0;
-        for(var l1 = 0; l1 < mX; l1++){
-            for(var i2 = 0; i2 < mY; i2++){
-                //GOAL
-                if(Fd[i2][l1] == 4){
-                    gl[j1].y = i2;
-                    gl[j1].x = l1;
-                    j1++;
+        var j1 = 0, k1 = 0;
+        for (var l1 = 0; l1 < mX; l1++) {
+            for (var i2 = 0; i2 < mY; i2++) {
+                // ゴール位置(4=ゴール空, 5=ボール+ゴール, 6=プレイヤー+ゴール)
+                if (Fd[i2][l1] == 4 || Fd[i2][l1] == 5 || Fd[i2][l1] == 6) {
+                    if (j1 < mB) { gl[j1].y = i2; gl[j1].x = l1; j1++; }
                 }
-                //BALL
-                if(Fd[i2][l1] == 2){
-                    bg[k1].y = i2;
-                    bg[k1].x = l1;
-                    k1++;
+                // ボール位置(2=ボール, 5=ボール+ゴール)
+                if (Fd[i2][l1] == 2 || Fd[i2][l1] == 5) {
+                    if (k1 < mB) { bg[k1].y = i2; bg[k1].x = l1; k1++; }
                 }
             }
-            
         }
+        // 5(ボール+ゴール)→2(ボール), 6(プレイヤー+ゴール)→3(プレイヤー) に正規化
+        for (i = 0; i < mY; i++) {
+            for (j = 0; j < mX; j++) {
+                if (Fd[i][j] == 5) Fd[i][j] = 2;
+                if (Fd[i][j] == 6) Fd[i][j] = 3;
+            }
+        }
+
         draw();
-        if(ctx){
-            setInterval(main,500); //コンテキストが取得できたならmain()関数を 繰り返し実行する
+        if (ctx) {
+            setInterval(main, 500);
         }
-    }else{
-        if(xmlHttp.status > 0 && xmlHttp.status != 200){
+    } else {
+        if (xmlHttp.status > 0 && xmlHttp.status != 200){
             alert("reload. this shuould be rewrite use axios."+xmlHttp.status);
         }
     }
@@ -188,13 +210,26 @@ function main()
 {
     if( change ){
         change = 0;
+        // 全ゴールにボールが乗っているか判定
+        var complete = true;
         for(var i = 0; i < mB; i++){
-            if(Fd[gl[i].y][gl[i].x] == 2)
-            continue;
-            GoalCHK = 1;
-            break;
+            if(Fd[gl[i].y][gl[i].x] != 2){
+                complete = false;
+                break;
+            }
         }
         draw();
+        if(complete && mB > 0){
+            // クリア: 1秒後に次の面へ
+            setTimeout(function(){
+                var next = currentLevel + 1;
+                if(next <= 90){
+                    window.location.href = window.location.pathname + '?level=' + next;
+                } else {
+                    alert('CONGRATULATIONS! All 90 stages complete!');
+                }
+            }, 1000);
+        }
     }
 }
 function mouseMove(x, y){
