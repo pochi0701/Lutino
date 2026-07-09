@@ -62,7 +62,7 @@ config.USERS = {
 
 // RESTRICTED: give access to some users to edit restricted pages
 config.RESTRICTED = {
-    "RestoreWiki": ["admin"]                        // only admin can restore wiki pages
+    "RestoreWiki": ["admin2"]                       // only admin2 can restore wiki pages
 };
 
 // LOCALE: text for some titles, icons, etc - you can use wiki syntax in these for images etc...
@@ -94,9 +94,9 @@ function isset(object) {
 }
 function css(pagename) {
     //global config;
-    css = config.GENERAL.CSS;
-    if (css != "") {
-        tokens = css.split(":");
+    cssStr = config.GENERAL.CSS;   // fix: css という関数名への上書きを回避
+    if (cssStr != "") {
+        tokens = cssStr.split(":");
         title = tokens[0];
         path = tokens[1];//.remove(1).join(":");
         print("\t<link rel=\"stylesheet\" type=\"text/css\" href=\"" + path + "\" title=\"" + title + "\" />\n");
@@ -111,8 +111,8 @@ function css(pagename) {
 // emails page changes
 function emailChanges(title, contents) {
     if (config.EMAIL.ENABLE) {
-        date = date(config.EMAIL.MODTIME_FORMAT);
-        subject = title + " :: " + date;
+        dateStr = Date().toDateString(config.EMAIL.MODTIME_FORMAT);  // fix: date() → Date().toDateString()、変数名も dateStr に変更
+        subject = title + " :: " + dateStr;
         if (config.EMAIL.SHOW_IP) {
             ipaddress = _SERVER.REMOTE_ADDR;
             subject += " :: IP " + ipaddress;
@@ -217,7 +217,7 @@ function updateWiki(modes, title, config) {
     // restore from backup
     if (title == "RestoreWiki")
         if (backupEnabled) {
-            if (modes.mode == "restorewiki" && isset(_FILES.userfile.name))
+            if (modes.mode == "restorewiki" && isset(_POST.userfile) && isset(_POST.userfile.filename) && _POST.userfile.filename != "")
                 restorePages();
             else
                 modes.mode = "restorewiki";
@@ -243,13 +243,14 @@ function updateWiki(modes, title, config) {
             }
 
             // write file    
+            writeResult = 0;
             if (!isIpBlocked() && !restricted)
-                error = writeFile(title, contents);
+                writeResult = writeFile(title, contents);
         }
         modes.mode = "display";
 
         // go back if you can't write the data (avoid data loss)
-        if ((restricted) || (error != 0))
+        if ((restricted) || (writeResult != 0))
             modes.mode = "edit";
     }
     // cancel a page edit
@@ -281,11 +282,95 @@ function htmlHeader(title, config) {
     print("  <link rel =\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css\">\n");
     print("  <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4\" crossorigin=\"anonymous\"></script>");
     print("  <script src=\"http://code.jquery.com/jquery-1.12.0.min.js\"></script>\n");
+    print("  <style>\n");
+    print("    body { background: #eef1f5; font-family: 'Segoe UI', Meiryo, sans-serif; }\n");
+    print("    .wiki-topnav {\n");
+    print("      background: #2c3e50; color: #ecf0f1;\n");
+    print("      display: flex; align-items: center; justify-content: space-between;\n");
+    print("      padding: 0.6rem 1.2rem; border-radius: 0.5rem;\n");
+    print("      margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.2);\n");
+    print("    }\n");
+    print("    .wiki-topnav-brand {\n");
+    print("      font-size: 1.2rem; font-weight: 700; letter-spacing: 1px;\n");
+    print("      color: #ecf0f1; text-decoration: none;\n");
+    print("    }\n");
+    print("    .wiki-topnav-links a {\n");
+    print("      color: #bdc3c7; text-decoration: none;\n");
+    print("      margin-left: 1.1rem; font-size: 0.9rem; transition: color 0.2s;\n");
+    print("    }\n");
+    print("    .wiki-topnav-links a:hover { color: #ffffff; }\n");
+    print("    .wiki-topnav-links a.home-link { font-size: 1.1rem; }\n");
+    print("    .wiki-card {\n");
+    print("      background: #ffffff; border-radius: 0.5rem;\n");
+    print("      box-shadow: 0 1px 5px rgba(0,0,0,0.1); padding: 1.5rem 2rem;\n");
+    print("      min-height: 200px; margin-bottom: 1rem;\n");
+    print("    }\n");
+    print("    .wiki_body { display: block; line-height: 1.8; }\n");
+    print("    .wiki_body h1, .wiki_body .h1 { border-bottom: 2px solid #2c3e50; padding-bottom: 0.3rem; margin-bottom: 1rem; }\n");
+    print("    .wiki_body a { color: #2980b9; }\n");
+    print("    .wiki_body a:hover { color: #1a5276; }\n");
+    print("    .wiki-controls { background: #f8f9fa; border-radius: 0.4rem; padding: 0.5rem 1rem; margin-bottom: 0.5rem; }\n");
+    print("    .wiki-pagefooter { color: #888; font-size: 0.85rem; border-top: 1px solid #dee2e6; padding-top: 0.5rem; margin-top: 0.5rem; }\n");
+    print("    .copyright { color: #aaa; font-size: 0.8rem; margin-top: 1rem; }\n");
+    print("    .error { color: #c0392b; background: #fdecea; padding: 0.4rem 0.8rem; border-radius: 0.3rem; }\n");
+    print("    #wiki-edit-form { display: none; }\n");
+    print("    #wiki-edit-badge {\n");
+    print("      position: fixed; bottom: 14px; right: 14px;\n");
+    print("      background: #e74c3c; color: white;\n");
+    print("      padding: 5px 13px; border-radius: 20px;\n");
+    print("      font-size: 12px; display: none; z-index: 9999;\n");
+    print("      cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3);\n");
+    print("      user-select: none;\n");
+    print("    }\n");
+    print("    #wiki-edit-badge:hover { background: #c0392b; }\n");
+    print("  </style>\n");
+    print("  <script>\n");
+    print("  (function() {\n");
+    print("    var STORAGE_KEY = 'wiki_edit_mode';\n");
+    print("    function setEditMode(on) {\n");
+    print("      var form = document.getElementById('wiki-edit-form');\n");
+    print("      var badge = document.getElementById('wiki-edit-badge');\n");
+    print("      if (form) form.style.display = on ? 'block' : 'none';\n");
+    print("      if (badge) badge.style.display = on ? 'block' : 'none';\n");
+    print("      localStorage.setItem(STORAGE_KEY, on ? '1' : '0');\n");
+    print("    }\n");
+    print("    document.addEventListener('DOMContentLoaded', function() {\n");
+    print("      var badge = document.createElement('div');\n");
+    print("      badge.id = 'wiki-edit-badge';\n");
+    print("      badge.innerHTML = '<i class=\"fas fa-pencil-alt\"></i> Edit ON';\n");
+    print("      badge.title = 'クリックまたは / キーでトグル';\n");
+    print("      badge.addEventListener('click', function() {\n");
+    print("        var form = document.getElementById('wiki-edit-form');\n");
+    print("        setEditMode(form && form.style.display === 'none');\n");
+    print("      });\n");
+    print("      document.body.appendChild(badge);\n");
+    print("      setEditMode(localStorage.getItem(STORAGE_KEY) === '1');\n");
+    print("      document.addEventListener('keydown', function(e) {\n");
+    print("        var tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';\n");
+    print("        if (tag === 'input' || tag === 'textarea') return;\n");
+    print("        if (e.key === '/') {\n");
+    print("          var form = document.getElementById('wiki-edit-form');\n");
+    print("          setEditMode(form && form.style.display === 'none');\n");
+    print("          e.preventDefault();\n");
+    print("        }\n");
+    print("      });\n");
+    print("    });\n");
+    print("  })();\n");
+    print("  </script>\n");
     print("</head>\n");
     print("<body>\n");
-    print("  <div class=\"container\">\n");
+    print("  <div class=\"container mt-3\">\n");
+    print("    <nav class=\"wiki-topnav\">\n");
+    print("      <span class=\"wiki-topnav-brand\">Lutino Wiki</span>\n");
+    print("      <div class=\"wiki-topnav-links\">\n");
+    print("        <a class=\"home-link\" href=\"/\" title=\"Home\"><i class=\"fas fa-house\"></i></a>\n");
+    print("        <a href=\"" + _SERVER.SCRIPT_NAME + "?page=HomePage\">HomePage</a>\n");
+    print("        <a href=\"" + _SERVER.SCRIPT_NAME + "?page=PageList\">PageList</a>\n");
+    print("      </div>\n");
+    print("    </nav>\n");
+    print("    <div class=\"wiki-card\">\n");
 }
-function htmlfooter2(title, config) {
+function htmlfooter2(title, config, mode) {
     origTitle = title;
     if (title == "HomePage") {
         title = config.GENERAL.HOMEPAGE;
@@ -295,36 +380,19 @@ function htmlfooter2(title, config) {
         err = config.INTERNAL.ERRORS[i];
         print("<p class=\"error\">ERROR: " + err + "</p>");
     }
-    if (getMode() == "restore") {
-        if (!isset(config.INTERNAL.DATA.RESTORED))
-            print("\t<form enctype=\"multipart/form-data\"  action=\"" + _SERVER.SCRIPT_NAME + "?page=" + title + "\" method=\"post\">\n");
-    }
-    //print("\t<table width=\"100%\">\n");
-    //print("\t<table>\n");
-    //print("\t\t<tr>\n");
-    //print("\t\t\t<td align=\"left\"><span class=\"wiki_header\">"+title+"</span></td>\n");
-    print("<div class=\"text-start\"><span class=\"wiki_header\">" + title + "</span></div>\n");
-    //print("\t\t\t<td align=\"right\">");
-    print("<div class=\"text-end\">");
-    if (config.GENERAL.SHOW_CONTROLS) {
-        print(wikiparse(config.LOCALE.HOMEPAGE_LINK + " " + config.LOCALE.PAGELIST_LINK));
-    }
-    //print( "</td>\n");
-    print("</div>\n");
-    //print("\t\t</tr>\n");
-    //print("\t</table>\n");  
-
+    print("<div class=\"wiki-pagefooter\">" + title + "</div>\n");
 }
 
 // generate our html footer
 function htmlFooter() {
     //global config;
     if (config.GENERAL.DEBUG) {
-        list(usec, sec) = microtime().split(" ");
+        timeParts = microtime().split(" ");  // fix: PHP list() → 配列で受け取る
+        usec = timeParts[0];
+        sec = timeParts[1];
         end_time = (float)sec + (float)usec;
-        duration = end_time - config.GENERAL.DEBUG_STARTTIME;
-        uptime = shell_exec("cut -d. -f1 /proc/uptime");
-        load_ar = exec("cat /proc/loadavg")).split(" ");
+        duration = end_time - config.GENERAL.DEBUG_STARTTIME;("cut -d. -f1 /proc/uptime");
+        load_ar = exec("cat /proc/loadavg").split(" ");  // fix: 余分な ) を除去
         load = load_ar[2];
         days = floor(uptime / 60 / 60 / 24);
         hours = uptime / 60 / 60 % 24;
@@ -336,11 +404,12 @@ function htmlFooter() {
         print(wikiparse("~~#FF0000:SERVER UPTIME:~~ days day(s) hours hour(s) mins minute(s) and secs second(s)\n"));
         print(wikiparse("~~#FF0000:SERVER LOAD:~~ load\n"));
     }
-    print("</div>\n");
+    print("    </div>\n");
+    print("  </div>\n");
     print("    <!-- ===== copyright ===== -->\n");
     print("    <div class=\"copyright\">\n");
     print("      <p class=\"text-center\">\n");
-    print("        Copyright(c) 2016-2022 <a href=\"http://www.birdland.co.jp\">Birdland Ltd.</a> All Rights Reserved.\n");
+    print("        Copyright(c) 2016-2026 <a href=\"https://www.birdland.co.jp\">Birdland Ltd.</a> All Rights Reserved.\n");
     print("      </p>\n");
     print("    </div>\n");
     print("  </body>\n");
@@ -395,9 +464,9 @@ function webpagelink(text) {
     else
         desc = src;
     // is our text an image?
-    patterns = "/{{(.^{*)}}/";
+    patterns = "/\\{\\{([^{]*)\\}\\}/";    // fix: 壊れた正規表現を修正
     replacements = "\"+image( \"$1\" )+\"";
-    cmd = (" \desc = \"" + desc.preg_replace(patterns, replacements) + "\";");
+    cmd = ("desc = \"" + desc.preg_replace(patterns, replacements) + "\";");  // fix: \desc の \ を除去
     eval(cmd);
 
     // link target    
@@ -626,7 +695,7 @@ function pagePath(title) {
 function cleanupTempFiles() {
     files = wikiReadDir(tempDir());
     for (i = 0; i < files.length; i++) {
-        mtime = filedate(file[i]);
+        mtime = filedate(files[i]);  // fix: file → files
         //now = date("U");
         //if ( now-mtime>300 ) // delete any files that are older than 5 minutes
         //    unlink( file ); 
@@ -650,7 +719,7 @@ function isLocked(title) {
 // add an error to our error buffer
 function error(str) {
     //global config;
-    config.INTERNAL.ERRORS[] = str;
+    config.INTERNAL.ERRORS[config.INTERNAL.ERRORS.length] = str;  // fix: PHP構文 [] = を修正
 }
 
 // are there any errors so far?
@@ -716,10 +785,10 @@ function rssFeed() {
     print("<rss version=\"2.0\">\n");
     print("\t<channel>\n");
     title = config.GENERAL.TITLE;
-    print("\t\t<title>title</title>\n");
-    url = "http://" + _SERVER.SERVER_NAME._SERVER.SCRIPT_NAME;
+    print("\t\t<title>" + title + "</title>\n");   // fix: 変数を文字列リテラルにしていたのを修正
+    url = "http://" + _SERVER.SERVER_NAME + _SERVER.SCRIPT_NAME;  // fix: . → + で文字列結合
     print("\t\t<link>" + url + "</link>\n");
-    print("\t\t<description>Recently changed pages on the title wiki.</description>\n");
+    print("\t\t<description>Recently changed pages on the " + title + " wiki.</description>\n");  // fix: 変数埋め込み
     print("\t\t<generator>Wiki v" + config.PAWFALIKI_VERSION + "</generator>\n");
     files = wikiReadDir(pageDir());
     details = [];
@@ -731,16 +800,19 @@ function rssFeed() {
     //reset(details);
     item = 0;
     numItems = config.RSS.ITEMS;
-    while (list(key, val) = each(details)) {
+    rssKeys = Object.keys(details);  // fix: PHP list()/each() → Object.keys() で反復
+    for (rssIdx = 0; rssIdx < rssKeys.length; rssIdx++) {
+        key = rssKeys[rssIdx];
+        val = details[key];
         title = basename(key);
-        modtime = date(config.RSS.MODTIME_FORMAT, val);
+        modtime = ("" + val).toDateString("%Y-%m-%d %H:%M:%S");  // fix: PHP date() → toDateString()（strftime形式）
         description = title + " " + modtime;
         print("\t\t<item>\n");
         if (config.RSS.TITLE_MODTIME)
-            print("\t\t\t<title>description</title>\n");
+            print("\t\t\t<title>" + description + "</title>\n");   // fix: 変数を文字列リテラルにしていたのを修正
         else
-            print("\t\t\t<title>title</title>\n");
-        print("\t\t\t<link>" + url + "?page=title</link>\n");
+            print("\t\t\t<title>" + title + "</title>\n");         // fix: 同上
+        print("\t\t\t<link>" + url + "?page=" + title + "</link>\n");  // fix: "title" → + title +
         print("\t\t\t<description>" + description + "</description>\n");
         print("\t\t</item>\n");
         item++;
@@ -763,10 +835,13 @@ function backupPages(filename) {
     //reset(details);    
     pages = [];
     pos = 0;
-    while (list(key, val) = each(details)) {
+    bkKeys = Object.keys(details);  // fix: PHP list()/each() → Object.keys() で反復
+    for (bkIdx = 0; bkIdx < bkKeys.length; bkIdx++) {
+        key = bkKeys[bkIdx];
+        val = details[key];
         pages[pos] = [];
         pages[pos].title = basename(key);
-        pages[pos].datestring = date("U", val);
+        pages[pos].datestring = "" + val;  // fix: date("U", val) → val はfiledate()が返すUnixタイムスタンプそのまま
         pos = pos + 1;
     }
     numpages = pages.length;
@@ -775,167 +850,105 @@ function backupPages(filename) {
         error("No pages to backup yet!");
         return;
     }
-    if (extension_loaded('zlib') && config.BACKUP.USE_ZLIB) // write a gzipped backup file
-    {
-        filename = filename + "+gz";
-        zp = gzopen(filename, "w9");
-        gzwrite(zp, numpages + "\n");
-        for (i = 0; i < pages.length; i++) {
-            page = pages[i];
-            contents = page.title + "\n" + page.datestring + "\n";
-            lines = rtrim(wikiReadFile(pagePath(page.title)));
-            numlines = lines.split("\n").length;
-            if (numlines == 0) // no lines?! weird - we must have at least 1 line for restore
-            {
-                numlines = 1;
-                lines.= "\n";
-            }
-            contents += numlines + "\n" + lines + "\n";
-            gzwrite(zp, contents);
+    // fix: extension_loaded/gzopen/fopen等のPHP関数をsaveToFileで置き換え
+    backupContent = numpages + "\n";
+    for (i = 0; i < pages.length; i++) {
+        page = pages[i];
+        lines = wikiReadFile(pagePath(page.title)).rtrim();
+        numlines = lines.split("\n").length;
+        if (numlines == 0) // no lines?! weird - we must have at least 1 line for restore
+        {
+            numlines = 1;
+            lines += "\n";
         }
-        gzclose(zp);
+        backupContent += page.title + "\n" + page.datestring + "\n" + numlines + "\n" + lines + "\n";
     }
-    else // otherwise normal binary file
-    {
-        fd = fopen(filename, "wb");
-        fwrite(fd, numpages + "\n");
-        for (i = 0; i < pages.length; i++) {
-            page = pages[i];
-            contents = page.title + "\n" + page.datestring + "\n";
-            lines = rtrim(wikiReadFile(pagePath(page.title)));
-            numlines = lines.split("\n").length;
-            if (numlines == 0) // no lines?! weird - we must have at least 1 line for restore
-            {
-                numlines = 1;
-                lines.= "\n";
-            }
-            contents += numlines + "\n" + lines + "\n";
-            fwrite(fd, contents);
-        }
-        fclose(fd);
+    if (saveToFile(filename, backupContent) == 0) {
+        error("Cannot write backup file: " + filename);
     }
     return 0;
 }
 
 // restore all the wiki pages from a file
 function restorePages() {
-    //global config, _FILES;
-    unset(config.INTERNAL.DATA.RESTORED);
+    //global config, _POST;
+    config.INTERNAL.DATA.RESTORED = undefined;  // fix: PHP unset() → undefinedへ代入
     if (!authPassword("RestoreWiki", _POST.password)) {
         error("Wrong password. Try again+");
         return;
     }
 
-    filename = _FILES.userfile.tmp_name;
-    if (filename == "none" || _FILES.userfile.size == 0 || !is_uploaded_file(filename)) {
+    if (!isset(_POST.userfile) || !isset(_POST.userfile.filebody) || _POST.userfile.length == 0) {
         error("No file was uploaded!<BR>Maybe the filesize exceeded the maximum upload size of " + config.BACKUP.MAX_SIZE + "bytes+");
         return;
     }
 
-    // if we can use zlib functions - they can read uncompressed files as well
-    zlib = false;
-    if (extension_loaded('zlib') && config.BACKUP.USE_ZLIB) zlib = true;
-
-    // sanity check on file
-    if (zlib)
-        fd = gzopen(filename, "rb9");
-    else
-        fd = fopen(filename, "rb");
-    if (!fd) {
-        error("Could not read temporary upload file: filename!");
+    // fix: _FILES/_POST.userfile.filebody はbase64エンコード済み → atob()でデコード
+    fileContent = atob(_POST.userfile.filebody);
+    if (!fileContent) {
+        error("Could not read uploaded file content!");
         return;
     }
+    fileLines = fileContent.split("\n");
+    lineIdx = 0;
     fileerror = "NO ERROR";
-    if (zlib)
-        numPages = trim(gzgets(fd));
-    else
-        numPages = trim(fgets(fd));
 
+    // sanity check on file
+    numPages = Integer.parseInt(fileLines[lineIdx].trim());
+    lineIdx++;
     if (numPages > 0) // must be at least 1 page
     {
         for (i = 0; i < numPages; i++) {
-            if (zlib) {
-                @gzgets(fd); if (gzeof(fd)) { fileerror = "GZ: Invalid title on page i!"; } // read title
-                @gzgets(fd); if (gzeof(fd)) { fileerror = "GZ: Invalid mod time on page i!"; } // mod time
-                numLines = trim(gzgets(fd)); // num lines
-            }
-            else {
-                @fgets(fd); if (feof(fd)) { fileerror = "Invalid title on page i!"; } // read title
-                @fgets(fd); if (feof(fd)) { fileerror = "Invalid mod time on page i!"; } // mod time
-                numLines = trim(fgets(fd)); // num lines
-            }
-
+            if (lineIdx >= fileLines.length) { fileerror = "Invalid title on page " + i + "!"; break; }
+            lineIdx++; // title
+            if (lineIdx >= fileLines.length) { fileerror = "Invalid mod time on page " + i + "!"; break; }
+            lineIdx++; // modtime
+            if (lineIdx >= fileLines.length) { fileerror = "Invalid numlines on page " + i + "!"; break; }
+            numLines = Integer.parseInt(fileLines[lineIdx].trim());
+            lineIdx++;
             if (numLines > 0) // must have at least 1 line
             {
                 for (j = 0; j < numLines; j++) {
-                    if (zlib) {
-                        @gzgets(fd); if (gzeof(fd) && i != numPages - 1) { fileerror = "GZ: Invalid line read on page i!"; } // page content
-                    }
-                    else {
-                        @fgets(fd); if (feof(fd) && i != numPages - 1) { fileerror = "Invalid line read on page i!"; } // page content
-                    }
+                    if (lineIdx >= fileLines.length && i != numPages - 1) { fileerror = "Invalid line read on page " + i + "!"; }
+                    lineIdx++;
                 }
             }
             else {
-                fileerror = "Invalid number of page lines on page i!";
+                fileerror = "Invalid number of page lines on page " + i + "!";
             }
         }
     }
     else {
         fileerror = "Invalid number of backup pages!";
     }
-    if (zlib)
-        gzclose(fd);
-    else
-        fclose(fd);
     if (fileerror != "NO ERROR") {
-        str = "This does not appear to be a valid backup file!";
-        if (!zlib)
-            str += "<br>NOTE: Zlib is not enabled so restoring a compressed file will not work+";
-        error(str);
+        error("This does not appear to be a valid backup file! (" + fileerror + ")");
         return;
     }
 
     // if we got here the file is OK - restore the pages!!
+    config.INTERNAL.DATA.RESTORED = [];
     restored = config.INTERNAL.DATA.RESTORED;
-    restored = [];
-    if (zlib)
-        fd = gzopen(filename, "rb9");
-    else
-        fd = fopen(filename, "rb");
-    if (zlib)
-        numPages = trim(gzgets(fd));
-    else
-        numPages = trim(fgets(fd));
+    fileLines = fileContent.split("\n");
+    lineIdx = 0;
+    numPages = Integer.parseInt(fileLines[lineIdx].trim());
+    lineIdx++;
     for (i = 0; i < numPages; i++) {
-        if (zlib) {
-            title = trim(gzgets(fd));
-            modtime = trim(gzgets(fd));
-            numLines = trim(gzgets(fd));
-            contents = "";
-            for (j = 0; j < numLines; j++)
-                contents += gzgets(fd);
-        }
-        else {
-            title = trim(fgets(fd));
-            modtime = trim(fgets(fd));
-            numLines = trim(fgets(fd));
-            contents = "";
-            for (j = 0; j < numLines; j++)
-                contents += fgets(fd);
+        title = fileLines[lineIdx].trim();
+        lineIdx++;
+        modtime = fileLines[lineIdx].trim();
+        lineIdx++;
+        numLines = Integer.parseInt(fileLines[lineIdx].trim());
+        lineIdx++;
+        contents = "";
+        for (j = 0; j < numLines; j++) {
+            contents += fileLines[lineIdx] + "\n";
+            lineIdx++;
         }
         if (!writeFile(title, contents)) {
-            if (@touch(pagePath(title), modtime, modtime) == false)
-            {
-                error("Could not modify filetimes for title - ensure php owns the file!");
-            }
-            restored[] = title;
+            restored[restored.length] = title;
         }
     }
-    if (zlib)
-        gzclose(fd);
-    else
-        fclose(fd);
 }
 
 // print a little wiki syntax box
@@ -999,7 +1012,7 @@ function displayPage(title, mode, contents) {
         }
         else {
             contents = wikiparse("Restored **" + config.INTERNAL.DATA.RESTORED.length + "** wiki pages:\n");
-            for (i = 0; config.INTERNAL.DATA.RESTORED.length; i++) {
+            for (i = 0; i < config.INTERNAL.DATA.RESTORED.length; i++) {  // fix: i< が抜けていた無限ループを修正
                 page = config.INTERNAL.DATA.RESTORED[i];
                 contents += wikiparse("-> [[" + page + "]]\n");
             }
@@ -1046,38 +1059,26 @@ function displayPage(title, mode, contents) {
 // display the wiki controls
 function displayControls(title, mode) {
     //global config;
-    print("\t<table width=\"100%\">\n");
-    print("\t\t<tr>\n");
-    print("\t\t\t<td align=\"left\" valign=\"top\">\n");
+    print("<div class=\"wiki-controls\">\n");
     if (config.GENERAL.SHOW_CONTROLS) {
         if (mode == "display") {
             if (!(isSpecial(title))) {
-                print("\t\t\t\t<form action=\"" + _SERVER.SCRIPT_NAME + "?page=" + title + "\" method=\"post\">\n");
-                print("\t\t\t\t\t<p>\n");
-
+                print("<form id=\"wiki-edit-form\" action=\"" + _SERVER.SCRIPT_NAME + "?page=" + title + "\" method=\"post\">\n");
                 if (config.MISC.REQ_PASSWORD_TEXT_IN_EDIT_BTN) {
                     print("<input name=\"mode\" value=\"edit\" type=\"hidden\" />");
                     print("<input value=\"edit ");
-                    if (isLocked(title)) {
-                        print(config.LOCALE.REQ_PASSWORD);
-                    }
+                    if (isLocked(title)) { print(config.LOCALE.REQ_PASSWORD); }
                     print("\" type=\"submit\" />");
+                } else {
+                    print("<input name=\"mode\" class=\"btn btn-sm btn-secondary\" value=\"edit\" type=\"submit\" />");
+                    if (isLocked(title)) print(wikiparse(config.LOCALE.REQ_PASSWORD));
                 }
-                else {
-                    print("<input name=\"mode\" class=\"btn btn-primary\" value=\"edit\" type=\"submit\" />");
-                    if (isLocked(title))
-                        print(wikiparse(config.LOCALE.REQ_PASSWORD));
-                }
-
-                print("\n\t\t\t\t\t</p>\n");
-                print("\t\t\t\t</form>\n");
+                print("</form>\n");
             }
             if (title == "PageList" && config.BACKUP.ENABLE) {
                 print("<form action=\"" + _SERVER.SCRIPT_NAME + "?page=" + title + "\" method=\"post\">\n");
-                print("<p>\n");
-                print("<input name=\"mode\" value=\"backup\" type=\"submit\" />");
-                print("<input name=\"mode\" value=\"restore\" type=\"submit\" />");
-                print("</p>\n");
+                print("<input name=\"mode\" class=\"btn btn-sm btn-secondary\" value=\"backup\" type=\"submit\" />");
+                print(" <input name=\"mode\" class=\"btn btn-sm btn-secondary\" value=\"restore\" type=\"submit\" />");
                 print("</form>\n");
             }
         } else if (mode == "backupwiki") {
@@ -1091,58 +1092,47 @@ function displayControls(title, mode) {
                     backup = backups[i];
                     details[backup] = filedate(backup);
                 }
-                //arsort(details);
-                //reset(details);    
-                while (list(key, val) = each(details)) {
-                    size = filesize(key);
-                    print(wikiparse("[[key|" + basename(key) + "]] (size bytes)\n"));
+                dcKeys = Object.keys(details);
+                for (dcIdx = 0; dcIdx < dcKeys.length; dcIdx++) {
+                    key = dcKeys[dcIdx];
+                    statResult = file_stat(key);
+                    size = (statResult != "undefined") ? eval(statResult).size : 0;
+                    print(wikiparse("[[" + key + "|" + basename(key) + "]] (" + size + " bytes)\n"));
                 }
             }
         } else if (mode == "restorewiki") {
             if (!isset(config.INTERNAL.DATA.RESTORED)) {
-                print("\t\t\t\t\t<p>\n");
                 print(wikiparse(" " + config.LOCALE.PASSWORD_TEXT));
-                print("<input name=\"password\" type=\"password\" class=\"pass\" size=\"17\" />");
-                print("\t\t\t\t\t<input name=\"mode\" value=\"restorewiki\" type=\"hidden\" />\n");
-                print("\t\t\t\t\t<input value=\"restore\" type=\"submit\" />\n");
-                print("\t\t\t\t\t</p>\n");
+                print("<input name=\"password\" type=\"password\" class=\"form-control d-inline-block\" style=\"width:auto\" />");
+                print(" <input name=\"mode\" value=\"restorewiki\" type=\"hidden\" />\n");
+                print("<input class=\"btn btn-sm btn-warning\" value=\"restore\" type=\"submit\" />\n");
             }
         } else if (mode == "edit") {
-            print("\t\t\t\t\t<p>\n");
             if (isLocked(title)) {
                 print(wikiparse(config.LOCALE.PASSWORD_TEXT));
                 print("<input name=\"password\" type=\"password\" class=\"pass\" size=\"17\" />");
             }
-            print("<input name=\"mode\" class=\"btn btn-primary\" value=\"save\" TYPE=\"submit\" />\n");
-            print("<input name=\"mode\" class=\"btn btn-primary\" value=\"cancel\" TYPE=\"submit\" />\n");
-            print("</p>\n");
+            print("<input name=\"mode\" class=\"btn btn-sm btn-success\" value=\"save\" TYPE=\"submit\" />\n");
+            print(" <input name=\"mode\" class=\"btn btn-sm btn-secondary\" value=\"cancel\" TYPE=\"submit\" />\n");
             print("</form>\n");
         } else if (mode == "editnew") {
-            print("\t\t\t\t\t<p>\n");
             if (isLocked(title)) {
                 print(wikiparse(config.LOCALE.PASSWORD_TEXT));
                 print("<input name=\"password\" type=\"password\" class=\"pass\" size=\"17\" />");
             }
-            print("\t\t\t\t\t\t<input name=\"mode\" value=\"save\" type=\"submit\" />");
-            print("\t\t\t\t\t</p>\n");
-            print("\t\t\t\t</form>\n");
+            print("<input name=\"mode\" class=\"btn btn-sm btn-success\" value=\"save\" type=\"submit\" />");
+            print("</form>\n");
         }
     }
-    print("\t\t\t</td>\n");
-    print("\t\t\t<td align=\"right\" valign=\"top\">\n");
-    print("\t\t\t\t<p>\n");
-    print("\t\t\t\t</p>\n");
-    print("\t\t\t</td>\n");
-    print("\t\t</tr>\n");
-    print("\t</table>\n");
-    if (getMode() == "restore")
-        print("\t</form>\n");
+    print("</div>\n");
+    if (mode == "restorewiki")
+        print("</form>\n");
     if ((mode == "edit" || mode == "editnew") && config.SYNTAX.SHOW_BOX && title != "RestoreWiki")
         printWikiSyntax();
 }
 // パッチ
 function mybasename(str) {
-    pos = str.indexOf(str, "/");
+    pos = str.indexOf("/");  // fix: 引数が逆だったのを修正（str.indexOf(str, "/") → str.indexOf("/")）
     if (pos < 0) {
         return str;
     } else {
@@ -1159,7 +1149,9 @@ function mybasename(str) {
 // the wiki functions without actually displaying a wiki.
 if (!isset(PAWFALIKI_FUNCTIONS_ONLY)) {
     if (config.GENERAL.DEBUG) {
-        list(usec, sec) = microtime().split(" ");
+        timeParts = microtime().split(" ");  // fix: PHP list() → 配列で受け取る
+        usec = timeParts[0];
+        sec = timeParts[1];
         config.GENERAL.DEBUG_STARTTIME = (float)sec + (float)usec;
     }
 
@@ -1195,6 +1187,9 @@ if (!isset(PAWFALIKI_FUNCTIONS_ONLY)) {
         htmlHeader(title, config);
 
     // page contents
+    // restorewiki フォームはファイルアップロードを含むため、displayPage より前に開く必要がある
+    if (mode == "restorewiki" && !isset(config.INTERNAL.DATA.RESTORED))
+        print("\t<form enctype=\"multipart/form-data\" action=\"" + _SERVER.SCRIPT_NAME + "?page=" + title + "\" method=\"post\">\n");
     htmlStartBlock();
     mode = displayPage(title, mode, contents);
     htmlEndBlock();
@@ -1202,9 +1197,9 @@ if (!isset(PAWFALIKI_FUNCTIONS_ONLY)) {
     // page controls
     displayControls(title, mode);
     if (mode == "edit") {
-        htmlfooter2(wikiparse(config.LOCALE.EDIT_TITLE) + title, config);
+        htmlfooter2(wikiparse(config.LOCALE.EDIT_TITLE) + title, config, mode);
     } else {
-        htmlfooter2(title, config);
+        htmlfooter2(title, config, mode);
     }
 
     // page footer
