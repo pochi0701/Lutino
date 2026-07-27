@@ -579,6 +579,7 @@ LEX_TYPES CScriptLex::getNextCh()
 	dataPos++;
 	return currCh;
 }
+
 /// <summary>１トークン取得</summary>
 void CScriptLex::getNextToken()
 {
@@ -766,6 +767,51 @@ void CScriptLex::getNextToken()
 			}
 			else {
 				tkStr += static_cast<char>(currCh);
+			}
+			getNextCh();
+		}
+		getNextCh();
+		tk = LEX_TYPES::LEX_STR;
+	}
+	else if (currCh == LEX_TYPES::LEX_BACKTICK) {
+		// backtick strings
+		getNextCh();
+		while (currCh != LEX_TYPES::LEX_EOF && currCh != LEX_TYPES::LEX_BACKTICK) {
+			if (currCh == LEX_TYPES::LEX_ESC) {
+				getNextCh();
+				switch (currCh) {
+				case LEX_TYPES::LEX_n: tkStr += '\n'; break;
+				case LEX_TYPES::LEX_a: tkStr += '\a'; break;
+				case LEX_TYPES::LEX_r: tkStr += '\r'; break;
+				case LEX_TYPES::LEX_t: tkStr += '\t'; break;
+				case LEX_TYPES::LEX_D_QUOTE: tkStr += '"'; break;
+				case LEX_TYPES::LEX_S_QUOTE: tkStr += '\''; break;
+				case LEX_TYPES::LEX_ESC: tkStr += '\\'; break;
+				case LEX_TYPES::LEX_x:
+				{
+					char buf[4] = "???";
+					getNextCh(); buf[0] = static_cast<char>(currCh);
+					getNextCh(); buf[1] = static_cast<char>(currCh);
+					tkStr += (char)strtol(buf, 0, 16);
+				} break;
+				case LEX_TYPES::LEX_BACKTICK: tkStr += '`'; break;
+				default:
+					if (static_cast<unsigned char>(currCh) >= '0' && static_cast<unsigned char>(currCh) <= '7') {
+						char buf[4] = "???";
+						// octal digits
+						buf[0] = static_cast<char>(currCh);
+						getNextCh(); buf[1] = static_cast<char>(currCh);
+						getNextCh(); buf[2] = static_cast<char>(currCh);
+						tkStr += (char)strtol(buf, 0, 8);
+					}
+					else {
+						tkStr += static_cast<unsigned char>(currCh);
+					}
+					break;
+				}
+			}
+			else {
+				tkStr += static_cast<unsigned char>(currCh);
 			}
 			getNextCh();
 		}

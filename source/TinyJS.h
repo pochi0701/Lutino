@@ -76,6 +76,7 @@ enum class  LEX_TYPES
 	LEX_OR = '|',
 	LEX_R_BRACE = '}',
 	LEX_TILDA = '~',
+	LEX_BACKTICK = '`',
 	LEX_a = 'a',
 	LEX_n = 'n',
 	LEX_r = 'r',

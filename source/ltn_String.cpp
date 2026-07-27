@@ -786,12 +786,21 @@ int wString::rfind (char ch, int index) const
 /********************************************************************************/
 void wString::duplex_character_to_unique(char unique_char)
 {
-	wString fromStr;
-	wString toStr;
-	fromStr = unique_char;
-	fromStr += unique_char;
-	toStr = unique_char;
-	replace_character(fromStr, toStr);
+	for(int i = 0; i < len - 1; i++) {
+		if (String[i] == unique_char && String[i + 1] == unique_char) {
+			// 連続している場合、後ろの文字を削除
+			memmove(String + i + 1, String + i + 2, len - i - 1);
+			len--;
+			String[len] = '\0'; // 終端文字を更新
+			i--; // 次の文字もチェックするためにインデックスを戻す
+		}
+	}
+	//wString fromStr;
+	//wString toStr;
+	//fromStr = unique_char;
+	//fromStr += unique_char;
+	//toStr = unique_char;
+	//replace_character(fromStr, toStr);
 	return;
 }
 //---------------------------------------------------------------------------

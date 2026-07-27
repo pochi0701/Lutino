@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>不定時法時計</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 20px;
+            background: #f0f4ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #info {
+            margin-bottom: 1rem;
+            padding: 0.5rem 0.75rem;
+            background: #ffffff;
+            border-radius: 6px;
+            border: 1px solid #dde3f0;
+            max-width: 400px;
+            font-size: 0.9rem;
+        }
+
+        /* ▼▼ 昼夜画像の表示エリア ▼▼ */
+        #sun-container {
+            width: 200px;
+            height: 100px;
+            border-radius: 100px 100px 0 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 8px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+        }
+
+        #dn-image {
+            width: 200px;
+            height: 200px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            object-fit: cover;
+            transform-origin: center center;
+            transition: transform 0.3s linear;
+        }
+        /* ▲▲ 昼夜画像の表示エリア ▲▲ */
+
+    </style>
+</head>
+<body>
+
+    <h1 id="title"></h1>
+
+    <div id="info">
+        <div><strong>日の出:</strong> <span id="sunrise">-</span></div>
+        <div><strong>日の入り:</strong> <span id="sunset">-</span></div>
+        <div><strong>不定時法時刻:</strong> <span id="futeiji">-</span></div>
+    </div>
+
+    <!-- 昼夜画像の表示 -->
+    <div id="sun-container">
+        <img id="dn-image" src="dn.png" alt="昼夜表示">
+    </div>
+
+    <div id="count-remaining">-</div>
+
+    <script>
+    const DAY = 86400000;
+
+    const monthName = ["睦月","如月","弥生","卯月","皐月","水無月","文月","葉月","長月","神無月","霜月","師走"];
+    const rokuyouName = ["先勝","友引","先負","仏滅","大安","赤口"];
+    const rokuyoStart = [0,1,2,3,4,5]; // 旧暦1〜12月の六曜開始
+
+    // 旧暦月初（閏12月は削除済み）
+    const lunarStart = [
+      "2026/2/17","2026/3/19","2026/4/17","2026/5/17","2026/6/15","2026/7/14",
+      "2026/8/13","2026/9/11","2026/10/11","2026/11/9","2026/12/9","2027/1/8",
+
+      "2027/2/6","2027/3/8","2027/4/6","2027/5/6","2027/6/5","2027/7/4",
+      "2027/8/3","2027/9/1","2027/10/1","2027/10/31","2027/11/29","2027/12/29",
+
+      "2028/1/27","2028/2/25","2028/3/26","2028/4/25","2028/5/24","2028/6/23",
+      "2028/7/22","2028/8/21","2028/9/19","2028/10/19","2028/11/17","2028/12/17",
+
+      "2029/1/15","2029/2/14","2029/3/15","2029/4/13","2029/5/13","2029/6/11",
+      "2029/7/11","2029/8/10","2029/9/8","2029/10/8","2029/11/6","2029/12/6",
+
+      "2030/1/5","2030/2/4","2030/3/6","2030/4/5","2030/5/4","2030/6/3",
+      "2030/7/3","2030/8/1","2030/8/31","2030/9/29","2030/10/29","2030/11/28"
+    ];
+    function getLunarInfo(date = new Date()) {
+      const t = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+      // 直前の旧暦月初を探す
+      let idx = -1;
+      for (let i = 0; i < lunarStart.length; i++) {
+        if (new Date(lunarStart[i]) <= t) idx = i;
+        else break;
+      }
+      if (idx < 0) return null;
+
+      const start = new Date(lunarStart[idx]);
+      const diff = Math.floor((t - start) / DAY);
+
+      const monthIndex = idx % 12; // 旧暦の月番号（0〜11）
+
+      return {
+        lunarMonth: monthName[monthIndex],
+        rokuyo: rokuyouName[(rokuyoStart[monthIndex] + diff) % 6],
+        diff
+      };
+    }
+        function formatHM(date) {
+            const pad = (n) => String(n).padStart(2, "0");
+            return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function formatRemaining(ms) {
+            const h = Math.floor(ms / 3600000);
+            const m = Math.floor((ms % 3600000) / 60000);
+            return `${h}時間${m}分`;
+        }
+
+        async function getSunTimes(lat, lon) {
+            const url = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lon}&formatted=0`;
+            const res = await fetch(url);
+            const data = await res.json();
+            let sunrise = new Date(data.results.sunrise);
+            let sunset = new Date(data.results.sunset);
+            const now = new Date();
+            // どちらも現在より過去なら1日進める
+            if (sunrise < now && sunset < now) {
+                sunrise = new Date(sunrise.getTime() + 24 * 3600000);
+                sunset = new Date(sunset.getTime() + 24 * 3600000);
+            }
+            return {
+                sunrise,
+                sunset
+            };
+        }
+
+        // 不定時法の刻名（ざっくり）
+        // 昼1〜6刻 → 明六つ〜暮六つ / 夜1〜6刻 → 宵六つ〜暁六つ といった本格運用もできますが、
+        // ここでは単純に「昼の◯刻」「夜の◯刻」と表示します。
+        function getFuteijiTime(now, sunrise, sunset) {
+            const msDay = sunset - sunrise;
+            const msNight = 24 * 3600000 - msDay;
+
+            let period, index;
+
+            if (now >= sunrise && now < sunset) {
+                // 昼
+                period = "昼";
+                const oneKoku = msDay / 6;
+                const diff = now - sunrise;
+                index = Math.floor(diff / oneKoku) + 1;
+            } else {
+                // 夜
+                period = "夜";
+                const nextSunrise = new Date(sunrise.getTime() + 24 * 3600000);
+                let diff;
+                if (now >= sunset) {
+                    diff = now - sunset;
+                } else {
+                    diff = now.getTime() + 24 * 3600000 - sunset.getTime();
+                }
+                const oneKoku = msNight / 6;
+                index = Math.floor(diff / oneKoku) + 1;
+            }
+
+            return `${period}の${index}刻`;
+        }
+
+
+        /* ▼▼ 昼夜画像の回転角度を更新 ▼▼ */
+        function updateDnRotation(now, sunrise, sunset) {
+            const dnImage = document.getElementById("dn-image");
+            const isDaytime = (now >= sunrise && now < sunset);
+
+            let angle;
+            if (isDaytime) {
+                const dayLength = sunset - sunrise;
+                const dayProgress = (now - sunrise) / dayLength;
+                angle = 1 + dayProgress * 179;
+            } else {
+                const nextSunrise = new Date(sunrise.getTime() + 24 * 3600000);
+                const nightLength = nextSunrise - sunset;
+                const nightElapsed = (now >= sunset)
+                    ? now - sunset
+                    : now.getTime() + 24 * 3600000 - sunset.getTime();
+                const nightProgress = nightElapsed / nightLength;
+                angle = 181 + nightProgress * 179;
+            }
+
+            dnImage.style.transform = `rotate(${angle}deg)`;
+        }
+        /* ▲▲ 昼夜画像の回転角度を更新 ▲▲ */
+
+        function updateCountdown(now, sunrise, sunset) {
+            const remainEl = document.getElementById("count-remaining");
+
+            let target;
+            let label;
+
+            if (now >= sunrise && now < sunset) {
+                target = sunset;
+                label = "日の入りまで：";
+            } else {
+                const nextSunrise = new Date(sunrise.getTime() + 24 * 3600000);
+                if (now >= sunset) {
+                    target = nextSunrise;
+                    label = "日の出まで：";
+                } else {
+                    target = sunrise;
+                    label = "日の出まで：";
+                }
+            }
+
+            const remain = target - now;
+            remainEl.textContent = `${label}${formatRemaining(remain)}`;
+        }
+
+        function init() {
+            const titleEl = document.getElementById("title");
+                  const info = getLunarInfo();
+            const today = new Date();
+            titleEl.innerHTML = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}<br>${info.lunarMonth}${info.diff+1}日 ${info.rokuyo}`;
+            
+            // ▼ 保存済み座標の読み込み
+            const savedLat = localStorage.getItem("savedLat");
+            const savedLon = localStorage.getItem("savedLon");
+
+            if (savedLat && savedLon) {
+                // ▼ 位置情報 API を使わずに開始
+                startWithCoordinates(Number(savedLat), Number(savedLon));
+                return;
+            }
+
+            // ▼ 初回のみ API を使う
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+
+                // 座標を保存
+                localStorage.setItem("savedLat", lat);
+                localStorage.setItem("savedLon", lon);
+
+                startWithCoordinates(lat, lon);
+            });
+        }
+
+        async function startWithCoordinates(lat, lon) {
+            const { sunrise, sunset } = await getSunTimes(lat, lon);
+
+            document.getElementById("sunrise").textContent = formatHM(sunrise);
+            document.getElementById("sunset").textContent = formatHM(sunset);
+
+            function tick() {
+                const now = new Date();
+                updateCountdown(now, sunrise, sunset);
+                document.getElementById("futeiji").textContent =
+                    getFuteijiTime(now, sunrise, sunset);
+
+
+                updateDnRotation(now, sunrise, sunset);
+            }
+
+            tick();
+            setInterval(tick, 1000);
+        }
+
+        window.onload = init;
+    </script>
+
+</body>
+</html>

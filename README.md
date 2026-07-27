@@ -42,6 +42,7 @@ cmake --install build
   - `const` 再代入時の例外化
   - `String.substring(lo, hi)` の `hi` 省略対応
   - `Math.atanh(a)` の `std::atanh` 実装
+  - バッククォート文字列 `` `...` ``（`${...}` 補完は未対応）
 
 ## TLS / HTTPS
 - HTTP に加えて HTTPS を利用できます。
