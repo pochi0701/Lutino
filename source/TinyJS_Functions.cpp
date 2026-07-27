@@ -950,7 +950,7 @@ void scShutDown(CScriptVar* c, void* userdata)
 	IGNORE_PARAMETER(userdata);
 	wString pw = c->getParameter("password")->getString();
 	//global_param.system_passwordを設定しないと、シャットダウンできないようにする
-	if (strlen(global_param.system_password) > 0 && pw == global_param.system_password) {
+	if (global_param.system_password.length() > 0 && pw == global_param.system_password) {
 		//ループ抜ける
 		loop_flag = 0;
 #ifndef __linux__

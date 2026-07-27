@@ -618,7 +618,7 @@ int wString::compare (const char* str) const
 void  wString::clear (void)
 {
 	len = 0;
-	if (*String) {
+	if (String != nullptr) {
 		*String = 0;
 	}
 }
@@ -3088,7 +3088,7 @@ bool wString::path_sanitize()
 	}
 
 	wString drive;   // Windows の "C:" を保持する
-	size_t pos = 0;
+	int pos = 0;
 	const size_t n = this->size();
 
 	// --- Windows ドライブレター判定 ---

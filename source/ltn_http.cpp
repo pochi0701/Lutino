@@ -225,7 +225,8 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 				http_recv_info.request_uri.sprintf ("/menu.jss?root=%s", http_recv_info.send_filename.c_str());
 			}
 			//send file nameの設定
-			http_recv_info.send_filename.sprintf("%s%smenu.jss", global_param.skin_root, global_param.skin_name);
+			http_recv_info.send_filename = global_param.skin_root + global_param.skin_name + "menu.jss";
+			//http_recv_info.send_filename.sprintf("%s%smenu.jss", global_param.skin_root, global_param.skin_name);
 			http_recv_info.http_cgi_response (accept_socket);
 			debug_log_output ("File menu convert done.\n");
 			return;
@@ -650,9 +651,10 @@ FILETYPES HTTP_RECV_INFO::http_file_check (void)
 		}
 
 		// skin置き場にあるモノとして、フルパス生成。
-		send_filename = global_param.skin_root;
-		send_filename += global_param.skin_name;
-		send_filename += work_data;
+		send_filename = global_param.skin_root + global_param.skin_name + work_data;
+		//send_filename = global_param.skin_root;
+		//send_filename += global_param.skin_name;
+		//send_filename += work_data;
 		if (wString::file_exists (send_filename)) {       // パスが示すファイルが存在する
 			// ファイル実体と検知
 			//debug_log_output("'%s' is File!!", send_filename);

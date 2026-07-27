@@ -48,21 +48,21 @@ public:
 	{
 		flag_daemon = 0;
 		flag_debug_log_output = 0;
-		//*debug_log_filename = 0;
+		debug_log_filename.clear();
 		*exec_user = 0;
 		*exec_group = 0;
 		*server_name = 0;
 		//flag_auto_detect = 0;
 		server_port = 0;
 		server_tls_port = 0;
-		*system_password = 0;
+		system_password.clear();
 		*document_root = 0;
-		*server_root = 0;
+		server_root.clear();
 		*alias_key[0] = 0;
 		*alias_rep[0] = 0;
 		flag_use_skin = 0;
-		*skin_root = 0;
-		*skin_name = 0;
+		skin_root.clear();
+		skin_name.clear();
 		*work_root = 0;
 		*user_agent_proxy_override = 0;
 		flag_execute_cgi = 0;
@@ -98,11 +98,11 @@ public:
 	/// <summary>HTTPS Server Port</summary>
 	int server_tls_port;
 	/// <summary>システムパスワード</summary>
-	char system_password[30];
+	wString system_password;
 	/// <summary>document root</summary>
 	char  document_root[FILENAME_MAX];
 	/// <summary>server root</summary>
-	char  server_root[FILENAME_MAX];
+	wString  server_root;
 	/// <summary>ファイルパスエイリアス</summary>
 	char alias_key[MAX_COUNT_ALIAS][FILENAME_MAX];
 	char alias_rep[MAX_COUNT_ALIAS][FILENAME_MAX];
@@ -111,9 +111,9 @@ public:
 	/// <summary>スキンを使用する／しない</summary>
 	char flag_use_skin;
 	/// <summary>スキン置き場</summary>
-	char skin_root[FILENAME_MAX];
+	wString skin_root;
 	/// <summary>スキン名</summary>
-	char skin_name[32];
+	wString skin_name;
 	/// <summary>ワーク作成場所</summary>
 	char work_root[FILENAME_MAX];
 	/// ---------------------------------------------------------------------
@@ -172,24 +172,6 @@ typedef struct {
 	char 	address[4];		// アドレス
 	char 	netmask[4];		// ネットマスク
 } ACCESS_CHECK_LIST_T;
-#define		JOINT_MAX	(255)
-// ********************************
-// JOINTする個々のファイル情報
-// ********************************
-typedef struct {
-	char   name[FILENAME_MAX];
-	off_t   size;
-} _FILE_INFO_T;
-// ****************************************
-// JOINTファイル情報 (VOB解析情報)
-// ****************************************
-typedef struct {
-	unsigned int		file_num;					// 全ファイル数
-	size_t			total_size;						// 全ファイル総byte数
-	_FILE_INFO_T		file[JOINT_MAX];			// JOINTファイル情報
-	unsigned int	current_file_num;				// とりあえずVOB専用
-} JOINT_FILE_INFO_T;
-
 
 typedef struct {
 	SOCKET  accept_socket;							// SOCKET
@@ -197,22 +179,7 @@ typedef struct {
 	struct  sockaddr_in  caddr;
 	int use_tls;
 } ACCESS_INFO;
-// 2004/08/02 Add test
-// 2004/08/11 Add test
-//typedef struct {
-//	char			access_ip[32];					// アクセスしてきたIP
-//	char*			user_name;						// ユーザー名
-//	char*			user_pass;						// ユーザーパスワード
-//	int				login_flag;						// ログインフラグ
-//	time_t			login_time;						// ログイン時刻
-//	int				file_send_flag;					// ファイル転送中フラグ(ファイル転送中はタイムアウトさせないため)
-//	char			recv_uri_log[FILENAME_MAX];		// 受信したURI(decoded)のログ
-//	char			recv_uri_last[FILENAME_MAX];	// 受信したURI(decoded)のログ
-//} ACCESS_USER_INFO;
-//typedef struct {
-//	ACCESS_USER_INFO    user_info[MULTI_ACCESS_MAX];
-//	int                 list_num;
-//} ACCESS_USER_INFO_LIST;
+
 
 /// <summary>
 /// multipart

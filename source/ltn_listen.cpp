@@ -88,7 +88,7 @@ SOCKET	listen_socket_tls;	// HTTPS待ち受けソケット
 /////////////////////////////////////////////////////////////////////////
 void	server_listen(void)
 {
-	int ret = 0;
+	//int ret = 0;
 	LISTENER_CONTEXT listeners[2] = {};
 	int listener_count = 0;
 
@@ -119,7 +119,7 @@ void	server_listen(void)
 		}
 	}
 	for (int i = 0; i < thread_count; i++) {
-		ret = pthread_join(hdl[i], NULL);
+		int ret = pthread_join(hdl[i], NULL);
 	}
 #else
 
@@ -156,7 +156,7 @@ unsigned int __stdcall accessloop(void* arg)
 #endif
 {
 	auto listener = static_cast<LISTENER_CONTEXT*>(arg);
-	int                lis_soc = listener->listen_socket;
+	SOCKET             lis_soc = listener->listen_socket;
 	struct sockaddr_in caddr = {};					// クライアントソケットアドレス構造体
 	socklen_t          caddr_len = sizeof(caddr);   // クライアントソケットアドレス構造体のサイズ
 	char               access_host[256] = {};

@@ -125,9 +125,11 @@ void GLOBAL_PARAM_T::global_param_init(void)
 	// スキン情報使用フラグ
 	flag_use_skin = DEFAULT_FLAG_USE_SKIN;
 	// スキン置き場
-	strncpy(skin_root, DEFAULT_SKINDATA_ROOT, sizeof(skin_root)-1);
+	skin_root = DEFAULT_SKINDATA_ROOT;
+	//strncpy(skin_root, DEFAULT_SKINDATA_ROOT, sizeof(skin_root)-1);
 	// スキン名
-	strncpy(skin_name, DEFAULT_SKINDATA_NAME, sizeof(skin_name)-1);
+	skin_name = DEFAULT_SKINDATA_NAME;
+	//strncpy(skin_name, DEFAULT_SKINDATA_NAME, sizeof(skin_name)-1);
 	// ワーク
 	strncpy(work_root, DEFAULT_WORKROOT_NAME, sizeof(work_root)-1);
 	// CGIスクリプトの実行を許可するかフラグ
@@ -137,7 +139,8 @@ void GLOBAL_PARAM_T::global_param_init(void)
 	// ltn.conf 変更対応 allow_user_agent
 	//strncpy(allow_user_agent[0].user_agent, DEFAULT_ALLOW_USER_AGENT, sizeof(allow_user_agent[0].user_agent) );
 	// ltn.conf 変更対応 allow_user_agent
-	strncpy(system_password, "", sizeof(system_password)-1);
+	//strncpy(system_password, "", sizeof(system_password) - 1);
+	system_password.clear();
 	return;
 }
 /// <summary>
@@ -173,7 +176,6 @@ void GLOBAL_PARAM_T::config_file_read(void)
 {
 	int    fd;
 	char   line_buf[1024 * 4];
-	int    ret;
 	int    count_alias = 0;
 	char   key[1024];
 	char   value[1023];
@@ -196,7 +198,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 	// =====================
 	while (1) {
 		// １行読む。
-		ret = config_file_read_line(fd, line_buf, sizeof(line_buf));
+		int ret = config_file_read_line(fd, line_buf, sizeof(line_buf));
 		if (ret < 0) {
 #ifdef __linux__
 			printf("EOF Detect.\n");
@@ -268,11 +270,13 @@ void GLOBAL_PARAM_T::config_file_read(void)
 #ifdef __linux__
 					strncpy(document_root, value, sizeof(document_root)-1);
 					cut_after_last_character(value, '/');
-					strncpy(server_root, value, sizeof(server_root) - 1);
+					server_root = value;
+					//strncpy(server_root, value, sizeof(server_root) - 1);
 					//printf("%s\n", value );
 #else
 					// server_root新設
-					strncpy(server_root, current_dir.c_str(), sizeof(server_root));
+					server_root = current_dir;
+					//strncpy(server_root, current_dir.c_str(), sizeof(server_root));
 					// ":"が含まれていなければ、相対パスとみなす
 					if (strchr(value, ':') == NULL) {
 						//現在のディレクトリを取ってはいけない。現在のディレクトリは不定
@@ -310,29 +314,39 @@ void GLOBAL_PARAM_T::config_file_read(void)
 					// ":"が含まれていなければ、相対パスとみなす
 					if (strchr(value, ':') == NULL) {
 						//現在のディレクトリを取ってはいけない
-						snprintf(skin_root, sizeof(skin_root), "%s%s", current_dir.c_str(), value);
+						skin_root = current_dir + value;
+						//snprintf(skin_root, sizeof(skin_root), "%s%s", current_dir.c_str(), value);
 					}
 					else {
-						strncpy(skin_root, value, sizeof(skin_root)-1);
+						skin_root = value;
+						//strncpy(skin_root, value, sizeof(skin_root)-1);
 					}
 #endif
 
 					// 最後がDelimiter[0]じゃなかったら、Delimiter[0]を追加
-					if (skin_root[strlen(skin_root) - 1] != DELIMITER[0]) {
-						strncat(skin_root, DELIMITER, sizeof(skin_root)-1);
+					if(skin_root.ends_with(DELIMITER) == false) {
+						skin_root += DELIMITER;
 					}
+					//if (skin_root[strlen(skin_root) - 1] != DELIMITER[0]) {
+					//	strncat(skin_root, DELIMITER, sizeof(skin_root)-1);
+					//}
 				}
 				// skin_name
 				else if (strcasecmp("skin_name", key) == 0) {
-					strncpy(skin_name, value, sizeof(skin_name)-1);
-					// 最後が'/'じゃなかったら、'/'を追加
-					if (skin_name[strlen(skin_name) - 1] != DELIMITER[0]) {
-						strncat(skin_name, DELIMITER, sizeof(skin_name)-1);
+					skin_name = value;
+					if(skin_name.ends_with(DELIMITER) == false) {
+						skin_name += DELIMITER;
 					}
+					//strncpy(skin_name, value, sizeof(skin_name)-1);
+					//// 最後が'/'じゃなかったら、'/'を追加
+					//if (skin_name[strlen(skin_name) - 1] != DELIMITER[0]) {
+					//	strncat(skin_name, DELIMITER, sizeof(skin_name)-1);
+					//}
 				}
 				// access_allow
 				else if (strcasecmp("system_password", key) == 0) {
-					strncpy(system_password, value, sizeof(system_password)-1);
+					system_password = value;
+					//strncpy(system_password, value, sizeof(system_password)-1);
 				}
 
 #ifndef __linux__

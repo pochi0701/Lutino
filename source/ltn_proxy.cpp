@@ -376,7 +376,6 @@ int getHeader (SOCKET sock, wString& lines, int& content_is_html, int& t_content
 	const char* HTTP_RECV_LOCATION2 = "Content-Location: ";
 	int line;
 	wString    wb;
-	int num;
 	lines.clear ();
 	//TODO ここが４０４や４００の可能性あり
 //    for (line = 0; line < MAX_LINE; line ++) {
@@ -391,7 +390,7 @@ int getHeader (SOCKET sock, wString& lines, int& content_is_html, int& t_content
 				return -1;
 			}
 			// 空白の次の文字列
-			num = atoi (&sptr[1]);
+			int num = atoi (&sptr[1]);
 			switch (num) {
 			case 200:
 				break;
