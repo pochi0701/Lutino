@@ -45,16 +45,27 @@ var img;
                 
         };
 
-        // mousemove イベント
-        document.addEventListener('mousemove', function(event) {
-            var canvas = document.getElementById('mainWindow');
-            var rect = canvas.getBoundingClientRect();
-            mouseMove(event.clientX - rect.left, event.clientY - rect.top);
+        // mousedown イベント
+        document.getElementById('mainWindow').addEventListener('mousedown', function(event) {
+            var rect = event.currentTarget.getBoundingClientRect();
+            var x = (event.clientX - rect.left) * event.currentTarget.width / rect.width;
+            var y = (event.clientY - rect.top) * event.currentTarget.height / rect.height;
+            mouseDown(x, y);
         });
 
-        // mousedown イベント
-        document.addEventListener('mousedown', function(event) {
-            mouseDown();
+        // 矢印キー イベント
+        document.addEventListener('keydown', function(event) {
+            var directions = {
+                ArrowUp: [-1, 0],
+                ArrowDown: [1, 0],
+                ArrowLeft: [0, -1],
+                ArrowRight: [0, 1]
+            };
+            var direction = directions[event.key];
+            if (!direction) return;
+
+            event.preventDefault();
+            movePlayer(direction[0], direction[1]);
         });
         
 function loadText(){
@@ -232,70 +243,48 @@ function main()
         }
     }
 }
-function mouseMove(x, y){
-    mouseX = x;
-    mouseY = y;
+function isInside(row, column) {
+    return row >= 0 && row < mY && column >= 0 && column < mX;
 }
-function mouseDown(){
-    var k = Math.floor((mouseY / hGap)-0.5);
-    var l = Math.floor((mouseX / wGap)-0.5);
-    if(Math.abs(l-Y)<Math.abs(k-X)){
-        if(k < X){
-            if(Fd[X - 1][Y] == 0 || Fd[X - 1][Y] == 4){
-                Fd[X][Y] = 0;
-                X--;
-                Fd[X][Y] = 3;
-                change++;
-            } else if(Fd[X - 1][Y] == 2 && (Fd[X - 2][Y] == 0 || Fd[X - 2][Y] == 4)){
-                Fd[X][Y] = 0;
-                X--;
-                Fd[X][Y] = 3;
-                Fd[X - 1][Y] = 2;
-                change++;
-            }
-        }else{
-            if(Fd[X + 1][Y] == 0 || Fd[X + 1][Y] == 4){
-                Fd[X][Y] = 0;
-                X++;
-                Fd[X][Y] = 3;
-                change++;
-            } else if(Fd[X + 1][Y] == 2 && (Fd[X + 2][Y] == 0 || Fd[X + 2][Y] == 4)){
-                Fd[X][Y] = 0;
-                X++;
-                Fd[X][Y] = 3;
-                Fd[X + 1][Y] = 2;
-                change++;
-            }
+
+function movePlayer(rowDirection, columnDirection) {
+    if (!Fd) return;
+
+    var nextRow = X + rowDirection;
+    var nextColumn = Y + columnDirection;
+    if (!isInside(nextRow, nextColumn)) return;
+
+    if (Fd[nextRow][nextColumn] == 2) {
+        var ballRow = nextRow + rowDirection;
+        var ballColumn = nextColumn + columnDirection;
+        if (!isInside(ballRow, ballColumn) ||
+            (Fd[ballRow][ballColumn] != 0 && Fd[ballRow][ballColumn] != 4)) {
+            return;
         }
-    }else{
-        if(l < Y){
-            if(Fd[X][Y - 1] == 0 || Fd[X][Y - 1] == 4){
-                Fd[X][Y] = 0;
-                Y--;
-                Fd[X][Y] = 3;
-                change++;
-            } else if(Fd[X][Y - 1] == 2 && (Fd[X][Y - 2] == 0 || Fd[X][Y - 2] == 4)){
-                Fd[X][Y] = 0;
-                Y--;
-                Fd[X][Y] = 3;
-                Fd[X][Y - 1] = 2;
-                change++;
-            }
-        }else{
-            if(Fd[X][Y + 1] == 0 || Fd[X][Y + 1] == 4){
-                Fd[X][Y] = 0;
-                Y++;
-                Fd[X][Y] = 3;
-                change++;
-            } else if(Fd[X][Y + 1] == 2 && (Fd[X][Y + 2] == 0 || Fd[X][Y + 2] == 4)){
-                Fd[X][Y] = 0;
-                Y++;
-                Fd[X][Y] = 3;
-                Fd[X][Y + 1] = 2;
-                change++;
-            }
-        }
+        Fd[ballRow][ballColumn] = 2;
+    } else if (Fd[nextRow][nextColumn] != 0 && Fd[nextRow][nextColumn] != 4) {
+        return;
     }
+
+    Fd[X][Y] = 0;
+    X = nextRow;
+    Y = nextColumn;
+    Fd[X][Y] = 3;
+    change++;
     main();
 }
 
+function mouseDown(mouseX, mouseY){
+    var clickedRow = Math.floor(mouseY / hGap);
+    var clickedColumn = Math.floor(mouseX / wGap);
+    var rowDistance = clickedRow - X;
+    var columnDistance = clickedColumn - Y;
+
+    if (rowDistance == 0 && columnDistance == 0) return;
+
+    if (Math.abs(rowDistance) > Math.abs(columnDistance)) {
+        movePlayer(rowDistance < 0 ? -1 : 1, 0);
+    } else {
+        movePlayer(0, columnDistance < 0 ? -1 : 1);
+    }
+}
