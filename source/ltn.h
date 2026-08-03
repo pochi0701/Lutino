@@ -4,7 +4,7 @@
 // Lutino:	Application SErver.
 //
 // 		ltn.h
-//		$Revision: 1.26 $
+//		$Revision: 1.27 $
 //		$Date: 2004/07/19 04:37:32 $
 //
 // ==========================================================================
@@ -49,9 +49,9 @@ public:
 		flag_daemon = 0;
 		flag_debug_log_output = 0;
 		debug_log_filename.clear();
-		*exec_user = 0;
-		*exec_group = 0;
-		*server_name = 0;
+		exec_user.clear();
+		exec_group.clear();
+		server_name.resize(32);
 		//flag_auto_detect = 0;
 		server_port = 0;
 		server_tls_port = 0;
@@ -63,11 +63,12 @@ public:
 		flag_use_skin = 0;
 		skin_root.clear();
 		skin_name.clear();
-		*work_root = 0;
+		work_root.clear();
 		*user_agent_proxy_override = 0;
 		flag_execute_cgi = 0;
 		flag_allow_proxy = 0;
 		*global_ip = 0;
+		batch_jobs.clear();
 	}
 	/// <summary>初期化</summary>
 	void global_param_init(void);
@@ -84,12 +85,13 @@ public:
 	char flag_debug_log_output;
 	wString debug_log_filename;
 	/// <summary>動作ユーザー名</summary>
-	char exec_user[32];
-	char exec_group[32];
+	wString exec_user;
+	/// <summary>動作グループ名</summary>
+	wString exec_group;
 	/// ---------------------------------------------------------------------
 	/// 自動検出系
 	/// <summary>サーバホスト名</summary>
-	char server_name[32];
+	wString server_name;
 	//char flag_auto_detect;
 	/// ---------------------------------------------------------------------
 	/// HTTP Server系
@@ -115,7 +117,7 @@ public:
 	/// <summary>スキン名</summary>
 	wString skin_name;
 	/// <summary>ワーク作成場所</summary>
-	char work_root[FILENAME_MAX];
+	wString work_root;
 	/// ---------------------------------------------------------------------
 	/// 拡張系
 	/// <summary>プロクシで User-Agent を上書きするならその文字列</summary>
@@ -126,6 +128,8 @@ public:
 	int flag_allow_proxy;
 	/// <summary>Global IP</summary>
 	char global_ip[16];
+	/// <summary>バッチジョブ設定リスト</summary>
+	std::vector<BATCH_JOB_T> batch_jobs;
 
 	/// <summary>
 	/// 内部JavaScript

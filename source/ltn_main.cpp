@@ -142,7 +142,7 @@ int Lutinomain(void* arg)
 	// ======================
 	// = SetUID 実行
 	// ======================
-	set_user_id(global_param.exec_user, global_param.exec_group);
+	set_user_id(global_param.exec_user.c_str(), global_param.exec_group.c_str());
 #endif
 	// =======================
 	// Debug Log 出力開始

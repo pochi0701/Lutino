@@ -45,19 +45,12 @@ unsigned int __stdcall batch(void* ptr)
 #endif
 {
     IGNORE_PARAMETER(ptr);
-    char script_filename[128];
-    //char cur_dir[256];
-//#ifdef __linux__
-//    getcwd (cur_dir, sizeof (cur_dir));
-//#else
-//    GetCurrentDirectory (256, cur_dir);
-//#endif
-    //sprintf(script_filename, "%s%s%s", cur_dir, "/system/tools", "/setip.jss");
-    sprintf(script_filename, "%s%s%s", global_param.server_root.c_str(), "/system", "/setip.jss");
+	wString script_filename;
+	script_filename = global_param.server_root + "/system/setip.jss";
 
-    while(loop_flag){
-        //イベントが合致したら指定jssを起動
-        wString buffer;
+	while (loop_flag) {
+		//イベントが合致したら指定jssを起動
+		wString buffer;
         buffer.load_from_file (script_filename);
         CTinyJS  s(INVALID_SOCKET);
         registerFunctions (&s);

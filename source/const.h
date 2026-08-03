@@ -119,6 +119,7 @@ typedef int socklen_t;
 #define DEFAULT_SKINDATA_NAME           "default"
 #define DEFAULT_WORKROOT_NAME           "./work"
 #define MAX_EVENTS                      100
+#define MAX_BATCH_JOBS                  99
 // execute path for CGI
 #define	DEFAULT_PATH	"/usr/bin:/bin:/usr/sbin:/usr/bin"
 #define	DEFAULT_FLAG_EXECUTE_CGI	TRUE

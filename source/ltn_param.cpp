@@ -106,7 +106,7 @@ void GLOBAL_PARAM_T::global_param_init(void)
 	// 自動検出
 	//flag_auto_detect = DEFAULT_FLAG_AUTO_DETECT;
 	// デフォルトServer名。gethostname()する。
-	gethostname(server_name, sizeof(server_name));
+	gethostname(server_name.c_str(), server_name.length());
 	// デフォルトHTTP 待ち受けPort.
 	server_port = DEFAULT_SERVER_PORT;
 	server_tls_port = DEFAULT_SERVER_TLS_PORT;
@@ -131,7 +131,7 @@ void GLOBAL_PARAM_T::global_param_init(void)
 	skin_name = DEFAULT_SKINDATA_NAME;
 	//strncpy(skin_name, DEFAULT_SKINDATA_NAME, sizeof(skin_name)-1);
 	// ワーク
-	strncpy(work_root, DEFAULT_WORKROOT_NAME, sizeof(work_root)-1);
+	work_root = DEFAULT_WORKROOT_NAME;
 	// CGIスクリプトの実行を許可するかフラグ
 	flag_execute_cgi = DEFAULT_FLAG_EXECUTE_CGI;
 	// プロクシを許可するかフラグ
@@ -240,11 +240,11 @@ void GLOBAL_PARAM_T::config_file_read(void)
 				}
 				// exec_user
 				else if (strcasecmp("exec_user", key) == 0) {
-					strncpy(exec_user, value, sizeof(exec_user)-1);
+					exec_user = value;
 				}
 				// exec_group
 				else if (strcasecmp("exec_group", key) == 0) {
-					strncpy(exec_group, value, sizeof(exec_group)-1);
+					exec_group = value;
 				}
 				//// auto_detect_bind_ip_address
 				//else if (strcasecmp("auto_detect_bind_ip_address", key) == 0) {
@@ -352,10 +352,10 @@ void GLOBAL_PARAM_T::config_file_read(void)
 #ifndef __linux__
 				// work_root
 				else if (strcasecmp("work_root", key) == 0) {
-					strncpy(work_root, value, sizeof(work_root)-1);
+					work_root = value;
 					// 最後が'/'じゃなかったら、'/'を追加
-					if (work_root[strlen(work_root) - 1] != DELIMITER[0]) {
-						strncat(work_root, DELIMITER, sizeof(DELIMITER));
+					if (work_root.ends_with(DELIMITER) == false) {
+						work_root += DELIMITER;
 					}
 				}
 #else

@@ -720,7 +720,7 @@ public:
 			return temp;
 			}
 			return temp;
-}
+	}
 #else
 	wString toJSON(void)
 	{
