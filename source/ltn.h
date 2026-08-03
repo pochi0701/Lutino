@@ -68,7 +68,6 @@ public:
 		flag_execute_cgi = 0;
 		flag_allow_proxy = 0;
 		*global_ip = 0;
-		batch_jobs.clear();
 	}
 	/// <summary>初期化</summary>
 	void global_param_init(void);
@@ -128,9 +127,6 @@ public:
 	int flag_allow_proxy;
 	/// <summary>Global IP</summary>
 	char global_ip[16];
-	/// <summary>バッチジョブ設定リスト</summary>
-	std::vector<BATCH_JOB_T> batch_jobs;
-
 	/// <summary>
 	/// 内部JavaScript
 	/// </summary>
