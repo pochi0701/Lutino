@@ -1,13 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="utf-8">
-    <title>menu</title>
+    <title>tool menu</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="index.css">
+    <link rel="stylesheet" type="text/css" href="tools.css">
 </head>
 <body>
     <!-- 1.ナビゲーションバーの設定 -->
@@ -26,50 +25,37 @@
     </nav>
     <div class="container">
         <div class="text-center">
-            <img src="images/lutino.png" width="304" height="79"/>
+            <img src="/images/lutino.png" width="304" height="79"/>
         </div>
     </div>
     <div class="container d-flex align-items-center justify-content-center">
         <table>
-            <tr id="icons0"></tr>
-            <tr id="icons0e"></tr>
-            <tr id="icons1"></tr>
-            <tr id="icons1e"></tr>
-            <tr id="icons2"></tr>
-            <tr id="icons2e"></tr>
-            <tr id="icons3"></tr>
-            <tr id="icons3e"></tr>
+            <tr id="icons"></tr>
+            <tr id="iconse"></tr>
         </table>
     </div>
+
     <div>
-        <div class="text-end"><img src="images/birdland_logo.png"/> </div>
+        <div class="text-end"><img src="/images/birdland_logo.png"/></div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
     <script>
         function setup(url) {
-            axios.get(`/data/setup.json`)
+            axios.get(`/data/tool_setup.json`)
                 .then(function (response) {
-                    const repl  = "<?print (getLocalAddress() + ':' + getLocalPort());?>"
-                    let setup = eval(response.data);
-                    let contents = "";
-                    let contentse = "";
-                    let line = 0;
-                    for( let i = 0 ; i < setup.length ; i++){
-                        if( setup[i].url.length > 0 ){
-                            if( setup[i].url.indexOf('%LOCALADDRESS%') >= 0 ){
-                                setup[i].url = setup[i].url.replace('%LOCALADDRESS%',repl);
-                            }
-                            contents += '<td><a href="'+setup[i].url+'">'+setup[i].image+'</a></td>\n';
-                            contentse += '<td class="title-cell">'+setup[i].title+'</td>\n';
-                        }else{
-                            document.getElementById('icons'+line).innerHTML = contents;
-                            document.getElementById('icons'+line+'e').innerHTML = contentse;
-                            contents = "";
-                            contentse = "";
-                            line += 1;
+                    var repl  = "<?print (getLocalAddress() + ':' + getLocalPort());?>"
+                    var setup = eval(response.data);
+                    var contents="";
+                    var contentse="";
+                    for( i = 0 ; i < setup.length ; i++){
+                        if( setup[i].url.indexOf('%LOCALADDRESS%') >= 0 ){
+                            setup[i].url = setup[i].url.replace('%LOCALADDRESS%',repl);
                         }
+                        contents += '<td><a href="'+setup[i].url+'">'+setup[i].image+'</a></td>\n';
+                        contentse += '<td class="text-center align-middle" style="color:white;">'+setup[i].title+'</a></td>\n';
                     }
-                    new QRCode(document.getElementById("qrcodeCanvas1"), { width: 96, height: 96, text: "http://<?print (getLocalAddress()+':'+getLocalPort()+'/');?>" });  
+                    document.getElementById("icons").innerHTML = contents;
+                    document.getElementById("iconse").innerHTML = contentse;
                     return false;
                 })
                 .catch(function (error) {
