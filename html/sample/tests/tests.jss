@@ -519,35 +519,62 @@
     }
     print("<br>\ntest46 ");
     {
+        // typeof + NaN/Infinity + isNaN/isFinite
+        let u;
+        let o = {};
+        function f(x) { return x; }
+        let result =
+            (typeof u == "undefined") &&
+            (typeof 1 == "number") &&
+            (typeof "abc" == "string") &&
+            (typeof o == "object") &&
+            (typeof f == "function") &&
+            isNaN(NaN) &&
+            !isNaN(1) &&
+            isFinite(123.5) &&
+            !isFinite(Infinity);
+        print((result == 1)?"OK":"NG");
+    }
+    print("<br>\ntest47 ");
+    {
+        // instanceof
+        let Base = {};
+        let Other = {};
+        let obj = new Base();
+        let result = (obj instanceof Base) && !(obj instanceof Other);
+        print((result == 1)?"OK":"NG");
+    }
+    print("<br>\ntest48 ");
+    {
         // Test for regex replace - basic
         var result = replace("hello world", "/world/", "universe");
         print((result == "hello universe")?"OK":"NG");
     }
-    print("<br>\ntest47 ");
+    print("<br>\ntest49 ");
     {
         // Test for regex replace - multiple patterns
         var result = replace("hello world", ["/hello/", "/world/"], ["hi", "earth"]);
         print((result == "hi earth")?"OK":"NG");
     }
-    print("<br>\ntest48 ");
+    print("<br>\ntest50 ");
     {
         // Test for regex replace - case insensitive
         var result = replace("HELLO world", "/hello/i", "hi");
         print((result == "hi world")?"OK":"NG");
     }
-    print("<br>\ntest49 ");
+    print("<br>\ntest51 ");
     {
         // Test for regex replace - invalid pattern (should return original)
         var result = replace("hello world", "invalid", "replacement");
         print((result == "hello world")?"OK":"NG");
     }
-    print("<br>\ntest50 ");
+    print("<br>\ntest52 ");
     {
         // Test for regex - complex pattern with special chars
         let result = match("/[a-z]+/", "abc");
         print((result == 1)?"OK":"NG");
     }
-    print("<br>\ntest51 ");
+    print("<br>\ntest53 ");
     {
         // compound assignment operators
         let a = 6;
@@ -567,7 +594,7 @@
 
         print((a == 4 && b == 5 && c == 9)?"OK":"NG");
     }
-    print("<br>\ntest52 ");
+    print("<br>\ntest54 ");
     {
         // typeof + isNaN/isFinite
         let u;
@@ -589,7 +616,7 @@
             !isFinite(vNaN);
         print(result?"OK":"NG");
     }
-    print("<br>\ntest53 ");
+    print("<br>\ntest55 ");
     {
         // instanceof
         let Base = {};
@@ -597,7 +624,7 @@
         let obj = new Base();
         print(((obj instanceof Base) && !(obj instanceof Other))?"OK":"NG");
     }
-    print("<br>\ntest54 ");
+    print("<br>\ntest56 ");
     {
         // bitwise not
         let a = ~0;

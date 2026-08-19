@@ -1756,6 +1756,8 @@ CTinyJS::CTinyJS(SOCKET mysocket)
 	root->addChild("String", stringClass);
 	root->addChild("Array", arrayClass);
 	root->addChild("Object", objectClass);
+	root->addChild("NaN", new CScriptVar(std::numeric_limits<double>::quiet_NaN()));
+	root->addChild("Infinity", new CScriptVar(std::numeric_limits<double>::infinity()));
 	printed = 0;
 	headerBuf = new wString();
 	prBuffer.clear();
@@ -2913,7 +2915,7 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
 		lex->match(LEX_TYPES::LEX_R_PARENTHESIS);
 		int whileBodyStart = lex->tokenStart;
 		ret = statement(loopCond ? execute : noexecute);
-		if (ret != LEX_TYPES::LEX_EOF) {
+		if (ret != LEX_TYPES::LEX_EOF && ret != LEX_TYPES::LEX_R_BREAK && ret != LEX_TYPES::LEX_R_CONTINUE) {
 			wString errorString;
 			errorString.sprintf("Syntax error at %s: %s", lex->getPosition(lex->tokenStart).c_str(), lex->getTokenStr(ret).c_str());
 			throw new CScriptException(errorString.c_str());
@@ -2945,6 +2947,50 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
 		delete whileBody;
 		whileCond = nullptr;
 		whileBody = nullptr;
+	}
+	else if (lex->tk == LEX_TYPES::LEX_R_DO) {
+		// do { ... } while (cond);
+		lex->match(LEX_TYPES::LEX_R_DO);
+		bool noexecute = false;
+		int doBodyStart = lex->tokenStart;
+		ret = statement(execute);
+		if (ret != LEX_TYPES::LEX_EOF && ret != LEX_TYPES::LEX_R_BREAK && ret != LEX_TYPES::LEX_R_CONTINUE) {
+			wString errorString;
+			errorString.sprintf("Syntax error at %s: %s", lex->getPosition(lex->tokenStart).c_str(), lex->getTokenStr(ret).c_str());
+			throw new CScriptException(errorString.c_str());
+		}
+		CScriptLex* doBody = lex->getSubLex(doBodyStart);
+
+		lex->match(LEX_TYPES::LEX_R_WHILE);
+		lex->match(LEX_TYPES::LEX_L_PARENTHESIS);
+		int doCondStart = lex->tokenStart;
+		bool condExecute = execute && (ret != LEX_TYPES::LEX_R_BREAK);
+		CScriptVarLink* cond = base(condExecute ? execute : noexecute);
+		bool loopCond = condExecute && cond->var->getBool();
+		CLEAN(cond);
+		CScriptLex* doCond = lex->getSubLex(doCondStart);
+		lex->match(LEX_TYPES::LEX_R_PARENTHESIS);
+		lex->match(LEX_TYPES::LEX_SEMICOLON);
+
+		CScriptLex* oldLex = lex;
+		while (execute && loopCond) {
+			doBody->reset();
+			lex = doBody;
+			ret = statement(execute);
+			if (ret == LEX_TYPES::LEX_R_BREAK) {
+				break;
+			}
+			doCond->reset();
+			lex = doCond;
+			cond = base(execute);
+			loopCond = cond->var->getBool();
+			CLEAN(cond);
+		}
+		lex = oldLex;
+		delete doBody;
+		delete doCond;
+		doBody = nullptr;
+		doCond = nullptr;
 	}
 	else if (lex->tk == LEX_TYPES::LEX_R_FOR) {
 		// for(statement condition; iterator)
