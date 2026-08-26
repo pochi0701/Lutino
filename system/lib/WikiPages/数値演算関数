@@ -14,5 +14,71 @@
 **Integer.valueOf(str)**
 　１文字を数値に変換
 
-**その他色々**
-　pending
+**Math.abs(a)**
+　絶対値を返す
+
+**Math.round(a)**
+　四捨五入した値を返す
+
+**Math.min(a,b)**
+　小さい方の値を返す
+
+**Math.max(a,b)**
+　大きい方の値を返す
+
+**Math.range(x,a,b)**
+　xをa以上b以下に丸めた値を返す
+
+**Math.sign(a)**
+　aが負なら-1、0なら0、正なら1を返す
+
+**Math.sqr(a)**
+　aの2乗を返す
+
+**Math.sqrt(a)**
+　aの平方根を返す
+
+**Math.pow(a,b)**
+　aのb乗を返す
+
+**Math.log(a)**
+　aの自然対数を返す
+
+**Math.log10(a)**
+　aの常用対数を返す
+
+**Math.exp(a)**
+　e(ネイピア数)のa乗を返す
+
+**Math.PI()**
+　円周率を返す。定数ではなく関数なので、Math.PI()のように呼び出す
+
+**Math.E()**
+　ネイピア数を返す。定数ではなく関数なので、Math.E()のように呼び出す
+
+**Math.toDegrees(a)**
+　ラジアンaを度に変換する
+
+**Math.toRadians(a)**
+　度aをラジアンに変換する
+
+**Math.sin(a) / Math.cos(a) / Math.tan(a)**
+　それぞれ正弦・余弦・正接を返す
+
+**Math.asin(a) / Math.acos(a) / Math.atan(a)**
+　それぞれ逆正弦・逆余弦・逆正接を返す
+
+**Math.sinh(a) / Math.cosh(a) / Math.tanh(a)**
+　それぞれ双曲線正弦・双曲線余弦・双曲線正接を返す
+
+**Math.asinh(a) / Math.acosh(a)**
+　それぞれ双曲線逆正弦・双曲線逆余弦を返す
+
+**Math.atanh(a)**
+　双曲線逆正接という名前だが、現状の実装ではMath.atan(a)と同じ値(逆正接)を返す不具合がある
+
+**isNaN(v)**
+　vが数値ではない(NaN)なら1、そうでなければ0を返す
+
+**isFinite(v)**
+　vが有限の値なら1、無限大やNaNなら0を返す

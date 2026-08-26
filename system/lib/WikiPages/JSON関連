@@ -23,3 +23,9 @@
 　　var b=JSON.stringify(a,replacer);
 
 他にString.SQL、LoadFromCSVもＪＳＯＮを返す
+
+**注意**
+　TinyJSにはJSON.parseは実装されていません。JSON文字列をオブジェクトや配列として扱いたい場合はeval()を使ってください。
+　ただしevalは信頼できる入力に対してのみ使用してください。
+　例：
+　　var files = eval(scandir("html"));

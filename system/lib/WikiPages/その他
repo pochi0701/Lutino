@@ -76,8 +76,11 @@ var str = strftime("%Y / %m / %d %H:%M:%S");
 **header(string str)**
 　strをhttpヘッダとして登録する
 
-**String.getLocalAddress()**
-　ローカルIPV4アドレスを返す
+**getLocalAddress()**
+　ローカルIPV4アドレスを返す(String型のメソッドではなくグローバル関数)
+
+**getLocalPort()**
+　ローカルのポート番号を返す
 
 **command(string path)**
 　指定のOSコマンドを実行する。実行権限はlutinoを起動した
@@ -105,3 +108,46 @@ setcookie('name','suzuki',60*60*48);
 **shutdown(string password)**
 全プログラムを終了させる。passwordはconfファイルで
 指定する。指定してない場合起動しない。
+
+**atob(string str)**
+　Base64文字列をデコードして返す
+
+**btoa(string str)**
+　文字列をBase64エンコードして返す
+
+**Date()**
+　現在時刻のUNIXタイムを文字列で返す
+
+**dirname(string uri)**
+　/区切りの親パス文字列を返す
+
+**basename(string uri)**
+　/区切りの末尾要素(ファイル名)を返す
+
+**isNaN(number v)**
+　vが数値でなければ1、数値なら0を返す
+
+**isFinite(number v)**
+　vが有限の値なら1、無限大やNaNなら0を返す
+
+**match(string pattern,string text)**
+　textに対しpatternで正規表現マッチを行う
+
+**replace(string text,pattern,replacement)**
+　textに対しpatternで示される正規表現をreplacementに置換する。
+　patternとreplacementは配列でも指定できる
+
+**restful(string method,string url,string send)**
+　urlに対しHTTP(REST)アクセスを行い、応答を文字列で返す
+
+**ssdp()**
+　SSDPで機器検索を行い、結果を文字列で返す
+
+**randomUUID()**
+　UUID v4形式の文字列を生成して返す
+
+**biosUUID()**
+　BIOSデータをsaltとしたUUIDを文字列で返す
+
+**die(string msg)**
+　msgを例外として投げ、処理を中断する

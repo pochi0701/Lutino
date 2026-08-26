@@ -14,7 +14,16 @@ SJISに起因する問題には対応していません。
 　見つからなければ-1が返る
 
 **String.substring(int lo,int hi)**
-　stringのloからhiまでの部分文字列を返す。0開始で文字列長より大きい場合は文字列長とする。lo>hiなら順序を入れ替える。
+　stringのloからhiまでの部分文字列を返す。0開始で文字列長より大きい場合は文字列長とする。lo>hiなら順序を入れ替える。hiは省略可。
+
+**String.substr(int lo,int hi)**
+　stringのloの位置から長さhi分の部分文字列を返す。範囲外を指定した場合は空文字を返す。
+
+**String.startsWith(string lo)**
+　文字列がloで始まるなら1、そうでなければ0を返す
+
+**String.endsWith(string lo)**
+　文字列がloで終わるなら1、そうでなければ0を返す
 
 **String.charAt(int pos)**
 　文字列のpos位置の1文字を返す。全角文字非対応
@@ -30,7 +39,10 @@ SJISに起因する問題には対応していません。
 　結合にはArray.joinを使う
 
 **String.replace(string before,string after)**
-　指定文字列中のbeforeの文字をafterに置換する
+　指定文字列中のbeforeの文字を最初の1件だけafterに置換する
+
+**String.replaceAll(string before,string after)**
+　指定文字列中のbeforeの文字をすべてafterに置換する
 
 **String.preg_replace(string pattern,string replace)**
 　patternで指定された正規表現文字列をreplaceに変換する。
@@ -44,6 +56,15 @@ SJISに起因する問題には対応していません。
 
 **String.toUpperCase()**
 　文字列中のアスキー文字を大文字に変換する
+
+**String.trim()**
+　文字列前後の空白を除去する
+
+**String.rtrim()**
+　文字列末尾の空白を除去する
+
+**String.ltrim()**
+　文字列先頭の空白を除去する
 
 **String.nkfconv(string Format)**
 　StringをFormatで示される文字コードに変換します。

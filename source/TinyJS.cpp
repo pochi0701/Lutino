@@ -359,6 +359,16 @@ void JSTRACE(SOCKET socket, const char* format, ...)
 	va_end(ap);
 	transport_send(socket, work, static_cast<int>(strlen(work)), 0);
 }
+#else
+static void JSTRACE(const char* format, ...)
+{
+	char work[1024];
+	va_list ap;
+	va_start(ap, format);
+	vsnprintf(work, sizeof(work), format, ap);
+	va_end(ap);
+	printf("%s", work);
+}
 #endif
 // ----------------------------------------------------------------------------------- CSCRIPTEXCEPTION
 // 例外はtextに格納
@@ -544,6 +554,10 @@ wString CScriptLex::getTokenStr(LEX_TYPES token)
 	case LEX_TYPES::LEX_R_NEW: return "new";
 	case LEX_TYPES::LEX_R_TYPEOF: return "typeof";
 	case LEX_TYPES::LEX_R_INSTANCEOF: return "instanceof";
+	case LEX_TYPES::LEX_R_TRY: return "try";
+	case LEX_TYPES::LEX_R_CATCH: return "catch";
+	case LEX_TYPES::LEX_R_FINALLY: return "finally";
+	case LEX_TYPES::LEX_R_THROW: return "throw";
 	default:
 		wString msg;
 		msg.sprintf("?[%d]", static_cast<int>(token));
@@ -667,6 +681,10 @@ void CScriptLex::getNextToken()
 		else if (tkStr == "new")       tk = LEX_TYPES::LEX_R_NEW;
 		else if (tkStr == "typeof")    tk = LEX_TYPES::LEX_R_TYPEOF;
 		else if (tkStr == "instanceof")tk = LEX_TYPES::LEX_R_INSTANCEOF;
+		else if (tkStr == "try")       tk = LEX_TYPES::LEX_R_TRY;
+		else if (tkStr == "catch")     tk = LEX_TYPES::LEX_R_CATCH;
+		else if (tkStr == "finally")   tk = LEX_TYPES::LEX_R_FINALLY;
+		else if (tkStr == "throw")     tk = LEX_TYPES::LEX_R_THROW;
 	}
 	else if (isNumeric(static_cast<unsigned char>(currCh))) { // Numbers
 		bool isHex = false;
@@ -3115,6 +3133,104 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
 				scopes.back()->addChildNoDup(funcVar->name, funcVar->var);
 		}
 		CLEAN(funcVar);
+	}
+	else if (lex->tk == LEX_TYPES::LEX_R_THROW) {
+		lex->match(LEX_TYPES::LEX_R_THROW);
+		CScriptVarLink* val = base(execute);
+		if (lex->tk == LEX_TYPES::LEX_SEMICOLON)
+			lex->match(LEX_TYPES::LEX_SEMICOLON);
+		if (execute) {
+			CScriptVar* throwVal = val->var;
+			throwVal->setRef();
+			CLEAN(val);
+			throw new CScriptVarException(throwVal);
+		}
+		CLEAN(val);
+	}
+	else if (lex->tk == LEX_TYPES::LEX_R_TRY) {
+		lex->match(LEX_TYPES::LEX_R_TRY);
+		bool noexec = false;
+
+		int tryBodyStart = lex->tokenStart;
+		statement(noexec);
+		CScriptLex* tryBody = lex->getSubLex(tryBodyStart);
+
+		wString catchVarName;
+		CScriptLex* catchBody = nullptr;
+		if (lex->tk == LEX_TYPES::LEX_R_CATCH) {
+			lex->match(LEX_TYPES::LEX_R_CATCH);
+			lex->match(LEX_TYPES::LEX_L_PARENTHESIS);
+			catchVarName = lex->tkStr;
+			lex->match(LEX_TYPES::LEX_ID);
+			lex->match(LEX_TYPES::LEX_R_PARENTHESIS);
+			int catchBodyStart = lex->tokenStart;
+			statement(noexec);
+			catchBody = lex->getSubLex(catchBodyStart);
+		}
+
+		CScriptLex* finallyBody = nullptr;
+		if (lex->tk == LEX_TYPES::LEX_R_FINALLY) {
+			lex->match(LEX_TYPES::LEX_R_FINALLY);
+			int finallyBodyStart = lex->tokenStart;
+			statement(noexec);
+			finallyBody = lex->getSubLex(finallyBodyStart);
+		}
+
+		if (execute) {
+			CScriptLex* oldLex = lex;
+			CScriptVar* thrownValue = nullptr;
+			bool caught = false;
+			ret = LEX_TYPES::LEX_EOF;
+
+			tryBody->reset();
+			lex = tryBody;
+			try {
+				ret = statement(execute);
+			}
+			catch (CScriptVarException* e) {
+				thrownValue = e->value ? e->value->setRef() : nullptr;
+				caught = true;
+				delete e;
+			}
+			catch (CScriptException* e) {
+				thrownValue = new CScriptVar(e->text);
+				thrownValue->setRef();
+				caught = true;
+				delete e;
+			}
+			lex = oldLex;
+
+			if (catchBody && caught) {
+				CScriptVar* catchScope = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_OBJECT);
+				catchScope->addChild(catchVarName, thrownValue ? thrownValue : new CScriptVar());
+				scopes.push_back(catchScope);
+				catchBody->reset();
+				lex = catchBody;
+				ret = statement(execute);
+				lex = oldLex;
+				scopes.pop_back();
+				delete catchScope;
+			}
+
+			if (thrownValue) {
+				thrownValue->unref();
+				thrownValue = nullptr;
+			}
+
+			if (finallyBody) {
+				finallyBody->reset();
+				lex = finallyBody;
+				LEX_TYPES finallyRet = statement(execute);
+				lex = oldLex;
+				if (finallyRet != LEX_TYPES::LEX_EOF) {
+					ret = finallyRet;
+				}
+			}
+		}
+
+		delete tryBody;
+		if (catchBody) delete catchBody;
+		if (finallyBody) delete finallyBody;
 	}
 	else {
 		lex->match(LEX_TYPES::LEX_EOF);

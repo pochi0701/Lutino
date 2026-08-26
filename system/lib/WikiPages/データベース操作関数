@@ -6,30 +6,28 @@
 漢字のファイル名は内部はUTF-8なのでスクリプトでnkfconvするか、
 そのうちに内部自動変換に統一しますので、待っててください。
 
-**String.Connect()**
-　Stringに格納されたデータベースに接続する。Stringは変数である必要がある。
-　接続後、接続ハンドルがStringに格納される。
+**DBConnect(string DBName)**
+　DBNameで示されるデータベースに接続する。戻り値はデータベース接続文字列(接続キー)。
+　接続に失敗した場合は空文字が返る。
    例：
-   var database="test";
-   database.Connect();
+   var database = DBConnect("test");
 
-**String.DisConnect()**
-　接続されたデータベースとの連携を切断する。もしそのデータベースを使うユーザが一人であれば
+**String.DBDisConnect()**
+　DBConnect()で取得した接続文字列に対して呼び出し、データベースとの接続を切断する。
+　もしそのデータベースを使うユーザが一人であれば
 　データベースはファイルとして保存される。
 　例：
-  var database="sample";
-  database.Connect();
-  database.DisConnect();
+  var database = DBConnect("sample");
+  database.DBDisConnect();
 
 **String.SQL(string sqltext)**
-　接続されたデータベースにSQLを発行する。
+　DBConnect()で取得した接続文字列に対してSQLを発行する。
    結果はJSON形式で取得する。セキュリティ的に保護するものは現在用意されてないので
 　SQLインジェクション等には留意すること
 　例：
-  var database="sample";
-  database.Connect();
+  var database = DBConnect("sample");
   var result = database.SQL("select * from user;");
-  database.DisConnect();
+  database.DBDisConnect();
   result.dump();
 
 **SQL一覧**

@@ -1,6 +1,32 @@
 ==環境変数==
 **[[JavaScript|目次]]**
 
+**_SERVER**
+リクエストごとにLutinoが設定するサーバ情報。以下のプロパティが利用できます(_SERVER.xxxの形でアクセス)。
+- CONTENT_TYPE：リクエストのContent-Type(POST時のみ)
+- CONTENT_LENGTH：リクエストのContent-Length(POST時のみ)
+- HTTP_HOST：リクエストのHostヘッダ
+- HTTP_USER_AGENT：リクエストのUser-Agentヘッダ
+- PATH：サーバ側のデフォルトPATH
+- SERVER_SOFTWARE：サーバ名(バージョン等)
+- SERVER_NAME：設定ファイルで指定したサーバ名
+- SERVER_ADDR：接続を受けたサーバ側のIPアドレス
+- SERVER_PORT：接続を受けたサーバ側のポート番号
+- DOCUMENT_ROOT：ドキュメントルートのフルパス
+- REMOTE_ADDR：接続してきたクライアントのIPアドレス
+- REMOTE_PORT：接続してきたクライアントのポート番号
+- SCRIPT_FILENAME：実行されるスクリプトの実ファイルパス
+- GATEWAY_INTERFACE："CGI/1.1"固定
+- SERVER_PROTOCOL："HTTP/1.0"固定
+- REQUEST_METHOD：GET/HEAD/POSTのいずれか
+- QUERY_STRING：URLの?以降の文字列
+- REQUEST_URI：リクエストされたURI
+- SCRIPT_NAME：REQUEST_URIと同じ値
+- REFERER：Refererヘッダ
+- OS："WINDOWS"または"LINUX"
+
+例：print(_SERVER.DOCUMENT_ROOT);
+
 **_GET**
 コマンド文字列で引き渡されるデータを取得する
 例：http://www.somedomain.com?test=1&data=2
@@ -13,8 +39,9 @@
 **_POST**
 ソケットを通じて引き渡されるデータを取得する。
 _GETと同様に_POST.dataや_POST.testでデータを取得できる
-http_uploadには現在対応しておりません。
-また現状ではバッファは10kbに制限されてます。
+<input type="file" name="upload">を使って、ファイルのアップロードができます。
+この場合ファイル長は_POST.upload.length、ファイル名は_POST.upload.filename、
+ファイル本体は_POST.upload.body。
 
 **_SESSION**
 session_start()でセッションを作成した時に永続化データとして使える。

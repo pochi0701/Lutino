@@ -133,6 +133,10 @@ enum class  LEX_TYPES
 	LEX_R_NEW,
 	LEX_R_TYPEOF,
 	LEX_R_INSTANCEOF,
+	LEX_R_TRY,
+	LEX_R_CATCH,
+	LEX_R_FINALLY,
+	LEX_R_THROW,
 
 	LEX_R_LIST_END /* always the last entry */
 };
@@ -182,11 +186,23 @@ enum class ExecuteModes
 /// convert the given wString into a quoted string suitable for javascript
 wString getJSString(const wString& str);
 
+#ifndef CSCRIPTEXCEPTION_DEFINED
+#define CSCRIPTEXCEPTION_DEFINED
 class CScriptException
 {
 public:
 	wString text;
-	explicit CScriptException(const wString& exceptionText);
+	explicit CScriptException(const wString& exceptionText) : text(exceptionText) {}
+};
+#endif
+
+/// JS throw で投げられた値を運ぶC++例外クラス
+class CScriptVar;
+class CScriptVarException {
+public:
+	CScriptVar* value;
+	explicit CScriptVarException(CScriptVar* v);
+	~CScriptVarException();
 };
 
 class CScriptLex

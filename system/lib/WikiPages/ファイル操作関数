@@ -24,6 +24,11 @@
 **extractFileExt(string uri)**
 　uriの拡張子情報を文字列として返す
 
+**mimeInfo(string uri)**
+　uriのMIMEタイプ情報を{"mimeType":"...","fileType":"..."}形式のJSON文字列として返す。
+　fileTypeはTYPE_MUSIC/TYPE_IMAGE/TYPE_MOVIE/TYPE_DOCUMENT/TYPE_SCRIPT等に分類される。
+　未知の拡張子の場合は空文字を返す。
+
 **file_stat(string path)**
 　ファイルの情報をJSON形式で取得する。
 
@@ -52,15 +57,12 @@
 　pathで示されるディレクトリを作成する
 　多段階のディレクトリは作成できない
 
-
 **rmdir(string path)**
 　pathで示されるディレクトリを削除する
 　中身が空でないディレクトリは削除できない
 
-
 **saveToFile(string path,string data)**
 　pathで示されるファイルにdataを保存する
-
 
 **copy(pathFrom,pathTo)**
 　pathFromからpathToへファイルをコピーする

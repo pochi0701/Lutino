@@ -9,3 +9,25 @@
 
 **Array.join(string separator)**
 　配列をseparatorでつないで文字列にする
+
+**Array.push(object val)**
+　配列の末尾にvalを追加し、追加後の配列の長さを返す
+
+**Array.pop()**
+　配列の末尾の要素を削除して返す。空配列の場合はundefinedを返す
+
+**Array.shift()**
+　配列の先頭の要素を削除して返す。空配列の場合はundefinedを返す
+
+**Array.unshift(object val)**
+　配列の先頭にvalを追加し、追加後の配列の長さを返す
+
+**Array.indexOf(object val)**
+　配列中でvalと一致する最初の位置を返す。見つからなければ-1を返す
+
+**Array.slice(int start,int end)**
+　startからendの手前までの部分配列を返す。endは省略可。負数のインデックスも指定できる
+
+**Array.splice(int start,int deleteCount,...items)**
+　startの位置からdeleteCount個の要素を削除し、itemsがあれば同じ位置に挿入する。
+　削除された要素の配列を返す
