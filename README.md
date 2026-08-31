@@ -50,9 +50,11 @@ cmake --install build
 - 開発用として埋め込みテスト証明書を使用する実装段階です。
 
 ## Linux インストール補足
-- 旧 `make install` フローは Linux では CMake フローへ移行しています。
-- 既定のインストール先は `/usr/local/lutino` です。
-- `CMAKE_INSTALL_PREFIX` や `LUTINO_*_ROOT` で配置先を変更できます。
+- Makefile と CMake の既定インストール先は `/var/www/html9` です。
+- Makefile は `INSTALL_DIR`、CMake は `CMAKE_INSTALL_PREFIX` で変更できます。
+- インストール先が存在しなければ自動的に作成します。
+- インストール先が空でなければ、既存内容を変更せず警告して終了します。
+- `lutino`、`ltn.conf`、`html/`、`database/`、`skin/`、`system/` を配置します。
 - 詳細: `CMAKE_INSTALL.md`
 
 ## History

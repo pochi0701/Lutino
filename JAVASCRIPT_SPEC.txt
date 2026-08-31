@@ -1,0 +1,236 @@
+Lutino TinyJS 対応仕様
+======================
+
+対象
+----
+この文書は source\TinyJS.cpp、source\TinyJS_Functions.cpp、および
+source\TinyJS_MathFunctions.cpp の実装から抽出した、Lutino 内蔵 TinyJS が
+受理・提供する JavaScript 風言語の仕様です。
+
+これはブラウザや Node.js の JavaScript 仕様ではありません。記載のない標準
+API、ES6 以降の構文、非同期 API は利用できないものとして扱ってください。
+
+基本型とリテラル
+----------------
+* 数値: 整数、少数、指数表記（例: 1, 1.5, 1e-3）、0x で始まる 16 進整数。
+* 文字列: "..."、'...'、`...`。バッククォート文字列は利用できますが、
+  ${...} による式展開はありません。
+* 文字列エスケープ: \n、\a、\r、\t、\\、引用符、\xNN、（単引用符および
+  バッククォート文字列では）3 桁までの 8 進エスケープ。
+* 真偽値: true、false。内部的には数値 1、0 として扱われます。
+* null、undefined。
+* 配列: [value1, value2, ...]。
+* オブジェクト: { key: value, "key": value, ... }。キーは識別子または
+  文字列に限られます。
+
+識別子、コメント、文末
+------------------------
+* 識別子は ASCII 英字または _ で開始し、その後に英数字または _ を続けます。
+* // ... と /* ... */ のコメントに対応します。
+* 文末のセミコロンは必須です。ただし関数宣言、ブロック、if/while/for など、
+  構文自体が文を完結させるものは除きます。
+
+変数とスコープ
+--------------
+var name = value;            関数スコープ。関数外ではグローバルスコープ。
+let name = value;            ブロックスコープ。
+const name = value;          ブロックスコープの定数。初期化は必須。
+
+複数宣言は var a = 1, b = 2; のように記述できます。let と const は同一
+スコープで同名を再宣言できません。const への再代入は例外になります。
+
+関数、呼び出し、オブジェクト
+------------------------------
+function name(arg1, arg2) {
+  return value;
+}
+
+var fn = function(arg) { return arg; };
+fn(value);
+object.member;
+object["member"];
+array[index];
+new Constructor(arg1, arg2);
+
+名前付き関数宣言と無名関数式に対応します。関数内では this と arguments
+（配列）を利用できます。基本型の引数は値渡し、配列とオブジェクトは参照渡し
+です。Array.length と String.length は読み取り専用のプロパティです。
+
+制御構文と例外
+--------------
+if (condition) statement; else statement;
+while (condition) statement;
+do statement; while (condition);
+for (initialization; condition; iteration) statement;
+break;
+continue;
+return value;
+
+try {
+  statement;
+} catch (error) {
+  statement;
+} finally {
+  statement;
+}
+
+throw value;
+
+statement は単文または { ... } のブロックです。for の初期化部では
+var / let / const を使えます。try は catch、finally のいずれかまたは両方を
+後置できます。
+
+演算子
+------
+代入: =, +=, -=, *=, /=, %=, <<=, >>=, >>>=, &=, |=, ^=
+算術: +, -, *, /, %
+増減: ++, --（前置・後置）
+シフト: <<, >>, >>>
+比較: ==, !=, ===, !==, <, <=, >, >=, instanceof
+論理・ビット: !, ~, &, |, ^, &&, ||
+条件: condition ? trueValue : falseValue
+単項: typeof value
+
+&& と || は短絡評価しますが、結果は JavaScript 標準と異なり真偽値（1 または
+0）です。typeof の結果は "undefined"、"function"、"string"、"number"、
+"object" のいずれかです。厳密比較 === / !== に対応します。
+
+未対応または注意が必要な言語機能
+----------------------------------
+* class、import/export、async/await、Promise、arrow function、template
+  literal の式展開、for...in、for...of、switch は未対応です。
+* 正規表現リテラル /.../ は未対応です。正規表現処理には match、replace、
+  String.preg_replace を使用します。
+* Array(5) による指定長配列の構築、配列 length の代入は未対応です。
+* 配列の検索は連結リスト実装のため、添字アクセスは O(n) です。
+
+グローバル関数
+--------------
+print(text)                         出力へ文字列を書き込みます。
+exec(jsCode)                        文字列を TinyJS コードとして実行します。
+eval(jsCode)                        文字列を評価し、結果を返します。
+trace()                             ルートオブジェクトをトレース出力します。
+charToInt(ch)                       先頭 1 バイトの値を返します（空文字は 0）。
+isNaN(v) / isFinite(v)              1 または 0 を返します。
+encodeURI(uri)                      URI エンコードします。
+atob(str) / btoa(str)               Base64 デコード / エンコードします。
+dirname(uri) / basename(uri)        / 区切りの親パス / 末尾要素を返します。
+match(pattern, text)                dregex による正規表現マッチです。
+replace(text, pattern, replacement) dregex による正規表現置換です。
+getLocalAddress() / getLocalPort()  ローカル IP / ポートを返します。
+Date()                              現在の Unix 時間を文字列で返します。
+randomUUID() / biosUUID()           UUID 風文字列 / BIOS UUID を返します。
+die(msg)                            CScriptException を送出します。
+
+HTTP・セッション
+----------------
+header(str)                         HTTP ヘッダ 1 行を追加し、成功時 1 を返します。
+session_start()                     セッションを開始し _SESSION を初期化します。
+setCookie(name, value, expire)      expire 秒後に失効する Cookie を設定します。
+restful(method, url, send)          HTTP リクエストを実行し応答を返します。
+command(path)                       OS コマンドを実行し、成功時 1 を返します。
+shutdown(password)                  設定済みパスワード一致時に終了処理を開始します。
+ssdp()                              SSDP 検索結果を返します。
+
+ファイル関数
+------------
+file_exists(path) / dir_exists(path)    ファイル / ディレクトリの存在を 1 または 0 で返します。
+scandir(path)                           パス配列を JSON 文字列で返します。
+extractFileExt(uri)                     拡張子を返します。
+mimeInfo(uri)                           MIME 情報を JSON 文字列で返します。
+file_stat(path) / filedate(path)        属性 JSON / 更新時刻を返します。
+loadFromFile(path) / loadFromCSV(path)  ファイル内容 / CSV の JSON 文字列を返します。
+saveToFile(path, data)                  保存し、成功時 1 を返します。
+touch(path)                             空ファイルを作成し、成功時 1 を返します。
+unlink(path) / rmdir(path)              削除し、成功時 1 を返します。
+rename(pathf, patht) / copy(pathf, patht)
+                                        リネーム / コピーします。
+mkdir(path)                             ディレクトリを作成します。
+htmlspecialchars(uri)                   HTML エスケープします。
+
+JSON 文字列を返す API の結果は値ではなく文字列です。JSON.parse はありません。
+信頼できる入力に限り、eval(scandir("path")) のように評価できます。
+
+データベース関数
+----------------
+DBConnect(dbn)                      接続キー文字列を返します。失敗時は空文字です。
+db.DBDisConnect()                   接続を切断します。
+db.SQL(sqltext)                     SQL を実行し、結果文字列を返します。
+
+DBConnect の戻り値を db として利用します。SQL の SELECT 結果は JSON 文字列に
+なることがあります。
+
+Object、Integer、JSON
+---------------------
+Object.dump()                       this をトレース出力します。
+Object.clone()                      this の深いコピーを返します。
+Object.keys(obj)                    キーの配列を返します。
+Integer.parseInt(str)               0x を含む整数文字列を整数化します。
+Integer.valueOf(str)                長さ 1 の文字列のバイト値を返します。
+JSON.stringify(obj, replacer)       JSON 文字列を返します。replacer は無視されます。
+JSON.mp3id3tag(path)                MP3 ID3 タグの JSON 文字列を返します。
+
+String メソッド
+---------------
+str.indexOf(search)                 見つかった位置、なければ -1。
+str.substring(lo, hi)               lo 以上 hi 未満。hi は省略可能です。
+str.substr(lo, length)              lo から length 文字。範囲外は空文字です。
+str.startsWith(prefix)               前方一致なら 1。
+str.endsWith(suffix)                 後方一致なら 1。
+str.charAt(pos)                      1 バイト文字。範囲外は ""。
+str.charCodeAt(pos)                  バイト値。範囲外は 0。
+str.fromCharCode(code)              code を 1 バイト文字列にします。
+str.split(separator)                配列を返します。末尾の空要素は返しません。
+str.replace(before, after)          最初の 1 件だけ置換します。
+str.replaceAll(before, after)       すべて置換します。
+str.preg_replace(pattern, replace)  dregex 置換。各引数は対応する配列にもできます。
+str.addSlashes()                    ', ", \、NUL をエスケープします。
+str.toLowerCase()                    小文字へ変換します。
+str.toUpperCase()                    大文字へ変換します。
+str.trim()                           前後の空白を除去します。
+str.ltrim()                          前方の空白を除去します。
+str.rtrim()                          後方の空白を除去します。
+str.toDateString(format)            Unix 時間文字列を strftime 形式で整形します。
+str.nkfconv(format)                 NKF 文字コード変換を行います。
+db.DBDisConnect()                   接続キー db を切断します。
+db.SQL(sqltext)                     接続キー db で SQL を実行します。
+
+Array メソッド
+--------------
+array.contains(value)               同値要素があれば 1 を返します。
+array.remove(value)                 一致要素をすべて削除します。
+array.join(separator)               要素を連結します。
+array.push(value)                   末尾に追加し、新しい長さを返します。
+array.pop()                         末尾を削除して返します。空なら undefined。
+array.shift()                       先頭を削除して返します。空なら undefined。
+array.unshift(value)                先頭に追加し、新しい長さを返します。
+array.indexOf(value)                最初の位置、なければ -1。
+array.slice(start, end)             部分配列を返します。end 省略と負の添字に対応します。
+array.splice(start, deleteCount, ...items)
+                                    削除配列を返し、必要に応じて items を挿入します。
+
+Math
+----
+Math.rand()                         0.0〜1.0 の乱数を返します。
+Math.randInt(min, max)               min〜max の範囲内の整数乱数を返します。
+Math.abs(a) / Math.round(a)          絶対値 / 四捨五入を返します。
+Math.min(a, b) / Math.max(a, b)      小さい方 / 大きい方を返します。
+Math.range(x, a, b)                  x を a〜b の範囲に収めます。
+Math.sign(a)                         負、ゼロ、正に対して -1、0、1 を返します。
+Math.sqr(a) / Math.sqrt(a)           二乗 / 平方根を返します。
+Math.pow(a, b)                       a の b 乗を返します。
+Math.log(a) / Math.log10(a)          自然対数 / 常用対数を返します。
+Math.exp(a)                          e の a 乗を返します。
+Math.PI() / Math.E()                 円周率 / ネイピア数（定数ではなく関数）。
+Math.toDegrees(a) / Math.toRadians(a)
+                                    ラジアンを度へ / 度をラジアンへ変換します。
+Math.sin(a) / Math.asin(a)           正弦 / 逆正弦を返します。
+Math.cos(a) / Math.acos(a)           余弦 / 逆余弦を返します。
+Math.tan(a) / Math.atan(a)           正接 / 逆正接を返します。
+Math.sinh(a) / Math.asinh(a)         双曲線正弦 / 双曲線逆正弦を返します。
+Math.cosh(a) / Math.acosh(a)         双曲線余弦 / 双曲線逆余弦を返します。
+Math.tanh(a) / Math.atanh(a)         双曲線正接 / 双曲線逆正接を返します。
+
+Math.atanh(a) は std::atanh を使用します。Math.randInt は min と max を含む
+範囲を返します。randomUUID() は UUID v4 風の形式ですが、variant 桁は実装上
+常に 9 です。

@@ -1,67 +1,49 @@
-set(_lutino_document_root "@LUTINO_DOCUMENT_ROOT@")
-if(_lutino_document_root STREQUAL "")
-  set(_lutino_document_root "${CMAKE_INSTALL_PREFIX}/html")
-elseif(NOT IS_ABSOLUTE "${_lutino_document_root}")
-  set(_lutino_document_root "${CMAKE_INSTALL_PREFIX}/${_lutino_document_root}")
+set(_lutino_install_dir "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}")
+set(_lutino_conf_source "@CMAKE_CURRENT_SOURCE_DIR@/ltn.conf.linux")
+set(_lutino_source_root "@CMAKE_CURRENT_SOURCE_DIR@")
+
+if(NOT EXISTS "${_lutino_conf_source}")
+  message(FATAL_ERROR "Error: ${_lutino_conf_source} was not found.")
 endif()
 
-set(_lutino_skin_root "@LUTINO_SKIN_ROOT@")
-if(_lutino_skin_root STREQUAL "")
-  set(_lutino_skin_root "${CMAKE_INSTALL_PREFIX}/skin")
-elseif(NOT IS_ABSOLUTE "${_lutino_skin_root}")
-  set(_lutino_skin_root "${CMAKE_INSTALL_PREFIX}/${_lutino_skin_root}")
+foreach(_lutino_source_dir html database skin system)
+  if(NOT IS_DIRECTORY "${_lutino_source_root}/${_lutino_source_dir}")
+    message(FATAL_ERROR
+      "Error: ${_lutino_source_root}/${_lutino_source_dir} was not found."
+    )
+  endif()
+endforeach()
+
+if(EXISTS "${_lutino_install_dir}")
+  file(GLOB _lutino_existing_entries LIST_DIRECTORIES true
+    "${_lutino_install_dir}/*"
+  )
+  if(_lutino_existing_entries)
+    message(FATAL_ERROR
+      "Warning: ${CMAKE_INSTALL_PREFIX} is not empty; installation aborted."
+    )
+  endif()
 endif()
 
-set(_lutino_system_root "@LUTINO_SYSTEM_ROOT@")
-if(_lutino_system_root STREQUAL "")
-  set(_lutino_system_root "${CMAKE_INSTALL_PREFIX}/system")
-elseif(NOT IS_ABSOLUTE "${_lutino_system_root}")
-  set(_lutino_system_root "${CMAKE_INSTALL_PREFIX}/${_lutino_system_root}")
-endif()
+file(MAKE_DIRECTORY "${_lutino_install_dir}")
 
-set(_lutino_database_root "@LUTINO_DATABASE_ROOT@")
-if(_lutino_database_root STREQUAL "")
-  set(_lutino_database_root "${CMAKE_INSTALL_PREFIX}/database")
-elseif(NOT IS_ABSOLUTE "${_lutino_database_root}")
-  set(_lutino_database_root "${CMAKE_INSTALL_PREFIX}/${_lutino_database_root}")
-endif()
-
-set(_lutino_work_root "@LUTINO_WORK_ROOT@")
-if(_lutino_work_root STREQUAL "")
-  set(_lutino_work_root "${CMAKE_INSTALL_PREFIX}/work")
-elseif(NOT IS_ABSOLUTE "${_lutino_work_root}")
-  set(_lutino_work_root "${CMAKE_INSTALL_PREFIX}/${_lutino_work_root}")
-endif()
-
-file(MAKE_DIRECTORY "${CMAKE_INSTALL_PREFIX}")
-
-set(_lutino_conf [=[
-##
-## Lutino parameter settings
-##
-
-server_port             8000
-server_tls_port         8443
-
-flag_debug_log_output   false
-
-document_root ]=] "${_lutino_document_root}" [=[
-skin_root               ]=] "${_lutino_skin_root}" [=[
-skin_name               lutino
-skin_menu               menu.jss
-
-alias /html/system ]=] "${_lutino_system_root}" [=[
-
-flag_execute_cgi        true
-flag_allow_proxy        true
-system_password
-]=])
-
-file(WRITE "${CMAKE_INSTALL_PREFIX}/ltn.conf" "${_lutino_conf}")
-
-message(STATUS "Installed ltn.conf to ${CMAKE_INSTALL_PREFIX}/ltn.conf")
-message(STATUS "  document_root = ${_lutino_document_root}")
-message(STATUS "  skin_root     = ${_lutino_skin_root}")
-message(STATUS "  system_root   = ${_lutino_system_root}")
-message(STATUS "  database_root = ${_lutino_database_root}")
-message(STATUS "  work_root     = ${_lutino_work_root}")
+file(READ "${_lutino_conf_source}" _lutino_conf)
+string(REGEX REPLACE
+  "(^|\n)[ \t]*document_root[ \t]+[^\r\n]*"
+  "\\1document_root           ${CMAKE_INSTALL_PREFIX}/html"
+  _lutino_conf
+  "${_lutino_conf}"
+)
+string(REGEX REPLACE
+  "(^|\n)[ \t]*skin_root[ \t]+[^\r\n]*"
+  "\\1skin_root               ${CMAKE_INSTALL_PREFIX}/skin"
+  _lutino_conf
+  "${_lutino_conf}"
+)
+string(REGEX REPLACE
+  "(^|\n)[ \t]*alias[ \t]+/html/system[ \t]+[^\r\n]*"
+  "\\1alias /html/system ${CMAKE_INSTALL_PREFIX}/system"
+  _lutino_conf
+  "${_lutino_conf}"
+)
+file(WRITE "${_lutino_install_dir}/ltn.conf" "${_lutino_conf}")

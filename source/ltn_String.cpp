@@ -45,9 +45,10 @@
 #include "define.h"
 #include <fstream>
 #include "libnkf.hpp"
+#ifndef __linux__
 #include <ipmib.h>
 #include <iphlpapi.h>
-
+#endif
 namespace {
 struct HttpUrlParts {
 	bool    use_tls = false;

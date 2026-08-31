@@ -120,6 +120,8 @@
 
  */
 #define _CRT_SECURE_NO_WARNINGS
+
+#include <limits>
 #include "TinyJS.h"
 #include <assert.h>
 #include "define.h"

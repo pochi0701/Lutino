@@ -252,7 +252,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 				//}
 				// server_name
 				else if (strcasecmp("server_name", key) == 0) {
-					strncpy(server_name, value, sizeof(server_name)-1);
+					server_name = value;
 				}
 #endif
 				// server_port
@@ -309,7 +309,7 @@ void GLOBAL_PARAM_T::config_file_read(void)
 				// skin_root
 				else if (strcasecmp("skin_root", key) == 0) {
 #ifdef __linux__
-					strncpy(skin_root, value, sizeof(skin_root)-1);
+					skin_root = value;
 #else
 					// ":"が含まれていなければ、相対パスとみなす
 					if (strchr(value, ':') == NULL) {

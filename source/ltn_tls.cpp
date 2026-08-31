@@ -10,7 +10,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "bearssl\bearssl.h"
+#include "bearssl/bearssl.h"
 
 #ifdef _WIN32
 #pragma comment(lib, "ws2_32.lib")
@@ -398,7 +398,11 @@ TlsConn::close()
     if (!active_) return;
     br_sslio_close(&ioc_);
     if (sock_ != INVALID_SOCKET) {
+#ifdef __linux__
+        ::close(sock_);
+#else
         closesocket(sock_);
+#endif
         sock_ = INVALID_SOCKET;
     }
     mode_ = Mode::None;

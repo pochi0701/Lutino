@@ -40,7 +40,9 @@
 #include "ltn.h"
 #include "ltn_tools.h"
 #include "define.h"
+#ifndef __linux__
 #include "Lutino.h"
+#endif
  //#include "unit1.h"
 using namespace std;
 void headerCheckPrint(SOCKET mysocket, int* printed, wString* headerBuf, int flag);
