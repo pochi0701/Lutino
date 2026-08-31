@@ -40,10 +40,4 @@ string(REGEX REPLACE
   _lutino_conf
   "${_lutino_conf}"
 )
-string(REGEX REPLACE
-  "(^|\n)[ \t]*alias[ \t]+/html/system[ \t]+[^\r\n]*"
-  "\\1alias /html/system ${CMAKE_INSTALL_PREFIX}/system"
-  _lutino_conf
-  "${_lutino_conf}"
-)
 file(WRITE "${_lutino_install_dir}/ltn.conf" "${_lutino_conf}")

@@ -79,7 +79,6 @@ install: $(TARGET)
 	awk -v root="$(INSTALL_DIR)" \
 		'$$1 == "document_root" { printf "document_root           %s/html\n", root; next } \
 		 $$1 == "skin_root" { printf "skin_root               %s/skin\n", root; next } \
-		 $$1 == "alias" && $$2 == "/html/system" { printf "alias /html/system %s/system\n", root; next } \
 		 { print }' \
 		../ltn.conf.linux > "$(INSTALL_DIR)/.ltn.conf.tmp"; \
 	mv "$(INSTALL_DIR)/.ltn.conf.tmp" "$(INSTALL_DIR)/ltn.conf"; \
