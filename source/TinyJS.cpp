@@ -377,6 +377,24 @@ CScriptException::CScriptException(const wString& exceptionText)
 	text = exceptionText;
 }
 
+// ----------------------------------------------------------------------------------- CSCRIPTVAREXCEPTION
+// JS throw で投げられた値を保持する
+CScriptVarException::CScriptVarException(CScriptVar* v)
+{
+	value = v;
+	if (value) {
+		value->setRef();
+	}
+}
+
+CScriptVarException::~CScriptVarException()
+{
+	if (value) {
+		value->unref();
+		value = nullptr;
+	}
+}
+
 // ----------------------------------------------------------------------------------- CSCRIPTLEX
 /// <summary>
 /// CSCRIPT LEX CLASS CONSTRUCTOR
@@ -3143,7 +3161,9 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
 			CScriptVar* throwVal = val->var;
 			throwVal->setRef();
 			CLEAN(val);
-			throw new CScriptVarException(throwVal);
+			CScriptVarException* ex = new CScriptVarException(throwVal);
+			throwVal->unref();
+			throw ex;
 		}
 		CLEAN(val);
 	}

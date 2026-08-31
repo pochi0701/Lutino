@@ -192,7 +192,7 @@ class CScriptException
 {
 public:
 	wString text;
-	explicit CScriptException(const wString& exceptionText) : text(exceptionText) {}
+	explicit CScriptException(const wString& exceptionText);
 };
 #endif
 

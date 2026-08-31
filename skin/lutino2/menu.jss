@@ -303,7 +303,23 @@ me=_SERVER.SCRIPT_NAME;
                         if( dir_exists(file) ){
                             //make link tag
                             stat = eval(file_stat(file));
-                            url1 = "?root="+encodeURI(filePath);
+                            //フォルダ内にindex.html/index.jss/index.mdがあれば、展開せずにそちらを実行する
+                            fld = filePath;
+                            if( fld.indexOf(base)>=0){
+                                fld = fld.substring(base.length,fld.length);
+                            }
+                            if(fld.substr(fld.length-1,1) != "/"){
+                                fld = fld+"/";
+                            }
+                            if( file_exists(filePath+"/index.html") ){
+                                url1 = fld+"index.html";
+                            }else if( file_exists(filePath+"/index.jss") ){
+                                url1 = fld+"index.jss";
+                            }else if( file_exists(filePath+"/index.md") ){
+                                url1 = fld+"index.md?action=/system/MarkDownv.jss";
+                            }else{
+                                url1 = "?root="+encodeURI(filePath);
+                            }
                             print( "<tr><td class=\"file-icon icon-folder\"><i class=\"fas fa-folder\"></i></td><td><a href=\""+url1+"\" class=\"folder-name\">"+basename(file)+"</a></td><td></td><td class=\"file-date\">"+stat.date+"</td><td></td></tr>\n");
                         }
                     }
