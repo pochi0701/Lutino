@@ -1,7 +1,6 @@
-<?
+﻿<?
    var data = "ddd";
    var dat = loadFromFile("template.html");
-   //var dat2 = dat.addSlashes();
-   var html = eval("\""+dat+"\"");
+   var html = dat.replaceAll("{{data}}", data);
    print(html);
 ?>

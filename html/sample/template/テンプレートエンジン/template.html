@@ -4,12 +4,12 @@
     </head>
     <body>
     template.htmlは元となるテンプレートです。<br>
-    template-enjin.jssを起動するとtemplate.htmlを読みこんで変数に値を設定して表示します。<br>
-    ※このファイルでは引用符を使うと動作しなくなるので、エンコード指定などしていません。<br>
+    template-engine.jssを起動するとtemplate.htmlを読みこんで二重波括弧のプレースホルダーを変数の値に置換して表示します。<br>
+    ※引用符や改行を含む通常のHTMLをそのまま書いても動作します。<br>
     utf-8の文字列が見えているのは、UTF-8BOM付きという形でファイルを書いているからです。
     <br><br>
         <p>aaaaa</p>
         <p>bbbbb</p>
-        <p>"+data+"</p>
+        <p>{{data}}</p>
     </body>
 </html>

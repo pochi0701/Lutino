@@ -104,6 +104,7 @@ Lutino に組み込まれている TinyJS のネイティブ関数一覧です�
 | `String.nkfconv(format)` | `string` | 文字コード変換を行います。内部で `nkfcnv` を呼びます。 |
 | `String.DBDisConnect()` | `int` | DB 接続キー文字列に対して切断します。成功時 `0`、キー未登録時 `-1`。 |
 | `String.SQL(sqltext)` | `string` | DB 接続キー文字列に対して SQL を実行します。結果は JSON 文字列または `OK` / エラー文字列です。 |
+| `String.sqlBind(params)` | `string` | `this` を SQL テンプレートとみなし、`:key` 形式のプレースホルダーを `params` の値で置換します。数値・真偽値はそのまま埋め込み、文字列は `'...'` で囲んで内部の `'` を `''` にエスケープします（SQL標準方式）。対応する `params` のキーが無い場合や、文字列・数値・真偽値以外の型が渡された場合は例外を投げます。`eval` や文字列連結で値を直接埋め込むより安全にSQL文を組み立てられます。 |
 | `String.trim()` | `string` | 前後の空白を除去します。 |
 | `String.rtrim()` | `string` | 末尾の空白を除去します。 |
 | `String.ltrim()` | `string` | 先頭の空白を除去します。 |
@@ -237,6 +238,18 @@ var db = DBConnect("main");
 if (db != "") {
   var rows = db.SQL("select * from sample");
   print(rows);
+  db.DBDisConnect();
+}
+```
+
+### SQLプレースホルダー（安全な値埋め込み）
+
+```javascript
+var sql = "select * from t where length>:a and name=:n".sqlBind({a: 10, n: "O'Brien"});
+// => "select * from t where length>10 and name='O''Brien'"
+var db = DBConnect("main");
+if (db != "") {
+  print(db.SQL(sql));
   db.DBDisConnect();
 }
 ```
