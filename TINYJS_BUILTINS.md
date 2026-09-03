@@ -62,6 +62,7 @@ Lutino に組み込まれている TinyJS のネイティブ関数一覧です�
 | `saveToFile(path,data)` | `int` | 文字列をファイルへ保存します。成功時 `1`。 |
 | `copy(pathf,patht)` | `int` | ファイルをコピーします。成功時 `1`。 |
 | `shutdown(password)` | なし | システムパスワードが一致した場合、Lutino の終了処理を開始します。 |
+| `change_config(key,value,password)` | `int` | システムパスワードが一致した場合、実行中プロセスの設定値をメモリ上で直接書き換えます(再起動不要)。現状は `key` が `"skin_name"` の場合のみ対応しており、それ以外の `key` は失敗として `0` を返します。成功時 `1`。 |
 | `ssdp()` | `string` | SSDP 検索結果を文字列で返します。 |
 | `restful(method,url,send)` | `string` | HTTP REST 呼び出しを行い、応答文字列を返します。 |
 | `randomUUID()` | `string` | UUID v4 風の文字列を返します。 |

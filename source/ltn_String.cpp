@@ -3331,6 +3331,21 @@ int wString::get_local_port (void)
 {
 	return global_param.server_port;
 }
+/// <summary>
+/// skinに名称を設定
+/// config_file_read()と同様に、末尾がDELIMITERでなければ付与する
+/// (skin_root + skin_name + file のパス結合と整合を取るため)
+/// </summary>
+/// <returns>成功失敗</returns>
+bool wString::set_skin_name(char* str)
+{
+	wString name = str;
+	if (name.ends_with(DELIMITER) == false) {
+		name += DELIMITER;
+	}
+	global_param.skin_name = name;
+	return true;
+}
 //---------------------------------------------------------------------------
 
 /// <summary>

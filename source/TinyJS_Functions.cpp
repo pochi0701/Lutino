@@ -973,6 +973,27 @@ void scShutDown(CScriptVar* c, void* userdata)
 #endif
 	}
 }
+// **************************************************************************
+// 設定値をメモリ上で変更する
+// reboot()を使わずに、実行中プロセスのglobal_paramを直接書き換えることで、
+// プロセス再起動なしに設定変更を即時反映させる。
+// 現状はkey=="skin_name"のみ対応。それ以外のkeyは失敗(0)を返す。
+// **************************************************************************
+void scChangeConfig(CScriptVar* c, void* userdata)
+{
+	IGNORE_PARAMETER(userdata);
+	wString key = c->getParameter("key")->getString();
+	wString value = c->getParameter("value")->getString();
+	wString pw = c->getParameter("password")->getString();
+	int ret = false;
+	//global_param.system_passwordを設定しないと、変更できないようにする
+	if (global_param.system_password.length() > 0 && pw == global_param.system_password) {
+		if (key == "skin_name") {
+			ret = wString::set_skin_name(value.c_str());
+		}
+	}
+	c->getReturnVar()->setInt(ret);
+}
 extern int ssdp_client(wString& str, int loops);
 void scSSDP(CScriptVar* c, void* userdata)
 {
@@ -1279,6 +1300,7 @@ void registerFunctions(CTinyJS* tinyJS)
 	tinyJS->addNative("function saveToFile(path,data)", scSaveToFile, 0);
 	tinyJS->addNative("function copy(pathf,patht)", scFileCopy, 0);
 	tinyJS->addNative("function shutdown(password)", scShutDown, 0);
+	tinyJS->addNative("function change_config(key,value,password)", scChangeConfig, 0);
 	tinyJS->addNative("function ssdp()", scSSDP, 0);
 	tinyJS->addNative("function restful(method,url,send)", scRestful, 0);
 	tinyJS->addNative("function randomUUID()", scRandomUUID, 0);

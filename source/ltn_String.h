@@ -187,6 +187,7 @@ public:
 	static wString  http_rest(const wString& methods, const wString& url, const wString& data);
 	static wString  get_local_address(void);
 	static int      get_local_port (void);
+	static bool     set_skin_name(char* str);
 };
 extern wString current_dir;
 #endif
