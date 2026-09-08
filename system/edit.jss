@@ -16,8 +16,8 @@ if( root.length==0){
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Instant Editor</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style type="text/css" media="screen">
         <!--
@@ -42,8 +42,8 @@ if( root.length==0){
         <div id="editArea"></div>
 
     <!-- SCRIPTS //-->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.37.5/ace.min.js" integrity="sha512-YjQHlQGNexP37C52f9apwLx+lnJXu8Nbk/812nUhqZkaHPIiOCC3Jg0Q8lL7cZpLpMvFlLIxV8fgQ9fZCjqaWQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.44.0/ace.min.js" integrity="sha512-nX2VMiv7R3QlrD1gIskPrBThnEgNbKxfzD1kOMm/cNaeHBt05SlNhNtxMeBHzcXV1DJ/Y1eTzE136o+1Ezu9/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
     <script src="/system/jss-mode.js"></script>
     <script type="text/javascript">
         const extractFileExt = str => str.slice(str.lastIndexOf("."));

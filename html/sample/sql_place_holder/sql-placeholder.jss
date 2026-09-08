@@ -5,10 +5,12 @@
    // eval や文字列連結で値を直接埋め込む方式と違い、値に引用符が
    // 含まれていてもSQL文の構造が壊れません。
 
-   var a = 10;
-   var n = "O'Brien"; // シングルクォートを含む値
-   var sql = "select * from t where length>:a and name=:n".sqlBind({a: a, n: n});
-   print("組み立てられたSQL: " + sql + "<br>");
+   let a = 10;
+   let n = "O'Brien"; // シングルクォートを含む値
+   let base = "select * from t where length>:a and name=:n";
+   let sql = base.sqlBind({a: a, n: n});
+   print("元となるSQL: " + base + "<br>\n");
+   print("組み立てられたSQL: " + sql + "<br>\n");
 
    // DB接続がある場合は、そのまま実行できます:
    // var db = DBConnect("main");
@@ -18,6 +20,7 @@
    // }
 
    // 未対応キーを指定するとエラーになることの確認:
+   print("エラーとなる場合:"+'"select * from t where x=:missing".sqlBind({a: 1});'+"<br>\n");
    try {
        "select * from t where x=:missing".sqlBind({a: 1});
    } catch (e) {

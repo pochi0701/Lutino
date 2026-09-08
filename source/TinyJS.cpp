@@ -1001,12 +1001,9 @@ wString CScriptLex::getPosition(int pos)
 	int line = 1;
 	int col = 1;
 	for (int i = 0; i < pos; i++) {
-		char ch;
+		char ch = 0;
 		if (i < dataEnd) {
 			ch = data[i];
-		}
-		else {
-			ch = 0;
 		}
 		col++;
 		if (ch == '\n') {

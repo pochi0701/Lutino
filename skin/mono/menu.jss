@@ -40,10 +40,10 @@ me=_SERVER.SCRIPT_NAME;
     <meta charset="utf-8">
     <title>file tree - <? print(sf); ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-    <link rel ="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-    <style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <link rel ="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
+     <style>
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
@@ -58,18 +58,19 @@ me=_SERVER.SCRIPT_NAME;
             padding: 1rem;
             margin-bottom: 1.5rem;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            /* 現在位置の色は Bootstrap の breadcrumb 変数で指定する */
+            --bs-breadcrumb-item-active-color: #495057;
         }
         .breadcrumb-item a {
-            color: #0d6efd;
+            color: var(--bs-link-color);
             text-decoration: none;
             font-weight: 500;
         }
         .breadcrumb-item a:hover {
-            color: #0a58ca;
+            color: var(--bs-link-hover-color);
             text-decoration: underline;
         }
         .breadcrumb-item.active {
-            color: #495057;
             font-weight: 600;
         }
         .file-table {
@@ -77,26 +78,13 @@ me=_SERVER.SCRIPT_NAME;
             border-radius: 0.5rem;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .file-table thead {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            font-weight: 600;
+            /* 罫線色は Bootstrap のテーブル変数経由で指定する */
+            --bs-table-border-color: var(--bs-border-color);
         }
         .file-table thead th {
             border: none;
             padding: 1rem;
             vertical-align: middle;
-        }
-        .file-table tbody tr {
-            border-bottom: 1px solid #e9ecef;
-            transition: background-color 0.2s ease;
-        }
-        .file-table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-        .file-table tbody tr:last-child {
-            border-bottom: none;
         }
         .file-table td {
             padding: 0.75rem 1rem;
@@ -107,70 +95,73 @@ me=_SERVER.SCRIPT_NAME;
             min-width: 2rem;
             text-align: center;
         }
-        .icon-folder { color: #ffc107; }
-        .icon-music { color: #e83e8c; }
-        .icon-image { color: #17a2b8; }
-        .icon-movie { color: #ff6b6b; }
-        .icon-document { color: #28a745; }
-        .icon-markdown { color: #fd7e14; }
-        .icon-script { color: #6f42c1; }
-        .icon-unknown { color: #6c757d; }
+        /*
+          Bootstrap 5.3 はセル(th/td)へ color を直接指定するようになったため、
+          セルに対する色は --bs-table-color を通して Bootstrap 側に渡す。
+          色そのものも Bootstrap のテーマ変数を使う。
+        */
+        .icon-folder { --bs-table-color: var(--bs-warning); }
+        .icon-music { --bs-table-color: var(--bs-pink); }
+        .icon-image { --bs-table-color: var(--bs-info); }
+        .icon-movie { --bs-table-color: var(--bs-danger); }
+        .icon-document { --bs-table-color: var(--bs-success); }
+        .icon-markdown { --bs-table-color: var(--bs-orange); }
+        .icon-script { --bs-table-color: var(--bs-purple); }
+        .icon-unknown { --bs-table-color: var(--bs-secondary); }
         .file-name {
             font-weight: 500;
-            color: #212529;
+            --bs-table-color: var(--bs-body-color);
         }
         .file-name a {
-            color: #0d6efd;
+            color: var(--bs-link-color);
             text-decoration: none;
             transition: color 0.2s ease;
         }
         .file-name a:hover {
-            color: #0a58ca;
+            color: var(--bs-link-hover-color);
             text-decoration: underline;
         }
         .folder-name {
             font-weight: 600;
-            color: #0d6efd;
+            color: var(--bs-link-color);
         }
         .folder-name a {
-            color: #0d6efd;
+            color: var(--bs-link-color);
             text-decoration: none;
             transition: color 0.2s ease;
         }
         .folder-name a:hover {
-            color: #0a58ca;
+            color: var(--bs-link-hover-color);
             text-decoration: underline;
         }
         .file-size {
             text-align: right;
-            color: #6c757d;
             font-size: 0.9rem;
             min-width: 80px;
+            --bs-table-color: var(--bs-secondary-color);
         }
         .file-date {
-            color: #6c757d;
             font-size: 0.9rem;
             min-width: 150px;
+            --bs-table-color: var(--bs-secondary-color);
         }
+        /* クラスは <a> 自身に付くので子孫セレクタにしない */
         .nav-back {
-            margin-bottom: 1rem;
-        }
-        .nav-back a {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            color: #0d6efd;
+            color: var(--bs-link-color);
             text-decoration: none;
             font-weight: 500;
             transition: color 0.2s ease;
         }
-        .nav-back a:hover {
-            color: #0a58ca;
+        .nav-back:hover {
+            color: var(--bs-link-hover-color);
         }
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
-            color: #6c757d;
+            --bs-table-color: var(--bs-secondary-color);
         }
         .empty-state i {
             font-size: 3rem;
@@ -266,7 +257,7 @@ me=_SERVER.SCRIPT_NAME;
 
         <!-- ファイルテーブル -->
         <table class="table file-table table-hover mb-0">
-            <thead>
+            <thead class="table-dark">
                 <tr>
                     <th style="width: 50px;"></th>
                     <th>Name</th>

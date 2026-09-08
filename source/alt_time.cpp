@@ -163,9 +163,9 @@ struct tm* localtime_r(const time_t* timer, struct tm* tmbuf) {
 /// <param name="tm">変換する時間を表す構造体</param>
 /// <returns>変換した文字列</returns>
 wString* asctimew(const struct tm* tm) {
-	wString* buf = new wString();
-	buf->resize(ASCBUFSIZE);
-	strftime(buf->c_str(), ASCBUFSIZE, "%c\n", tm);
+	wString* buf = new wString(ASCBUFSIZE);
+	//strftime(buf->c_str(), ASCBUFSIZE, "%c\n", tm);
+	strftime(buf->c_str(), ASCBUFSIZE, "%Y-%m-%d %H:%M", tm);
 	return buf;
 }
 
