@@ -135,7 +135,7 @@
 /// Frees the given link IF it isn't owned by anything else
 /// </summary>
 /// <param name="x"></param>
-inline void CLEAN(CScriptVarLink* x)
+inline static void CLEAN(CScriptVarLink* x)
 {
 	auto link = x;
 	if (link && !link->owned) {
@@ -145,7 +145,7 @@ inline void CLEAN(CScriptVarLink* x)
 }
 //Create a LINK to point to VAR and free the old link.
 //BUT this is more clever - it tries to keep the old link if it's not owned to save allocations
-inline void CREATE_LINK(CScriptVarLink*& LINK, CScriptVar* VAR)
+inline static void CREATE_LINK(CScriptVarLink*& LINK, CScriptVar* VAR)
 {
 	if (!LINK || LINK->owned) {
 		LINK = new CScriptVarLink(VAR);
@@ -998,14 +998,14 @@ CScriptLex* CScriptLex::getSubLex(int lastPosition)
 wString CScriptLex::getPosition(int pos)
 {
 	if (pos < 0) pos = tokenLastEnd;
+
 	int line = 1;
 	int col = 1;
-	for (int i = 0; i < pos; i++) {
-		char ch = 0;
-		if (i < dataEnd) {
-			ch = data[i];
-		}
+	int end = (pos < dataEnd) ? pos : dataEnd;
+	for (int i = 0; i < end; i++) {
+		char ch = data[i];
 		col++;
+		// 改行なら line++, col をリセット
 		if (ch == '\n') {
 			line++;
 			col = 1;
