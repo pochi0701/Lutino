@@ -98,6 +98,8 @@ if( root.length>0){
         var base = "<? print( base ); ?>";
         var scriptp = "<? print( scriptp ); ?>";
         var mycode;
+        //読み込んだファイルがBOM付きだったかどうか(Aceは文字のみ扱うため別管理する)
+        var bomFlag = false;
         scriptp = extractFilePath(scriptp) + "/";
         var scriptn = "<? print( scriptn ); ?>";
         scriptn = extractFilePath(scriptn) + "/";
@@ -135,10 +137,11 @@ if( root.length>0){
             var myWin = window.open(path, path);
         }
         // file save (no check)
-        function saveFile(path, code) {
+        function saveFile(path, code, bom) {
             const params = new URLSearchParams();
             params.append('path', path);
             params.append('code', code);
+            params.append('bom', bom ? '1' : '0');
             axios.post(`${scriptn}common/file_save.jss`, params)
                 .then(function (response) {
                     console.log(response);
@@ -155,15 +158,16 @@ if( root.length>0){
                 return false;
             }
             mycode = editor.getValue();
-            saveFile(this.filepath, mycode);
+            saveFile(this.filepath, mycode, bomFlag);
             return false;
         }
         // file load
         function loadFile(path) {
             axios.get(`${scriptn}common/file_load.jss?path=${path}`)
                 .then(function (response) {
-                    // set code to editor
+                    // set code to editor(BOMはcodeから除去済み。フラグはヘッダで受け取る)
                     mycode = response.data;
+                    bomFlag = (response.headers['x-bom'] == '1');
                     // editorの設定
                     if (this.editor === undefined) {
                         document.getElementById("editArea").innerHTML = "";

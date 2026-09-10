@@ -9,8 +9,9 @@
    let n = "O'Brien"; // シングルクォートを含む値
    let base = "select * from t where length>:a and name=:n";
    let sql = base.sqlBind({a: a, n: n});
-   print("元となるSQL: " + base + "<br>\n");
-   print("組み立てられたSQL: " + sql + "<br>\n");
+   print(":変数で示されるSQLパラメータを.sqlBind({変数名: バインドする値,…})で設定します。<br>\n");
+   print("元となるSQL: \t" + base + "<br>\n");
+   print("組み立てられたSQL:\t " + sql + "<br><br>\n");
 
    // DB接続がある場合は、そのまま実行できます:
    // var db = DBConnect("main");
@@ -20,10 +21,10 @@
    // }
 
    // 未対応キーを指定するとエラーになることの確認:
-   print("エラーとなる場合:"+'"select * from t where x=:missing".sqlBind({a: 1});'+"<br>\n");
+   print("バインドエラーの例:\t"+'"select * from t where x=:missing".sqlBind({a: 1});'+"<br>\n");
    try {
        "select * from t where x=:missing".sqlBind({a: 1});
    } catch (e) {
-       print("予想エラー: " + e + "<br>");
+       print("エラーの例: \t" + e + "<br>");
    }
 ?>

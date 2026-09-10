@@ -351,10 +351,11 @@ if( sf == ""){
             return false;
         }
         // file save (no check)
-        function saveFile(path, code) {
+        function saveFile(path, code, bom) {
             const params = new URLSearchParams();
             params.append('path', path);
             params.append('code', code);
+            params.append('bom', bom ? '1' : '0');
             axios.post(`${scriptn}common/file_save.jss`, params)
                 .then(function (response) {
                     console.log(response);
@@ -380,7 +381,8 @@ if( sf == ""){
                 elm[index].code = code;
                 elm[index].modify = false;
                 localStorage.setItem('files', JSON.stringify(elm));
-                saveFile(this.filepath, code);
+                //旧データにbomフィールドが無い場合はfalse扱い
+                saveFile(this.filepath, code, elm[index].bom || false);
                 showTab(elm, elm[index].filepath);
                 return false;
                 // this.lastIndexed,filepathは変更されない
@@ -395,8 +397,9 @@ if( sf == ""){
                 .then(function (response) {
                     // check current data
                     checkEditData();
-                    // set code to editor
-                    loadCode(path, response.data, false);
+                    // set code to editor(BOMはcodeから除去済み。フラグはヘッダで受け取る)
+                    var bom = (response.headers['x-bom'] == '1');
+                    loadCode(path, response.data, false, bom);
 
                     // canvas close
                     let myOffCanvas = document.getElementById("offcanvasWithBothOptions");
@@ -409,11 +412,12 @@ if( sf == ""){
                 });
         }
         // set code and path to editor.
-        function loadCode(path, code, modified) {
-            // list取得[{"filepath":filepath,"modify":false/true}]
+        function loadCode(path, code, modified, bom) {
+            bom = bom || false;
+            // list取得[{"filepath":filepath,"modify":false/true,"bom":true/false}]
             elm = getElements();
             // 変更中のものは上書きするか問い合わせる
-            data = { "filepath": `${path}`, "code": `${code}`, "modify": modified };
+            data = { "filepath": `${path}`, "code": `${code}`, "modify": modified, "bom": bom };
             // elm中にdataが存在するか調べる。
             index = elm.findIndex(datum => datum.filepath == path);
             if (index >= 0) {
@@ -422,12 +426,14 @@ if( sf == ""){
                     if (window.confirm(extractFileName(path) + "は変更されています。リロードしてよろしいですか？")) {
                         elm[index].modify = false
                         elm[index].code = code;
+                        elm[index].bom = bom;
                         localStorage.setItem('files', JSON.stringify(elm));
                     }
                 } else {
                     // no change
                     elm[index].modify = false
                     elm[index].code = code;
+                    elm[index].bom = bom;
                     localStorage.setItem('files', JSON.stringify(elm));
                 }
             } else {
