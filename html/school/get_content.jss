@@ -1,4 +1,4 @@
-<?
+﻿<?
     var version = _GET.version;
     var email = _POST.email;
     var contid = _POST.contentid;
@@ -14,11 +14,18 @@
         }
         baseptr++;
         var base = base.substring(0,baseptr);
-        var dat = loadFromFile("https://birdland.co.jp/market/download2.php?version="+version+"&contid="+contid+"&termid="+termid);
-        if( dat != "none" ){
+        var dat = loadFromFile("https://www.birdland.co.jp/market/download2.php?version="+version+"&contid="+contid+"&termid="+termid);
+        if( dat != "none" && dat.length > 0 ){
           saveToFile(base+"lesson.tgz",dat);
           command("cd \""+base+"\" && tar zxvf \""+base+"lesson.tgz\"");
           unlink( base+"lesson.tgz");
+          // ダウンロードしたコンテンツのinitSQL.jssはcourseの行が
+          // 既に存在すると件数一致でINSERTをスキップし、purchaseを
+          // 更新しないため、ここで明示的に購入済みへ更新しておく。
+          var purchaseFlag = (contid.length > 0) ? contid : "1";
+          var database = DBConnect("_SYSTEM");
+          database.SQL("update course set purchase='"+purchaseFlag+"' where no="+version+";");
+          database.DBDisConnect();
           header("Location: /school/");
         }else{
           errmsg = "このコンテンツは購入してません。";

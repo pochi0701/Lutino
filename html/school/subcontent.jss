@@ -1,4 +1,4 @@
-<?  session_start();
+﻿<?  session_start();
     var database;
     var elm;
     var course_no = _GET.no;

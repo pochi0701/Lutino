@@ -1,4 +1,4 @@
-<?  session_start();
+﻿<?  session_start();
     var scriptn  = _SERVER.SCRIPT_NAME;
     var base = "http://"+_SERVER.SERVER_ADDR+":"+_SERVER.SERVER_PORT+dirname(scriptn)+"/initSQL.jss";
     if(file_exists(_SERVER.DOCUMENT_ROOT+dirname(scriptn)+"/initSQL.jss")){
