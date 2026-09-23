@@ -3,11 +3,12 @@
     var elm;
     var course_no = _GET.no;
     database = DBConnect("_SYSTEM");
-    var tmp = database.SQL("select * from content where no="+course_no+" order by content_no;");
+    var tmp = database.SQL("select * from content where no=:course_no order by content_no;".sqlBind({"course_no":course_no}));
     if(tmp.startsWith("[")){
         elm = eval(tmp);
         for(i = 0 ; i < elm.length ; i++){
-           tmp2 = database.SQL("select count(*) as cnt from subcontent where no="+course_no+" and content_no="+(i+1)+" and done<100;");
+           var target_content_no = i + 1;
+           tmp2 = database.SQL("select count(*) as cnt from subcontent where no=:course_no and content_no=:content_no and done<100;".sqlBind({"course_no":course_no,"content_no":target_content_no}));
            // 完了してないコンテンツの個数
            num = eval(tmp2);
            elm[i].cnt = num.cnt;

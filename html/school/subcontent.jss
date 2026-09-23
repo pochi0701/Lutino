@@ -5,13 +5,13 @@
     var content_no = _GET.contentno;
     var path = "/school/";//_SERVER.SCRIPT_NAME;
     database = DBConnect("_SYSTEM");
-    var tmp1 = database.SQL("select * from content where no="+course_no+" and content_no="+content_no+";");
+    var tmp1 = database.SQL("select * from content where no=:course_no and content_no=:content_no;".sqlBind({"course_no":course_no,"content_no":content_no}));
     if(tmp1.startsWith("[")){
         elm1 = eval(tmp1);
         content_name = elm1[0].name;
         path += course_no+'/'+elm1[0].path+'/';
     }
-    var tmp = database.SQL("select * from subcontent where no="+course_no+" and content_no="+content_no+" order by sub_no;");
+    var tmp = database.SQL("select * from subcontent where no=:course_no and content_no=:content_no order by sub_no;".sqlBind({"course_no":course_no,"content_no":content_no}));
     if(tmp.startsWith("[")){
         elm = eval(tmp);
     }

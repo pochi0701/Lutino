@@ -24,7 +24,7 @@
           // 更新しないため、ここで明示的に購入済みへ更新しておく。
           var purchaseFlag = (contid.length > 0) ? contid : "1";
           var database = DBConnect("_SYSTEM");
-          database.SQL("update course set purchase='"+purchaseFlag+"' where no="+version+";");
+          database.SQL("update course set purchase=:purchase where no=:version;".sqlBind({"purchase":purchaseFlag,"version":version}));
           database.DBDisConnect();
           header("Location: /school/");
         }else{
