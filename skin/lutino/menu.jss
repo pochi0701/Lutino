@@ -43,7 +43,7 @@ me=_SERVER.SCRIPT_NAME;
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
     <link rel ="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
-     <style>
+    <style>
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
@@ -78,13 +78,26 @@ me=_SERVER.SCRIPT_NAME;
             border-radius: 0.5rem;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            /* 罫線色は Bootstrap のテーブル変数経由で指定する */
-            --bs-table-border-color: var(--bs-border-color);
+        }
+        .file-table thead {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            font-weight: 600;
         }
         .file-table thead th {
             border: none;
             padding: 1rem;
             vertical-align: middle;
+        }
+        .file-table tbody tr {
+            border-bottom: 1px solid #e9ecef;
+            transition: background-color 0.2s ease;
+        }
+        .file-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .file-table tbody tr:last-child {
+            border-bottom: none;
         }
         .file-table td {
             padding: 0.75rem 1rem;
