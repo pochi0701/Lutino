@@ -183,7 +183,7 @@
     </nav>
     <div class="container-fluid">
         <div class="row">
-            <form action="/system/sql.jss" method="post" enctype="multipart/form-data" >
+            <form action="/system/lib/sql.jss" method="post" enctype="multipart/form-data" >
               <label for="formFile" class="form-label">CSV To Table</label>
               <div class="input-group">
                 <input class="form-control" type="file" id="formFile" name="upload" accept="text/csv">
