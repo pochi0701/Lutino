@@ -14,6 +14,10 @@ foreach(_lutino_source_dir html database skin system)
   endif()
 endforeach()
 
+if(NOT EXISTS "${_lutino_source_root}/system/pdf/pdfView.jss")
+  message(FATAL_ERROR "Build MyPDF first: cd MyPDF && npm run build")
+endif()
+
 if(EXISTS "${_lutino_install_dir}")
   file(GLOB _lutino_existing_entries LIST_DIRECTORIES true
     "${_lutino_install_dir}/*"

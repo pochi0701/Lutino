@@ -69,6 +69,10 @@ install: $(TARGET)
 			exit 1; \
 		fi; \
 	done; \
+	if [ ! -f ../system/pdf/pdfView.jss ]; then \
+		echo "Build MyPDF first: cd MyPDF && npm run build" >&2; \
+		exit 1; \
+	fi; \
 	if [ -d "$(INSTALL_DIR)" ] && \
 		find "$(INSTALL_DIR)" -mindepth 1 -maxdepth 1 -print -quit | grep -q .; then \
 		echo "Warning: $(INSTALL_DIR) is not empty; installation aborted." >&2; \

@@ -1,0 +1,14 @@
+THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
+
+This software includes components from the following third-party software:
+
+1. PDF.js (pdfjs-dist)
+   Version: 6.3.289
+   Copyright: 2024 Mozilla Foundation
+   License: Apache License, Version 2.0
+   Project URL: https://github.com/mozilla/pdf.js
+   
+   Modifications / Bundling:
+   - Built and bundled with custom viewer logic for Lutino.
+   - The worker script is served as a JavaScript asset alongside the viewer.
+   - For the full license text of Apache License, Version 2.0, see LICENSE-PDFJS.txt.

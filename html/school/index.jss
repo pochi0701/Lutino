@@ -64,7 +64,7 @@
         <h2>コース一覧</h2>
         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
             <?
-            for(var i = 0 ; i < elm.length ; i++){
+            for(var i = 0 ; elm !== undefined && i < elm.length ; i++){
                 var isPurchased = (elm[i].purchase.length > 0);
                 var badgeClass = isPurchased ? 'text-bg-success' : 'text-bg-secondary';
                 var badgeText = isPurchased ? '購入済' : '未購入';
@@ -78,7 +78,10 @@
                 print('        <div class="content-card-title flex-grow-1">'+htmlspecialchars(elm[i].name)+'</div>\r\n');
                 print('        <span class="badge '+badgeClass+' text-nowrap">'+badgeText+'</span>\r\n');
                 print('      </div>\r\n');
-                print('      <div class="mt-auto d-flex justify-content-end">\r\n');
+                print('      <div class="mt-auto d-flex justify-content-end gap-2">\r\n');
+                if(isPurchased){
+                    print('        <a class="btn btn-outline-danger delete-content-link" href="delete_content.jss?version='+elm[i].no+'" data-course-name="'+htmlspecialchars(elm[i].name)+'">削除</a>\r\n');
+                }
                 print('        <a class="btn btn-primary" href="'+actionHref+'">'+actionText+'</a>\r\n');
                 print('      </div>\r\n');
                 print('    </div>\r\n');
@@ -90,6 +93,14 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
     <script>
+      document.querySelectorAll('.delete-content-link').forEach(function (link) {
+        link.addEventListener('click', function (event) {
+          if (!window.confirm(link.getAttribute('data-course-name') + ' を削除して未購入状態に戻しますか？')) {
+            event.preventDefault();
+          }
+        });
+      });
+
       (function () {
         var reloadedKey = 'lutino:reloaded:' + location.pathname + location.search;
 

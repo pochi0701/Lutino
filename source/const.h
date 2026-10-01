@@ -144,7 +144,7 @@ typedef int socklen_t;
 
 #define	HTTP_OK 	        		"HTTP/1.0 200 OK\r\n"
 #define	HTTP_NOT_FOUND 				"HTTP/1.0 404 File Not Found\r\n"
-#define HTTP_NOT_FOUND1     		"HTTP/1.x 404 Not Found\r\n"
+#define HTTP_NOT_FOUND1     		"HTTP/1.0 404 Not Found\r\n"
 //#ifdef __linux__
 #define HTTP_CONTENT_LENGTH			"Content-Length: %zu\r\n"
 //#else

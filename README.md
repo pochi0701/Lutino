@@ -9,14 +9,28 @@
 2. `Lutino.exe` を起動します。
 3. `http://localhost:8000/` にアクセスします（既定設定）。
 
+PDF viewer を利用する場合は、起動前に Node.js 22.13 以降を用意して `cd MyPDF` → `npm install` → `npm run build` を実行してください。生成物の `pdfView.jss` とアセットは `system\pdf\` に配置されます（git 管理外）。配布時は `system\pdf\` も `system\` と一緒にコピーします。旧 `html\mypdf\` および `system\pdf\index.html` は配布物から撤去してください。
+
 ### Linux (CMake)
 ```sh
 cmake -S . -B build
 cmake --build build
+cd MyPDF && npm install && npm run build && cd ..
 cmake --install build
 ```
 
 `cmake --install build` の `build` は、`cmake -B build` で指定した**ビルドディレクトリ**です（フォルダー名は任意）。
+`make -C source install` を使う場合も、先に同じ MyPDF ビルドが必要です。viewer の生成物がない場合はインストールを中止します。
+
+## PDF viewer
+
+PDF を閲覧するときは `/system/common/cheat-sheet-markdown.pdf` のように元の PDF URL を開きます。Lutino はリダイレクトせずサーバー内部で `pdfView.jss` を実行し、viewer は同一オリジンの `/system/common/cheat-sheet-markdown.pdf?mypdf_raw=1` から PDF を取得します。PDF のクエリーは `&` 区切りで完全一致する `mypdf_raw=1` のみを残し、旧 action やその他のパラメータは内部で除去します。有効な raw 指定が1つでもあれば PDF 本体を返し、それ以外は viewer を表示します。ブラウザーのアドレスバーのクエリーは変更しません。PDF ファイル一覧やヘルプも通常の PDF URL にリンクします。PDF の編集・ダウンロード操作は表示しません。PDF 以外のファイル配信は従来どおりです。
+
+既存の `alias /html/system /system` が有効な間、viewer を含む `/system` 全体が公開されます。この alias を解除すると通常 PDF URL からの viewer 表示はエラーになりますが、`html` 配下の PDF の raw 取得を禁止するものではありません。また他の `/system` のページも利用できなくなります。JSS を実行するため、`flag_execute_cgi` を無効にしないでください。
+
+コピー、印刷、保存の抑止は **viewer の UI に限る補助措置**です。`?mypdf_raw=1` の PDF URL は公開されており、ブラウザーへの手入力、HTTP クライアントや開発者ツール等で PDF 本体を取得できます。Cookie や User-Agent では viewer の取得と手入力を確実に区別できません。閲覧権限の追加や複製防止を保証するものではありません。実際のアクセス制限が必要なら、別途サーバー側の認証・認可と画像配信方式を検討してください。
+
+サーバーを起動した状態で `cd MyPDF` → `LUTINO_BASE_URL=http://127.0.0.1:8000 npm test`（PowerShell では `$env:LUTINO_BASE_URL='http://127.0.0.1:8000'; npm test`）により HTTP 統合テストを実行できます。
 
 ## 主な機能
 - TinyJS によるサーバーサイドスクリプト実行

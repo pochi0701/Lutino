@@ -374,6 +374,11 @@ me=_SERVER.SCRIPT_NAME;
                                         iconClass = "icon-markdown";
                                         url1 = fl+basename(filePath)+"?action=/system/MarkDownv.jss";
                                         url2 = fl+basename(filePath)+"?action=/system/MarkDown.jss";
+                                    }else if( ext == "pdf" ){
+                                        icon = "fas fa-file-pdf";
+                                        iconClass = "icon-document";
+                                        url1 = fl+basename(filePath);
+                                        url2 = "";
                                     }else{
                                         icon = "fas fa-file";
                                         iconClass = "icon-document";
@@ -395,7 +400,9 @@ me=_SERVER.SCRIPT_NAME;
                                 if( url2.length > 0 ){
                                     actions += "<a href=\""+url2+"\" class=\"icon-btn\" title=\"Edit\" target=\"_blank\"><i class=\"fas fa-edit\"></i></a> ";
                                 }
-                                actions += "<a href=\"javascript:void(0)\" onclick=\"lutinoDownload('"+url3+"')\" class=\"icon-btn\" title=\"Download\"><i class=\"fas fa-download\"></i></a>";
+                                if( ext != "pdf" ){
+                                    actions += "<a href=\"javascript:void(0)\" onclick=\"lutinoDownload('"+url3+"')\" class=\"icon-btn\" title=\"Download\"><i class=\"fas fa-download\"></i></a>";
+                                }
                                 print( "<tr><td class=\"file-icon "+iconClass+"\"><i class=\""+icon+"\"></i></td><td class=\"file-name\"><a href=\""+url1+"\">"+fname+"</a></td><td class=\"file-size\">"+fileSize+"</td><td class=\"file-date\">"+stat.date+"</td><td>"+actions+"</td></tr>\n");
                             }
                         }
