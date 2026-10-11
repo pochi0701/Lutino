@@ -367,6 +367,8 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, wString& script_filename, char* q
 		wString tmp;
 		tmp.sprintf("SCRIPT ERROR: %s\n", e->text.c_str());
 		transport_send(accept_socket, tmp.c_str(), tmp.length(), 0);
+		delete e;
+		e = nullptr;
 		delete[] buffer;
 		for (auto p : mp)
 		{

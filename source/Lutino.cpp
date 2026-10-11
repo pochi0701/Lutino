@@ -4,6 +4,10 @@
 #include "framework.h"
 #include "Lutino.h"
 
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
+
 #include "shellapi.h"
 #include "ltn.h"
 
@@ -83,6 +87,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
+
+#ifdef _DEBUG
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
 	// TODO: ここにコードを挿入してください。
 

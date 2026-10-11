@@ -12,6 +12,7 @@
 #include <map>
 #include <string>
 #include <stdio.h>
+#include <memory>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -1520,6 +1521,14 @@ int Table::LoadFromFile(bufrd* br)
 {
 	unsigned int len;
 	char work[1024];
+	for (auto* clm : column) {
+		delete clm;
+	}
+	column.clear();
+	for (auto* nd : node) {
+		delete nd;
+	}
+	node.clear();
 	//name復帰
 	for (;;) {
 		if (br->Read(&len, sizeof(unsigned int))) break;
@@ -1528,26 +1537,23 @@ int Table::LoadFromFile(bufrd* br)
 		name = work;
 
 		//Column復帰
-		column.clear();
 		if (br->Read(&len, sizeof(unsigned int)))  break;
 		for (unsigned int i = 0; i < len; i++) {
 			Column* clm = new Column();
 			if (clm->LoadFromFile(br) < 0) {
 				delete clm;
-				column.clear();
-				break;
+				return -1;
 			}
 			column.push_back(clm);
 		}
 
 		//Node復帰
-		node.clear();
 		if (br->Read(&len, sizeof(unsigned int))) break;
 		for (unsigned int i = 0; i < len; i++) {
 			Node* nd = new Node(column[i]->type);
 			if (nd->LoadFromFile(br) < 0) {
 				delete nd;
-				break;
+				return -1;
 			}
 			node.push_back(nd);
 		}
@@ -1663,7 +1669,7 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 	unsigned char    token[256];
 	unsigned char    token2[256];
 	unsigned char    sql[2048] = {};
-	vector<Column*>  columns;
+	vector<unique_ptr<Column>> columns;
 	vector<wString>  colnams;
 	//　テーブル名
 	vector<wString>  tables;
@@ -1891,8 +1897,7 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 						err("CREATE TABLE INVALID ARGS");   return -1;
 					}//number/string
 					dataType typ = (stricmp(reinterpret_cast<char*>(token2), "number") == 0) ? dataType::NUMBER : dataType::STRING;
-					Column* clm = new Column(tables[0], reinterpret_cast<char*>(token), typ);
-					columns.push_back(clm);
+					columns.push_back(make_unique<Column>(tables[0], reinterpret_cast<char*>(token), typ));
 					ret = getToken(sql, token);
 					if (ret == CMDS::TXPE)          break;
 					else if (ret != CMDS::TXCM) { err("CREATE TABLE SYNTAX ERROR");   return -1; }//number/string
@@ -1900,18 +1905,17 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 				//テーブル作成
 				//チェック。既に同名のテーブルがないか？
 				if (tblList.count(tables[0])) {
-					for (unsigned int i = 0; i < columns.size(); i++) {
-						delete columns[i];
-					}
 					err("Table already exists");
 					return -1;
 				}
-				Table* ntbl = new Table(tables[0], columns);//永続化
+				vector<Column*> columnPtrs;
+				columnPtrs.reserve(columns.size());
+				for (const auto& column : columns) {
+					columnPtrs.push_back(column.get());
+				}
+				Table* ntbl = new Table(tables[0], columnPtrs);//永続化
 				ntbl->changed = true;
 				tblList[tables[0]] = ntbl;
-				for (unsigned int i = 0; i < columns.size(); i++) {
-					delete columns[i];
-				}
 			}
 			// CREATE TABLE FROM
 			else if (ret == CMDS::TXFROM) {
@@ -1932,7 +1936,10 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 				//if (rs) {
 				char work[8192];
 				auto ret2 = wString::readLineCSV(fd, work, sizeof(work));
-				if (ret2 < 0) break;
+				if (ret2 < 0) {
+					close(fd);
+					break;
+				}
 				//fgets(work, 4096, rs);
 				wString::rtrim_chr(work);
 				//while (*work && work[strlen (work) - 1] < ' ') work[strlen (work) - 1] = 0;
@@ -2208,8 +2215,7 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 					err("CREATE TABLE INVALID ARGS");   return -1;
 				}//number/string
 				dataType typ = (stricmp(reinterpret_cast<char*>(token2), "number") == 0) ? dataType::NUMBER : dataType::STRING;
-				Column* clm = new Column(tables[0], reinterpret_cast<char*>(token), typ);
-				columns.push_back(clm);
+				columns.push_back(make_unique<Column>(tables[0], reinterpret_cast<char*>(token), typ));
 				ret = getToken(sql, token);
 				if (ret == CMDS::TXPE)          break;
 				else if (ret != CMDS::TXCM) { err("ALTER TABLE SYNTAX ERROR");   return -1; }
@@ -2236,18 +2242,20 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 			//ADD,MODIFY実行処理
 			if (nctyp == CMDS::TXADD) {
 				for (unsigned int i = 0; i < columns.size(); i++) {
-					tbl->column.push_back(columns[i]);
+					tbl->column.push_back(columns[i].get());
 					Node* nd = new Node(columns[i]->type);
 					//個数を増やす
 					for (unsigned int j = 0; j < tbl->node[0]->size(); j++) {
 						nd->put("");
 					}
 					tbl->node.push_back(nd);
+					columns[i].release();
 				}
 			}
 			else if (nctyp == CMDS::TXMODIFY) {
 				for (unsigned int i = 0; i < columns.size(); i++) {
-					tbl->column[colpos[i]] = columns[i];
+					delete tbl->column[colpos[i]];
+					tbl->column[colpos[i]] = columns[i].get();
 					//ノードの変更
 					Node* nd = new Node(columns[i]->type);
 					//nd->resize(tbl->node[colpos[i]].size());
@@ -2255,10 +2263,9 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 						nd->put(tbl->node[colpos[i]]->getNode(j, 1));
 					}
 					//tbl->node[colpos[i]].changetype(columns[i]->type);
-					//消す
-					tbl->node.erase(tbl->node.begin() + colpos[i]);
-					//挿入
-					tbl->node.insert(tbl->node.begin() + colpos[i], nd);
+					delete tbl->node[colpos[i]];
+					tbl->node[colpos[i]] = nd;
+					columns[i].release();
 				}
 			}
 			//変更したことにする
@@ -2296,10 +2303,6 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 					tbl->column.erase(tbl->column.begin() + colpos[i]);
 					tbl->node.erase(tbl->node.begin() + colpos[i]);
 				}
-			}
-			//カラム一時データ削除
-			for (unsigned int i = 0; i < columns.size(); i++) {
-				delete columns[i];
 			}
 			//変更したことにする
 			tbl->node[0]->changed = true;
@@ -2420,11 +2423,10 @@ int Database::LoadFromFile(wString file)
 {
 	//tableを全部読み込む
 	unsigned int max;
-	bufrd* br = new bufrd();
+	bufrd br;
 	tblList.clear();
 	if (wString::file_exists(file)) {
-		if (br->ropen(file)) {
-			delete br;
+		if (br.ropen(file)) {
 			return -1;
 		}
 		//ファイルがない場合終了
@@ -2433,39 +2435,36 @@ int Database::LoadFromFile(wString file)
 		return -1;
 	}
 	//テーブル個数取得
-	if (br->Read(&max, sizeof(unsigned int))) return -1;
+	if (br.Read(&max, sizeof(unsigned int))) return -1;
 	//テーブル取得
 	for (unsigned int i = 0; i < max; i++) {
 		Table* tbl = new Table();
-		if (tbl->LoadFromFile(br) < 0) {
+		if (tbl->LoadFromFile(&br) < 0) {
 			delete tbl;
-			delete br;
 			err("table load error\n");
 			return -1;
 		}
 		tblList[tbl->name] = tbl;
 	}
-	br->rclose();
-	delete br;
+	br.rclose();
 	return 0;
 }
 ////////////////////////////////////////////////////////////////////////////
 int Database::SaveToFile(wString file)
 {
-	auto br = new bufrd();
-	if (br->wopen(file)) {
+	bufrd br;
+	if (br.wopen(file)) {
 		return -1;
 	}
 	//名前はcatalogクラスで保存
 	//テーブル個数保存
 	auto max = (unsigned int)tblList.size();
-	br->Write(&max, sizeof(unsigned int));
+	br.Write(&max, sizeof(unsigned int));
 	//テーブル保存
 	for (auto const& x : tblList) {
-		x.second->SaveToFile(br);
+		x.second->SaveToFile(&br);
 	}
-	br->wclose();
-	delete br;
+	br.wclose();
 	return 0;
 }
 
@@ -2610,11 +2609,6 @@ int DBCatalog::SaveToFile(void)
 	}
 	// ファイルクローズ
 	close(fd);
-	for (auto const& x : dblist) {
-		if (x.second != NULL) {
-			delete x.second;
-		}
-	}
 	return 0;
 }
 
@@ -2736,12 +2730,16 @@ wString _DBSQL(const wString& key, wString& sql)
 DBCatalog::~DBCatalog(void)
 {
 	refs--;
-	//connectはまあいいかな。
-	for (auto const& x : *connects) {
-		wString nam = x.first;
+	while (!connects->empty()) {
+		wString nam = connects->begin()->first;
 		_DBDisConnect(nam);
 	}
 	delete connects;
+
+	for (auto& x : dblist) {
+		delete x.second;
+		x.second = NULL;
+	}
 	SaveToFile();
 }
 #if 0

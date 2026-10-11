@@ -1887,16 +1887,14 @@ const wString& CTinyJS::execute(const wString& code, ExecuteModes executeMode)
 	}
 	catch (CScriptException* e) {
 		wString msg;
-		msg.sprintf("Error at %s: %s", lex->getPosition().c_str(), e->text.c_str());;
-		//msg +=  e->text;
+		msg.sprintf("Error at %s: %s", lex->getPosition().c_str(), e->text.c_str());
 #ifdef TINYJS_CALL_STACK
-		for (auto i = (int)call_stack.size() - 1; i >= 0; i--) {
+		for (int i = (int)call_stack.size() - 1; i >= 0; i--) {
 			msg.cat_sprintf("\n%d: %s", i, call_stack.at(i).c_str());
 		}
 #endif
 		delete lex;
 		lex = oldLex;
-		//いらないかも
 		delete e;
 		e = nullptr;
 
@@ -1939,6 +1937,8 @@ CScriptVarLink CTinyJS::evaluateComplex(const wString& code)
 #endif
 		delete lex;
 		lex = oldLex;
+		delete e;
+		e = nullptr;
 
 		throw new CScriptException(msg.c_str());
 	}
@@ -2475,8 +2475,8 @@ CScriptVarLink* CTinyJS::expression(bool& execute)
 			if (execute) {
 				CScriptVar one(1);
 				CScriptVar* res = a->var->mathsOp(&one, op == LEX_TYPES::LEX_PLUSPLUS ? LEX_TYPES::LEX_PLUS : LEX_TYPES::LEX_MINUS);
-				CScriptVarLink* oldValue = new CScriptVarLink(a->var);
 				// in-place add/subtract
+				CScriptVarLink* oldValue = new CScriptVarLink(a->var);
 				a->replaceWith(res);
 				CLEAN(a);
 				a = oldValue;
@@ -2512,7 +2512,7 @@ CScriptVarLink* CTinyJS::shift(bool& execute)
 		if (execute) {
 			if (op == LEX_TYPES::LEX_LSHIFT) a->var->setInt(a->var->getInt() << shift_bits);
 			else if (op == LEX_TYPES::LEX_RSHIFT)         a->var->setInt(a->var->getInt() >> shift_bits);
-			else if (op == LEX_TYPES::LEX_RSHIFTUNSIGNED) a->var->setInt(((unsigned int)a->var->getInt()) >> shift_bits);
+			else if (op == LEX_TYPES::LEX_RSHIFTUNSIGNEDEQUAL) a->var->setInt(((unsigned int)a->var->getInt()) >> shift_bits);
 		}
 	}
 	return a;
@@ -3302,7 +3302,6 @@ bool CTinyJS::setVariable(const wString& path, const wString& varData)
 		return false;
 	}
 }
-
 /// <summary>
 /// Finds a child, looking recursively up the scopes
 /// </summary>

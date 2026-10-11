@@ -36,8 +36,14 @@ public:
 	{
 		*buf = 0;
 		bufptr = 0;
-		fd = 0;
+		fd = -1;
 		rest = 0;
+	}
+	~bufrd()
+	{
+		if (fd >= 0) {
+			close(fd);
+		}
 	}
 
 	/// <summary>
@@ -74,7 +80,9 @@ public:
 	/// </summary>
 	/// <param name=""></param>
 	void rclose(void) {
-		close(fd);
+		if (fd >= 0) {
+			close(fd);
+		}
 		fd = -1;
 	}
 	
@@ -83,8 +91,10 @@ public:
 	/// </summary>
 	/// <param name=""></param>
 	void wclose(void) {
-		write(fd, static_cast<void*>(buf), bufptr);
-		close(fd);
+		if (fd >= 0) {
+			write(fd, static_cast<void*>(buf), bufptr);
+			close(fd);
+		}
 		fd = -1;
 	}
 	//読み込み：戻り値 成功:0 失敗:-1
@@ -103,7 +113,10 @@ public:
 			return 0;
 		}
 		else {
-			close(fd);
+			if (fd >= 0) {
+				close(fd);
+			}
+			fd = -1;
 			return -1;
 		}
 	}
