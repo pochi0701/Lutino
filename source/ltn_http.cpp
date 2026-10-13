@@ -178,7 +178,7 @@ void server_http_process (SOCKET accept_socket, char* access_host, char* client_
 	// ファイルチェック
 	//  種類に応じて分岐
 	// ============================
-	result = http_recv_info.http_file_check ();
+	result = http_recv_info.http_file_check();
 #ifdef cript
 //88cad6701a53e55aae8118e30da6a35b1645c236c326bcf34832dcae3d3e9a69a54fb8e59a308d
 //58f64c06417cb3e7637a3e865d53e72e662af636a7622f7bb96604f45e69c41cd08fbae44535c1

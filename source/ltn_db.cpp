@@ -1921,7 +1921,7 @@ int Database::SQL(const wString& sqltext, wString& retStr)
 			else if (ret == CMDS::TXFROM) {
 				if (chkToken(sql, token, ret, CMDS::TXARG, CMDS::TXPRM)) { err("No file assigned");            return -1; }
 
-				// 名前はSJIS。今後変化する可能性がある。
+				// ファイル名前はSJIS。今後変化する可能性がある。
 				// FILE* rs = fopen(wString(reinterpret_cast<char*>(token)).nkfcnv("Ws").c_str(), "r");
 				// myopenでSJISにするのでここではSJISにしない
 				int fd = myopen(wString(reinterpret_cast<char*>(token)).c_str(), O_RDONLY | O_BINARY, S_IREAD);

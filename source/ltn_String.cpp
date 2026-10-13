@@ -113,6 +113,24 @@ SOCKET open_http_socket(const HttpUrlParts& info)
 	return socket;
 }
 
+class HttpSocketGuard
+{
+private:
+	SOCKET socket;
+
+public:
+	explicit HttpSocketGuard(SOCKET socket) : socket(socket) {}
+	~HttpSocketGuard()
+	{
+		transport_close(socket);
+	}
+
+	SOCKET get() const
+	{
+		return socket;
+	}
+};
+
 bool read_http_response(SOCKET socket, wString& response)
 {
 	char buffer[4096];
@@ -126,7 +144,7 @@ bool read_http_response(SOCKET socket, wString& response)
 			return true;
 		}
 		else {
-			return response.length() > 0;
+			return false;
 		}
 	}
 	return response.length() > 0;
@@ -166,7 +184,7 @@ bool split_http_response(const wString& response, wString& body)
 /// <param name="string">検索対象となる文字列</param>
 /// <param name="pattern">文字列から検索する文字列</param>
 /// <returns></returns>
-char* strrstr (const char* string, const char* pattern)
+static char* strrstr (const char* string, const char* pattern)
 {
 	// 文字列終端に達するまで検索を繰り返す。
 	const char* last = NULL;
@@ -925,9 +943,14 @@ int wString::load_from_file (const wString& FileName)
 	long flen;
 	int  handle;
 	if (FileName.starts_with ("http://") || FileName.starts_with ("https://")) {
-		wString tmp;
-		tmp = wString::http_get (const_cast<char*>(FileName.c_str ()));
-		*this = tmp;
+		try {
+			wString tmp = wString::http_get(FileName);
+			*this = tmp;
+		}
+		catch (const HttpRequestException& e) {
+			debug_log_output("%s(%d):load_from_file() HTTP error: %s", __FILE__, __LINE__, e.what());
+			return -1;
+		}
 	}
 	else {
 		wString FileName2 = replace_env(FileName);
@@ -1129,14 +1152,14 @@ bool wString::load_from_csv (const wString& FileName)
 //---------------------------------------------------------------------------
 // ファイル書き込み
 //---------------------------------------------------------------------------
-int wString::save_to_file (const char* str)
+int wString::save_to_file (const char* str) const
 {
 	return save_to_file (wString (str));
 }
 //---------------------------------------------------------------------------
 // ファイル書き込み
 //---------------------------------------------------------------------------
-int wString::save_to_file (const wString& FileName)
+int wString::save_to_file (const wString& FileName) const
 {
 	wString FileName2 = replace_env(FileName);
 #ifdef __linux__
@@ -1155,7 +1178,7 @@ int wString::save_to_file (const wString& FileName)
 //---------------------------------------------------------------------------
 // 大文字化
 //---------------------------------------------------------------------------
-wString wString::ToUpper (void)
+wString wString::ToUpper (void) const
 {
 	wString temp (*this);
 	for (auto i = 0U; i < length (); i++) {
@@ -1166,7 +1189,7 @@ wString wString::ToUpper (void)
 //---------------------------------------------------------------------------
 // 大文字化
 //---------------------------------------------------------------------------
-wString wString::ToLower (void)
+wString wString::ToLower (void) const
 {
 	wString temp (*this);
 	for (auto i = 0U; i < length (); i++) {
@@ -1177,7 +1200,7 @@ wString wString::ToLower (void)
 //---------------------------------------------------------------------------
 // トリム
 //---------------------------------------------------------------------------
-wString wString::trim (void)
+wString wString::trim (void) const
 {
 	wString temp (*this);
 	if (temp.len) {
@@ -1204,7 +1227,7 @@ wString wString::trim (void)
 //---------------------------------------------------------------------------
 // トリム
 //---------------------------------------------------------------------------
-wString wString::rtrim (void)
+wString wString::rtrim (void) const
 {
 	wString temp (*this);
 	if (temp.len) {
@@ -1259,7 +1282,7 @@ void wString::rtrim_chr (unsigned char cut_char)
 /// </summary>
 /// <param name=""></param>
 /// <returns></returns>
-wString wString::ltrim_chr (unsigned char cut_char)
+wString wString::ltrim_chr (unsigned char cut_char) const
 {
 	wString temp (*this);
 	if (temp.len) {
@@ -1278,7 +1301,7 @@ wString wString::ltrim_chr (unsigned char cut_char)
 //---------------------------------------------------------------------------
 // トリム
 //---------------------------------------------------------------------------
-wString wString::ltrim (void)
+wString wString::ltrim (void) const
 {
 	wString temp (*this);
 	if (temp.len) {
@@ -1389,7 +1412,7 @@ int wString::file_exists (const wString& str)
 	return file_exists (str.String);
 }
 //---------------------------------------------------------------------------
-int wString::file_exists (void)
+int wString::file_exists (void) const
 {
 	return file_exists (String);
 }
@@ -1522,6 +1545,11 @@ wString wString::extract_file_ext (const wString& str)
 {
 	int pos = str.last_delimiter (".");
 	return str.substr (pos + 1);
+}
+//---------------------------------------------------------------------------
+wString wString::extract_file_ext (void) const
+{
+	return extract_file_ext (*this);
 }
 //---------------------------------------------------------------------------
 const char* MIME_TYPE_NAME[] = {
@@ -1724,13 +1752,16 @@ wString wString::enum_folder_json (const wString& Path)
 	if (n >= 0) {
 		temp = "[";
 		for (int i = 0; i < n; i++) {
+			const char* name = namelist[i]->d_name;
+			if (strcmp (name, ".") != 0 && strcmp (name, "..") != 0) {
 			if (first) {
 				first = 0;
 			}
 			else {
 				temp += ",";
 			}
-			temp += "\"" + Path2 + DELIMITER + namelist[i]->d_name + "\"";
+				temp += "\"" + Path2 + DELIMITER + name + "\"";
+			}
 			free (namelist[i]);
 		}
 		temp += "]";
@@ -2313,7 +2344,7 @@ int wString::cat_sprintf (const char* format, ...)
 /// </summary>
 /// <param name="delimstr">分解したTStringList文字列</param>
 /// <returns>切断後の文字列。見つからない場合は長さ０の文字列</returns>
-wString wString::strsplit (const char* delimstr)
+wString wString::strsplit (const char* delimstr) const
 {
 	wString tmp;
 	char* ptr = c_str ();
@@ -2424,7 +2455,6 @@ wString wString::uri_encode (void)
 	return dst;
 }
 
-#define FILE_BUFFER 8000
 /// <summary>
 /// ファイルコピー
 /// </summary>
@@ -2433,6 +2463,7 @@ wString wString::uri_encode (void)
 /// <returns>成功:0,失敗:-1</returns>
 int   wString::FileCopy (const wString& fname_r, const wString& fname_w)
 {
+	constexpr auto FILE_BUFFER = 8000;
 	int fpr;
 	int fpw;
 	unsigned char buf[FILE_BUFFER];
@@ -2479,7 +2510,7 @@ wString wString::add_slashes (void)
 /// </summary>
 /// <param name="x">変換する文字</param>
 /// <returns>１０進の数値</returns>
-unsigned char htoc (unsigned char x)
+static unsigned char htoc (unsigned char x)
 {
 	if ('0' <= x && x <= '9') return (unsigned char)(x - '0');
 	if ('a' <= x && x <= 'f') return (unsigned char)(x - 'a' + 10);
@@ -2560,14 +2591,14 @@ void wString::init_header (size_t content_length, int expire, const char* mime_t
 /// </summary>
 /// <param name="socket">送出ソケット</param>
 /// <param name="endflag">指定するとHTTPヘッダ終了(\r\n\r\n)</param>
-void wString::send_header (SOCKET socket, int endflag)
+void wString::send_header (SOCKET socket, int endflag) const
 {
 	transport_send (socket, String, len, 0);
 	if (endflag) {
 		transport_send (socket, HTTP_END, (int)strlen (HTTP_END), 0);
 	}
 }
-wString wString::headerPrintMem (void)
+wString wString::headerPrintMem (void) const
 {
 	return *this + HTTP_END;
 }
@@ -2806,13 +2837,14 @@ wString wString::get_list_string (int pos)
 	return wString ();
 }
 #if 1
-#define HTTP_STR_BUF_SIZE (1024)
+constexpr auto HTTP_STR_BUF_SIZE = (1024);
 /// <summary>
 /// HTTPより文字列データを取得
 /// </summary>
 /// <param name="url">URL</param>
 /// <param name="offset">読み込みオフセット</param>
-/// <returns>読み込んだ文字列。失敗したときは長さ０</returns>
+/// <returns>HTTP応答本文。空本文も正常な応答として返る。</returns>
+/// <exception cref="HttpRequestException">URL、接続、送受信、HTTP応答のいずれかに失敗した場合。</exception>
 wString wString::http_get (const wString& url, off_t offset)
 {
 	wString     buf;
@@ -2821,12 +2853,13 @@ wString wString::http_get (const wString& url, off_t offset)
 	HttpUrlParts target_info;
 	SOCKET      server_socket;                  //サーバーソケット
 	if (!parse_http_url(url, target_info)) {
-		return wString ();
+		throw HttpRequestException("Invalid HTTP URL");
 	}
 	server_socket = open_http_socket(target_info);
 	if (SERROR(server_socket)) {
-		return wString();
+		throw HttpRequestException("Unable to connect to HTTP server");
 	}
+	HttpSocketGuard socket_guard(server_socket);
 
 	request.sprintf("GET %s HTTP/1.0\r\n"
 					"Accept: */*\r\n"
@@ -2836,21 +2869,18 @@ wString wString::http_get (const wString& url, off_t offset)
 					MACADDR,
 					target_info.host.c_str(),
 					static_cast<unsigned long long>(offset));
-	if (transport_send(server_socket, request.c_str(), request.length(), 0) == SOCKET_ERROR) {
-		transport_close(server_socket);
-		return wString();
+	if (transport_send(socket_guard.get(), request.c_str(), request.length(), 0) == SOCKET_ERROR) {
+		throw HttpRequestException("Failed to send HTTP request");
 	}
-	if (!read_http_response(server_socket, buf)) {
-		transport_close(server_socket);
-		return wString();
+	if (!read_http_response(socket_guard.get(), buf)) {
+		throw HttpRequestException("Failed to receive HTTP response");
 	}
-	transport_close(server_socket);
 	auto status = get_http_status_code(buf);
 	if (status < 200 || 300 <= status) {
-		return wString();
+		throw HttpRequestException("HTTP server returned an unsuccessful status");
 	}
 	if (!split_http_response(buf, body)) {
-		return wString();
+		throw HttpRequestException("Malformed HTTP response");
 	}
 	return body;
 }
@@ -2861,7 +2891,8 @@ wString wString::http_get (const wString& url, off_t offset)
 /// <param name="methods">HEAD,GET,POST,PUT,DELETE</param>
 /// <param name="url"></param>
 /// <param name="data">送出データ</param>
-/// <returns>読み込んだ文字列。失敗したときは長さ０</returns>
+/// <returns>HTTP応答本文。空本文も正常な応答として返る。</returns>
+/// <exception cref="HttpRequestException">URL、接続、送受信、HTTP応答のいずれかに失敗した場合。</exception>
 wString wString::http_rest (const wString& methods, const wString& url, const wString& data)
 {
 	wString     buf;
@@ -2869,12 +2900,13 @@ wString wString::http_rest (const wString& methods, const wString& url, const wS
 	HttpUrlParts target_info;
 	SOCKET      server_socket;                  //サーバーソケット
 	if (!parse_http_url(url, target_info)) {
-		return wString ();
+		throw HttpRequestException("Invalid HTTP URL");
 	}
 	server_socket = open_http_socket(target_info);
 	if (SERROR(server_socket)) {
-		return wString();
+		throw HttpRequestException("Unable to connect to HTTP server");
 	}
+	HttpSocketGuard socket_guard(server_socket);
 
 	if (methods == "GET") {
 		ptr.sprintf("%s %s HTTP/1.0\r\n"
@@ -2904,21 +2936,18 @@ wString wString::http_rest (const wString& methods, const wString& url, const wS
 					data.length());
 		ptr += data;
 	}
-	if (transport_send(server_socket, ptr.c_str(), ptr.length(), 0) == SOCKET_ERROR) {
-		transport_close(server_socket);
-		return wString();
+	if (transport_send(socket_guard.get(), ptr.c_str(), ptr.length(), 0) == SOCKET_ERROR) {
+		throw HttpRequestException("Failed to send HTTP request");
 	}
-	if (!read_http_response(server_socket, buf)) {
-		transport_close(server_socket);
-		return wString();
+	if (!read_http_response(socket_guard.get(), buf)) {
+		throw HttpRequestException("Failed to receive HTTP response");
 	}
-	transport_close(server_socket);
 	auto status = get_http_status_code(buf);
 	if (status < 200 || 300 <= status) {
-		return wString();
+		throw HttpRequestException("HTTP server returned an unsuccessful status");
 	}
 	if (!split_http_response(buf, ptr)) {
-		return wString();
+		throw HttpRequestException("Malformed HTTP response");
 	}
 	return ptr;
 }
@@ -3711,7 +3740,7 @@ bool wString::sentence_split(char cut_char, wString& split1, wString& split2)
 /// <param name="pos">挿入位置</param>
 /// <param name="fill">挿入文字</param>
 /// <returns>挿入された文字</returns>
-wString wString::insert (int pos, const wString& fill)
+wString wString::insert (int pos, const wString& fill) const
 {
 	wString str1;
 	wString str2;
@@ -3996,4 +4025,3 @@ wString wString::bios_uuid()
 #endif
 	return tmp;
 }
-

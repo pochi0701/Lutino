@@ -4,11 +4,20 @@
 #include <string.h>
 #include <malloc.h>
 #include <fcntl.h>
+#include <stdexcept>
 //#include <dirent.h>
 #include <assert.h>
 #include "const.h"
 //#include "ltn.h"
 
+class HttpRequestException : public std::runtime_error
+{
+public:
+	explicit HttpRequestException(const char* message)
+		: std::runtime_error(message)
+	{
+	}
+};
 
 class wString
 {
@@ -86,19 +95,19 @@ public:
 	char*			c_str(void) const;
 	wString&		set_length(const unsigned int num);
 
-	wString         ToUpper(void);
-	wString         ToLower(void);
-	wString         trim(void);
-	wString         rtrim(void);
-	wString         ltrim(void);
-	void          rtrim_chr (const unsigned char cut_char);
-	wString         ltrim_chr (const unsigned char cut_char);
+	wString         ToUpper(void) const;
+	wString         ToLower(void) const;
+	wString         trim(void) const;
+	wString         rtrim(void) const;
+	wString         ltrim(void) const;
+	void            rtrim_chr (const unsigned char cut_char);
+	wString         ltrim_chr (const unsigned char cut_char) const;
 	static void     rtrim_chr (char* sentence, const unsigned char cut_char = ' ');
 	int             sprintf(const char* format, ...);
 	int             cat_sprintf(const char* format, ...);
 	int             last_delimiter(const char* delim) const;
 ///	wString         strsplit(const wString& str, const char* delimstr);
-	wString         strsplit(const char* delimstr);
+	wString         strsplit(const char* delimstr) const;
 	int             find(const wString& str, int index = 0) const;
 	int             find(const char* str, int index = 0) const;
 	int             find(char ch, int index = 0) const;
@@ -128,8 +137,8 @@ public:
 	void            Add(const char* str);
 	//HEADER
 	void            init_header(size_t content_length, int expire = 1, const char* mime_type = "text/html");
-	void            send_header(SOCKET socket, int endflag);
-	wString         headerPrintMem(void);
+	void            send_header(SOCKET socket, int endflag) const;
+	wString         headerPrintMem(void) const;
 	int             header(const char* str, int flag = true, int status = 0);
 	//FILE OPERATION
 	static bool     rename_file(const wString& src, const wString& dst);
@@ -142,10 +151,11 @@ public:
 	static wString  file_stats(const wString& str, int mode = 0);
 	static int      file_exists(const char* str);
 	static int      file_exists(const wString& str);
-	int             file_exists(void);
+	int             file_exists(void) const;
 	static wString  extract_file_dir(const wString& str);
 	static wString  extract_file_name(const char* str, const char* delim = DELIMITER);
 	static wString  extract_file_name(const wString& str, const char* delim = DELIMITER);
+	wString         extract_file_ext(void) const;
 	static wString  extract_file_ext(const wString& str);
 	static wString  find_mime_type(const wString& file_name);
 	static bool     create_dir(const wString& str);
@@ -167,8 +177,8 @@ public:
 	int             load_from_file(const wString& FileName);
 	bool            load_from_csv(const wString& FileName);
 	void            load_from_csv(const char* str);
-	int             save_to_file(const char* FileName);
-	int             save_to_file(const wString& str);
+	int             save_to_file(const char* FileName) const;
+	int             save_to_file(const wString& str) const;
 	wString         nkfcnv(const wString& option);
 	int             line_receive(SOCKET accept_socket);
 	bool            cut_before_character(const char cut_char);
@@ -176,14 +186,16 @@ public:
 	bool            cut_after_last_character(const char cut_char);
 	bool            sentence_split(char cut_char, wString& split1, wString& split2);
 	bool            replace_character(wString key, wString rep);
-	wString         insert(int pos, const wString& fill);
+	wString         insert(int pos, const wString& fill) const;
 	//
 	char*			strtok_csv (char* str, int& ptr);
 	//HTTP接続用
 	static int      http_size(const wString& url);
 	static SOCKET   sock_connect(const wString& host, const int port);
 	static SOCKET   sock_connect(const char* host, const int port);
+	// Throws HttpRequestException on request or response failures; empty bodies are valid.
 	static wString  http_get(const wString& url, const off_t offset = 0);
+	// Throws HttpRequestException on request or response failures; empty bodies are valid.
 	static wString  http_rest(const wString& methods, const wString& url, const wString& data);
 	static wString  get_local_address(void);
 	static int      get_local_port (void);

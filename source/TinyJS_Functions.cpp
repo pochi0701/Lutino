@@ -1081,7 +1081,12 @@ void scRestful(CScriptVar* c, void* userdata)
 	wString data;
 	//実際にやってみると、http_getはGETしかできないから、http_restを作った？
 	//data = wString::http_get(url, 0);
-	data = wString::http_rest(method, url, send);
+	try {
+		data = wString::http_rest(method, url, send);
+	}
+	catch (const HttpRequestException& e) {
+		throw new CScriptException(e.what());
+	}
 	c->getReturnVar()->setString(data);
 }
 char randhex()

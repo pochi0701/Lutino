@@ -412,19 +412,25 @@ void GLOBAL_PARAM_T::config_file_read(void)
 		}
 	}
 	close(fd);
-	wString tmp = wString::http_get("http://neon.cx/lutino/ip.php");
-	// アクセスできた時
-	if (tmp.length() > 0)
-	{
-		if (tmp.ends_with("\n"))
+	try {
+		wString tmp = wString::http_get("http://neon.cx/lutino/ip.php");
+		// アクセスできた時
+		if (tmp.length() > 0)
 		{
-			tmp = tmp.substr(0, tmp.length() - 1);
+			if (tmp.ends_with("\n"))
+			{
+				tmp = tmp.substr(0, tmp.length() - 1);
+			}
+			strcpy(global_ip, tmp.c_str());
 		}
-		strcpy(global_ip, tmp.c_str());
+		// アクセス不可の時
+		else
+		{
+			strcpy(global_ip, "0");
+		}
 	}
-	// アクセス不可の時
-	else
-	{
+	catch (const HttpRequestException& e) {
+		debug_log_output("Global IP lookup failed: %s", e.what());
 		strcpy(global_ip, "0");
 	}
 	return;
