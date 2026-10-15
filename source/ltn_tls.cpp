@@ -7,7 +7,6 @@
 #include <string.h>
 #include <memory>
 #include <mutex>
-#include <string>
 #include <unordered_map>
 
 #include "bearssl/bearssl.h"

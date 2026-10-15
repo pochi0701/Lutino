@@ -21,7 +21,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/stat.h>
-#include <string>
 #include <sstream>
 #include <stdio.h>
 #else

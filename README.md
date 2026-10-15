@@ -24,13 +24,13 @@ cmake --install build
 
 ## PDF viewer
 
-PDF を閲覧するときは `/system/common/cheat-sheet-markdown.pdf` のように元の PDF URL を開きます。Lutino はリダイレクトせずサーバー内部で `pdfView.jss` を実行し、viewer は同一オリジンの `/system/common/cheat-sheet-markdown.pdf?mypdf_raw=1` から PDF を取得します。PDF のクエリーは `&` 区切りで完全一致する `mypdf_raw=1` のみを残し、旧 action やその他のパラメータは内部で除去します。有効な raw 指定が1つでもあれば PDF 本体を返し、それ以外は viewer を表示します。ブラウザーのアドレスバーのクエリーは変更しません。PDF ファイル一覧やヘルプも通常の PDF URL にリンクします。PDF の編集・ダウンロード操作は表示しません。PDF 以外のファイル配信は従来どおりです。
+PDF を閲覧するときは `/system/common/cheat-sheet-markdown.pdf` のように元の PDF URL を開きます。Lutino はリダイレクトせずサーバー内部で `pdfView.jss` を実行し、viewer へ渡す PDF URL に発行時刻を `mypdf_raw=<Unix timestamp>` として付加します。その時刻から30秒以内の PDF および Range 要求だけを受け付けます。古い `mypdf_raw=1`、不正な時刻、未来の時刻は拒否されます。ブラウザーのアドレスバーの URL は変更しません。PDF ファイル一覧やヘルプも通常の PDF URL にリンクします。PDF の編集・ダウンロード操作は表示しません。PDF 以外のファイル配信は従来どおりです。
 
 既存の `alias /html/system /system` が有効な間、viewer を含む `/system` 全体が公開されます。この alias を解除すると通常 PDF URL からの viewer 表示はエラーになりますが、`html` 配下の PDF の raw 取得を禁止するものではありません。また他の `/system` のページも利用できなくなります。JSS を実行するため、`flag_execute_cgi` を無効にしないでください。
 
-コピー、印刷、保存の抑止は **viewer の UI に限る補助措置**です。`?mypdf_raw=1` の PDF URL は公開されており、ブラウザーへの手入力、HTTP クライアントや開発者ツール等で PDF 本体を取得できます。Cookie や User-Agent では viewer の取得と手入力を確実に区別できません。閲覧権限の追加や複製防止を保証するものではありません。実際のアクセス制限が必要なら、別途サーバー側の認証・認可と画像配信方式を検討してください。
+コピー、印刷、保存の抑止と時刻トークンは **viewer の起動経路を区別する補助措置**です。時刻だけのトークンには署名がなく、利用者は新しい時刻を自分で作れるため、認証・認可や複製防止にはなりません。これはコピーされた URL の有効期間を短くするだけです。実際のアクセス制限が必要なら、別途サーバー側の認証・認可と配信方式を検討してください。
 
-サーバーを起動した状態で `cd MyPDF` → `LUTINO_BASE_URL=http://127.0.0.1:8000 npm test`（PowerShell では `$env:LUTINO_BASE_URL='http://127.0.0.1:8000'; npm test`）により HTTP 統合テストを実行できます。
+サーバーを起動した状態で `cd MyPDF` → `LUTINO_BASE_URL=http://127.0.0.1:8000 npm test`（PowerShell では `$env:LUTINO_BASE_URL='http://127.0.0.1:8000'; npm test`）により HTTP 統合テストを実行できます。時刻トークンの検証には PDF の Range 要求を含みます。
 
 ## 主な機能
 - TinyJS によるサーバーサイドスクリプト実行

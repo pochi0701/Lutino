@@ -1,6 +1,5 @@
 ﻿#ifndef nodehpp
 #define nodehpp
-#include <string>
 #include <vector>
 #include <iostream>
 #ifdef __linux__

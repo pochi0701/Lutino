@@ -7,7 +7,6 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <netdb.h>
-#include <string>
 #else
 #include <sys/stat.h>
 #include <process.h>

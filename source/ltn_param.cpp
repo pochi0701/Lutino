@@ -74,6 +74,7 @@ MIME_LIST_T     mime_list[] = {
 	{(char*)"text/plain"		,(char*)"upl"    ,STREAM_TYPE::TYPE_STREAM     ,   MIME_TYPE::TYPE_PLAYLIST   }, // Uzu Play List拡張子でもOK. ファイル自身の互換は無し。
 	{(char*)"text/plain"		,(char*)"m3u"    ,STREAM_TYPE::TYPE_STREAM     ,   MIME_TYPE::TYPE_MUSICLIST  }, // m3u でもOK?
 	{(char*)"text/javascript"	,(char*)"js"     ,STREAM_TYPE::TYPE_NO_STREAM  ,   MIME_TYPE::TYPE_SCRIPT     }, //JavaScript
+	{(char*)"text/javascript"	,(char*)"mjs"    ,STREAM_TYPE::TYPE_NO_STREAM  ,   MIME_TYPE::TYPE_SCRIPT     }, //JavaScript module
 	{(char*)"text/html"			,(char*)"exe"    ,STREAM_TYPE::TYPE_NO_STREAM  ,   MIME_TYPE::TYPE_SCRIPT     },
 	{(char*)"text/html"			,(char*)"jss"    ,STREAM_TYPE::TYPE_NO_STREAM  ,   MIME_TYPE::TYPE_SCRIPT     },
 	{(char*)"text/html"			,(char*)"php"    ,STREAM_TYPE::TYPE_NO_STREAM  ,   MIME_TYPE::TYPE_SCRIPT     },
