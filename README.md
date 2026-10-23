@@ -22,16 +22,6 @@ cmake --install build
 `cmake --install build` の `build` は、`cmake -B build` で指定した**ビルドディレクトリ**です（フォルダー名は任意）。
 `make -C source install` を使う場合も、先に同じ MyPDF ビルドが必要です。viewer の生成物がない場合はインストールを中止します。
 
-## PDF viewer
-
-PDF を閲覧するときは `/system/common/cheat-sheet-markdown.pdf` のように元の PDF URL を開きます。Lutino はリダイレクトせずサーバー内部で `pdfView.jss` を実行し、viewer へ渡す PDF URL に発行時刻を `mypdf_raw=<Unix timestamp>` として付加します。その時刻から30秒以内の PDF および Range 要求だけを受け付けます。古い `mypdf_raw=1`、不正な時刻、未来の時刻は拒否されます。ブラウザーのアドレスバーの URL は変更しません。PDF ファイル一覧やヘルプも通常の PDF URL にリンクします。PDF の編集・ダウンロード操作は表示しません。PDF 以外のファイル配信は従来どおりです。
-
-既存の `alias /html/system /system` が有効な間、viewer を含む `/system` 全体が公開されます。この alias を解除すると通常 PDF URL からの viewer 表示はエラーになりますが、`html` 配下の PDF の raw 取得を禁止するものではありません。また他の `/system` のページも利用できなくなります。JSS を実行するため、`flag_execute_cgi` を無効にしないでください。
-
-コピー、印刷、保存の抑止と時刻トークンは **viewer の起動経路を区別する補助措置**です。時刻だけのトークンには署名がなく、利用者は新しい時刻を自分で作れるため、認証・認可や複製防止にはなりません。これはコピーされた URL の有効期間を短くするだけです。実際のアクセス制限が必要なら、別途サーバー側の認証・認可と配信方式を検討してください。
-
-サーバーを起動した状態で `cd MyPDF` → `LUTINO_BASE_URL=http://127.0.0.1:8000 npm test`（PowerShell では `$env:LUTINO_BASE_URL='http://127.0.0.1:8000'; npm test`）により HTTP 統合テストを実行できます。時刻トークンの検証には PDF の Range 要求を含みます。
-
 ## 主な機能
 - TinyJS によるサーバーサイドスクリプト実行
 - 組み込み SQL（結果は JSON 形式で取得可能）
@@ -39,6 +29,7 @@ PDF を閲覧するときは `/system/common/cheat-sheet-markdown.pdf` のよう
 - Markdown ファイル表示
 - 動画ストリーミング
 - HTTPS/TLS（BearSSL ベンダリング実装）
+- PDF ViewerとDRM
 
 ## 設定ファイル (`ltn.conf`)
 主な設定項目:
