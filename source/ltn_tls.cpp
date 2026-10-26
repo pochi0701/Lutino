@@ -373,7 +373,12 @@ int
 TlsConn::read(void *buf, size_t len)
 {
     if (!active_) return -1;
-    return br_sslio_read(&ioc_, buf, len);
+    int result = br_sslio_read(&ioc_, buf, len);
+    if (result < 0 && br_ssl_engine_current_state(engine()) == BR_SSL_CLOSED &&
+        br_ssl_engine_last_error(engine()) == BR_ERR_OK) {
+        return 0;
+    }
+    return result;
 }
 
 int
