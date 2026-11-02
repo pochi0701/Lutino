@@ -122,6 +122,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <limits>
+#include <memory>
+#include <functional>
 #include "TinyJS.h"
 #include <assert.h>
 #include "define.h"
@@ -130,6 +132,18 @@
 #define ASSERT(X) assert(X)
 #endif
  //#define TINYJS_CALL_STACK
+
+namespace {
+class ScriptStateGuard {
+public:
+	explicit ScriptStateGuard(std::function<void()> restore) : restore_(restore) {}
+	~ScriptStateGuard() { restore_(); }
+	ScriptStateGuard(const ScriptStateGuard&) = delete;
+	ScriptStateGuard& operator=(const ScriptStateGuard&) = delete;
+private:
+	std::function<void()> restore_;
+};
+}
 
 /// <summary>
 /// Frees the given link IF it isn't owned by anything else
@@ -1857,8 +1871,18 @@ const wString& CTinyJS::execute(const wString& code, ExecuteModes executeMode)
 	//退避する
 	CScriptLex* oldLex = lex;
 	std::vector<CScriptVar*> oldScopes = scopes;
-
-	lex = new CScriptLex(socket, &printed, headerBuf, code, executeMode, &prBuffer, &prPos);
+#ifdef TINYJS_CALL_STACK
+	auto oldCallStack = call_stack;
+#endif
+	std::unique_ptr<CScriptLex> newLex(new CScriptLex(socket, &printed, headerBuf, code, executeMode, &prBuffer, &prPos));
+	ScriptStateGuard stateGuard([&]() {
+		lex = oldLex;
+		scopes = oldScopes;
+#ifdef TINYJS_CALL_STACK
+		call_stack = oldCallStack;
+#endif
+	});
+	lex = newLex.get();
 #ifdef TINYJS_CALL_STACK
 	call_stack.clear();
 #endif
@@ -1893,17 +1917,15 @@ const wString& CTinyJS::execute(const wString& code, ExecuteModes executeMode)
 			msg.cat_sprintf("\n%d: %s", i, call_stack.at(i).c_str());
 		}
 #endif
-		delete lex;
-		lex = oldLex;
 		delete e;
 		e = nullptr;
 
 		throw new CScriptException(msg.c_str());
 	}
-	delete lex;
-	//復帰する
-	lex = oldLex;
-	scopes = oldScopes;
+	catch (CScriptVarException* e) {
+		std::unique_ptr<CScriptVarException> error(e);
+		throw new CScriptException(e->value ? e->value->getString() : "undefined");
+	}
 	return outBuffer;
 }
 //複合式
@@ -1911,8 +1933,18 @@ CScriptVarLink CTinyJS::evaluateComplex(const wString& code)
 {
 	CScriptLex* oldLex = lex;
 	std::vector<CScriptVar*> oldScopes = scopes;
-
-	lex = new CScriptLex(socket, &printed, headerBuf, code, ExecuteModes::ON_SERVER, &prBuffer, &prPos);
+#ifdef TINYJS_CALL_STACK
+	auto oldCallStack = call_stack;
+#endif
+	std::unique_ptr<CScriptLex> newLex(new CScriptLex(socket, &printed, headerBuf, code, ExecuteModes::ON_SERVER, &prBuffer, &prPos));
+	ScriptStateGuard stateGuard([&]() {
+		lex = oldLex;
+		scopes = oldScopes;
+#ifdef TINYJS_CALL_STACK
+		call_stack = oldCallStack;
+#endif
+	});
+	lex = newLex.get();
 #ifdef TINYJS_CALL_STACK
 	call_stack.clear();
 #endif
@@ -1935,16 +1967,17 @@ CScriptVarLink CTinyJS::evaluateComplex(const wString& code)
 			msg.cat_sprintf("\n%d: %s", i, call_stack.at(i).c_str());
 		}
 #endif
-		delete lex;
-		lex = oldLex;
+		CLEAN(v);
 		delete e;
 		e = nullptr;
 
 		throw new CScriptException(msg.c_str());
 	}
-	delete lex;
-	lex = oldLex;
-	scopes = oldScopes;
+	catch (CScriptVarException* e) {
+		std::unique_ptr<CScriptVarException> error(e);
+		CLEAN(v);
+		throw new CScriptException(e->value ? e->value->getString() : "undefined");
+	}
 
 	if (v) {
 		CScriptVarLink r = *v;
@@ -2049,11 +2082,13 @@ CScriptVarLink* CTinyJS::functionCall(bool& execute, CScriptVarLink* function, C
 		}
 		lex->match(LEX_TYPES::LEX_L_PARENTHESIS);
 		// create a new symbol table entry for execution of this function
-		CScriptVar* functionRoot = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_FUNCTION);
+		std::unique_ptr<CScriptVar> functionOwner(new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_FUNCTION));
+		CScriptVar* functionRoot = functionOwner.get();
 		if (parent)
 			functionRoot->addChildNoDup("this", parent);
 		// grab in all parameters and build arguments array
 		CScriptVar* argumentsArray = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_ARRAY);
+		functionRoot->addChild("arguments", argumentsArray);
 		int argIndex = 0;
 		CScriptVarLink* v = function->var->firstChild;
 		// named parameters
@@ -2100,13 +2135,22 @@ CScriptVarLink* CTinyJS::functionCall(bool& execute, CScriptVarLink* function, C
 			argIndex++;
 			if (lex->tk != LEX_TYPES::LEX_R_PARENTHESIS) lex->match(LEX_TYPES::LEX_COMMA);
 		}
-		functionRoot->addChild("arguments", argumentsArray);
 		lex->match(LEX_TYPES::LEX_R_PARENTHESIS);
 		// setup a return variable
 		CScriptVarLink* returnVar = NULL;
 		// execute function!
 		// add the function's execute space to the symbol table so we can recurse
 		CScriptVarLink* returnVarLink = functionRoot->addChild(TINYJS_RETURN_VAR);
+		auto scopeDepth = scopes.size();
+#ifdef TINYJS_CALL_STACK
+		auto callDepth = call_stack.size();
+#endif
+		ScriptStateGuard stateGuard([&]() {
+			scopes.resize(scopeDepth);
+#ifdef TINYJS_CALL_STACK
+			call_stack.resize(callDepth);
+#endif
+		});
 		scopes.push_back(functionRoot);
 #ifdef TINYJS_CALL_STACK
 		call_stack.push_back(function->name + " from " + lex->getPosition());
@@ -2120,35 +2164,18 @@ CScriptVarLink* CTinyJS::functionCall(bool& execute, CScriptVarLink* function, C
 			/* we just want to execute the block, but something could
 			* have messed up and left us with the wrong ScriptLex, so
 			* we want to be careful here... */
-			CScriptException* exception = 0;
 			CScriptLex* oldLex = lex;
-			CScriptLex* newLex = new CScriptLex(socket, &printed, headerBuf, function->var->getString(), ExecuteModes::ON_SERVER, &prBuffer, &prPos);
-			lex = newLex;
-			try {
-				block(execute);
-				// because return will probably have called this, and set execute to false
-				execute = true;
-			}
-			catch (CScriptException* e) {
-				exception = e;
-			}
-			delete newLex;
-			lex = oldLex;
-
-			if (exception) {
-				throw exception;
-			}
+			std::unique_ptr<CScriptLex> newLex(new CScriptLex(socket, &printed, headerBuf, function->var->getString(), ExecuteModes::ON_SERVER, &prBuffer, &prPos));
+			ScriptStateGuard lexerGuard([&]() { lex = oldLex; });
+			lex = newLex.get();
+			block(execute);
+			// A return in the callee must not stop the caller.
+			execute = true;
 		}
-#ifdef TINYJS_CALL_STACK
-		if (!call_stack.empty()) call_stack.pop_back();
-#endif
-		scopes.pop_back();
 		/* get the real return var before we remove it from our function */
 		//resource leak
 		returnVar = new CScriptVarLink(returnVarLink->var);
 		functionRoot->removeLink(returnVarLink);
-		delete functionRoot;
-		functionRoot = nullptr;
 		if (returnVar) {
 			return returnVar;
 		}
@@ -2512,7 +2539,7 @@ CScriptVarLink* CTinyJS::shift(bool& execute)
 		if (execute) {
 			if (op == LEX_TYPES::LEX_LSHIFT) a->var->setInt(a->var->getInt() << shift_bits);
 			else if (op == LEX_TYPES::LEX_RSHIFT)         a->var->setInt(a->var->getInt() >> shift_bits);
-			else if (op == LEX_TYPES::LEX_RSHIFTUNSIGNEDEQUAL) a->var->setInt(((unsigned int)a->var->getInt()) >> shift_bits);
+			else if (op == LEX_TYPES::LEX_RSHIFTUNSIGNED) a->var->setInt(((unsigned int)a->var->getInt()) >> shift_bits);
 		}
 	}
 	return a;
@@ -2709,11 +2736,12 @@ LEX_TYPES CTinyJS::block(bool& execute)
 	LEX_TYPES ret = LEX_TYPES::LEX_EOF;
 	lex->match(LEX_TYPES::LEX_L_BRACE);
 	int brackets = 1;
-	CScriptVar* blockScope = nullptr;
 	if (execute) {
 		// 新しいスコープをpush（let用）
-		blockScope = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_OBJECT);
-		scopes.push_back(blockScope);
+		std::unique_ptr<CScriptVar> blockScope(new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_OBJECT));
+		auto scopeDepth = scopes.size();
+		ScriptStateGuard scopeGuard([&]() { scopes.resize(scopeDepth); });
+		scopes.push_back(blockScope.get());
 		while (lex->tk != LEX_TYPES::LEX_EOF && lex->tk != LEX_TYPES::LEX_R_BRACE) {
 			ret = statement(execute);
 			//この場合のみ末尾まで読み飛ばし
@@ -2723,18 +2751,10 @@ LEX_TYPES CTinyJS::block(bool& execute)
 					if (lex->tk == LEX_TYPES::LEX_R_BRACE) brackets--;
 					lex->match(lex->tk);
 				}
-				// スコープpop
-				scopes.pop_back();
-				delete blockScope;
-				blockScope = nullptr;
 				return ret;
 			}
 		}
 		lex->match(LEX_TYPES::LEX_R_BRACE);
-		// スコープpop
-		scopes.pop_back();
-		delete blockScope;
-		blockScope = nullptr;
 	}
 	else {
 		// fast skip of blocks
@@ -3172,10 +3192,10 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
 
 		int tryBodyStart = lex->tokenStart;
 		statement(noexec);
-		CScriptLex* tryBody = lex->getSubLex(tryBodyStart);
+		std::unique_ptr<CScriptLex> tryBody(lex->getSubLex(tryBodyStart));
 
 		wString catchVarName;
-		CScriptLex* catchBody = nullptr;
+		std::unique_ptr<CScriptLex> catchBody;
 		if (lex->tk == LEX_TYPES::LEX_R_CATCH) {
 			lex->match(LEX_TYPES::LEX_R_CATCH);
 			lex->match(LEX_TYPES::LEX_L_PARENTHESIS);
@@ -3184,72 +3204,72 @@ LEX_TYPES  CTinyJS::statement(bool& execute)
 			lex->match(LEX_TYPES::LEX_R_PARENTHESIS);
 			int catchBodyStart = lex->tokenStart;
 			statement(noexec);
-			catchBody = lex->getSubLex(catchBodyStart);
+			catchBody.reset(lex->getSubLex(catchBodyStart));
 		}
 
-		CScriptLex* finallyBody = nullptr;
+		std::unique_ptr<CScriptLex> finallyBody;
 		if (lex->tk == LEX_TYPES::LEX_R_FINALLY) {
 			lex->match(LEX_TYPES::LEX_R_FINALLY);
 			int finallyBodyStart = lex->tokenStart;
 			statement(noexec);
-			finallyBody = lex->getSubLex(finallyBodyStart);
+			finallyBody.reset(lex->getSubLex(finallyBodyStart));
 		}
 
 		if (execute) {
 			CScriptLex* oldLex = lex;
-			CScriptVar* thrownValue = nullptr;
-			bool caught = false;
+			ScriptStateGuard lexerGuard([&]() { lex = oldLex; });
+			std::unique_ptr<CScriptVarException> pendingException;
 			ret = LEX_TYPES::LEX_EOF;
 
 			tryBody->reset();
-			lex = tryBody;
+			lex = tryBody.get();
 			try {
 				ret = statement(execute);
 			}
 			catch (CScriptVarException* e) {
-				thrownValue = e->value ? e->value->setRef() : nullptr;
-				caught = true;
-				delete e;
+				pendingException.reset(e);
 			}
 			catch (CScriptException* e) {
-				thrownValue = new CScriptVar(e->text);
-				thrownValue->setRef();
-				caught = true;
-				delete e;
+				std::unique_ptr<CScriptException> error(e);
+				pendingException.reset(new CScriptVarException(new CScriptVar(e->text)));
 			}
 			lex = oldLex;
 
-			if (catchBody && caught) {
-				CScriptVar* catchScope = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_OBJECT);
-				catchScope->addChild(catchVarName, thrownValue ? thrownValue : new CScriptVar());
-				scopes.push_back(catchScope);
-				catchBody->reset();
-				lex = catchBody;
-				ret = statement(execute);
+			if (catchBody && pendingException) {
+				try {
+					std::unique_ptr<CScriptVar> catchScope(new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_OBJECT));
+					catchScope->addChild(catchVarName, pendingException->value ? pendingException->value : new CScriptVar());
+					pendingException.reset();
+					auto scopeDepth = scopes.size();
+					ScriptStateGuard scopeGuard([&]() { scopes.resize(scopeDepth); });
+					scopes.push_back(catchScope.get());
+					catchBody->reset();
+					lex = catchBody.get();
+					ret = statement(execute);
+				}
+				catch (CScriptVarException* e) {
+					pendingException.reset(e);
+				}
+				catch (CScriptException* e) {
+					std::unique_ptr<CScriptException> error(e);
+					pendingException.reset(new CScriptVarException(new CScriptVar(e->text)));
+				}
 				lex = oldLex;
-				scopes.pop_back();
-				delete catchScope;
-			}
-
-			if (thrownValue) {
-				thrownValue->unref();
-				thrownValue = nullptr;
 			}
 
 			if (finallyBody) {
 				finallyBody->reset();
-				lex = finallyBody;
+				lex = finallyBody.get();
 				LEX_TYPES finallyRet = statement(execute);
 				lex = oldLex;
 				if (finallyRet != LEX_TYPES::LEX_EOF) {
 					ret = finallyRet;
 				}
 			}
+			if (pendingException) {
+				throw pendingException.release();
+			}
 		}
-
-		delete tryBody;
-		if (catchBody) delete catchBody;
-		if (finallyBody) delete finallyBody;
 	}
 	else {
 		lex->match(LEX_TYPES::LEX_EOF);

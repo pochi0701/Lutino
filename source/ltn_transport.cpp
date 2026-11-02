@@ -44,6 +44,11 @@ int transport_recv(SOCKET socket, char* buffer, unsigned int length, int mode)
 #endif
 }
 
+bool transport_peer_closed(SOCKET socket)
+{
+	return ltn_tls_peer_closed(socket);
+}
+
 int transport_close(SOCKET& socket)
 {
 	if (socket == 0 || socket == INVALID_SOCKET) {

@@ -52,7 +52,7 @@ cmake --install build
 ## TLS / HTTPS
 - HTTP に加えて HTTPS を利用できます。
 - TLS は `source\bearssl\` の BearSSL ソースを利用しています。
-- 開発用として埋め込みテスト証明書を使用する実装段階です。
+- 現在の TLS 機能は開発用途です。本番環境や機密情報を扱う通信への利用は避け、利用前に証明書管理・検証などの安全性を確認してください。
 
 ## Linux インストール補足
 - Makefile と CMake の既定インストール先は `/var/www/html9` です。

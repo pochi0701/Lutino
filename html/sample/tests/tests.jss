@@ -1,74 +1,88 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="utf-8">
-    <title>JSSテスト</title>
+    <title>TinyJS基本テスト</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/sample/tests/test-results.css">
 </head>
 <body>
+<main class="test-page">
+    <h1>TinyJS基本テスト</h1>
+    <section class="test-results">
 <?
-    print("<br>\ntest01 ");
+    var totalTests = 0;
+    var passedTests = 0;
+    function startTest(name) {
+        print("<div class='test-result'><span class='test-name'>" + name + "</span>");
+    }
+    function finishTest(passed) {
+        totalTests++;
+        if (passed) passedTests++;
+        print("<span class='test-status " + (passed ? "status-pass" : "status-fail") + "'>" + (passed ? "PASS" : "FAIL") + "</span></div>\n");
+    }
+    startTest("test01");
     {
         let result = 1;
-        print( (result == 1)?"OK":"NG" );
+        finishTest( (result == 1));
     }
-    print("<br>\ntest02 ");
+    startTest("test02");
     {
         var a  = 42;
-        print( (a == 42)?"OK":"NG" );
+        finishTest( (a == 42));
     }
-    print("<br>\ntest03 ");
+    startTest("test03");
     {
         let a = 0;
         let i ;
         for (i=1;i<10;i++) a = a + i;
-        print( (a == 45)?"OK":"NG" );
+        finishTest( (a == 45));
     }
-    print("<br>\ntest04 ");
+    startTest("test04");
     {
         let a = 42;
-        print( (a < 43)?"OK":"NG" );
+        finishTest( (a < 43));
     }
-    print("<br>\ntest05 ");
+    startTest("test05");
     {
         let a = 0;
         for (let i=1;i<10;i++) a += i;
-        print( (a == 45)?"OK":"NG" );
+        finishTest( (a == 45));
     }
-    print("<br>\ntest06 ");
+    startTest("test06");
     {
         // simple function
         function add(x,y) { return x+y; }
-        print( (add(3,6)==9)?"OK":"NG" );
+        finishTest( (add(3,6)==9));
     }
-    print("<br>\ntest07 ");
+    startTest("test07");
     {
         // simple function scoping test
         let a = 7;
         function add(x,y) { var a=x+y; return a; }
-        print( (add(3,6)==9 && a==7)?"OK":"NG");
+        finishTest( (add(3,6)==9 && a==7));
     }
-    print("<br>\ntest08 ");
+    startTest("test08");
     {
         // functions in variables
         let bob = {};
         bob.add = function(x,y) { return x+y; };
-        print( (bob.add(3,6)==9)?"OK":"NG");
+        finishTest( (bob.add(3,6)==9));
     }
-    print("<br>\ntest09 ");
+    startTest("test09");
     {
         // functions in variables using JSON-style initialisation
         let bob = { add : function(x,y) { return x+y; } };
-        print( (bob.add(3,6)==9)?"OK":"NG");
+        finishTest( (bob.add(3,6)==9));
     }
-    print("<br>\ntest10 ");
+    startTest("test10");
     {
         // double function calls
         function a(x) { return x+2; }
         function b(x) { return a(x)+1; }
-        print( (a(3)==5 && b(3)==6)?"OK":"NG");
+        finishTest( (a(3)==5 && b(3)==6));
     }
-    print("<br>\ntest11 ");
+    startTest("test11");
     {
         // recursion
         function a(x) { 
@@ -76,10 +90,10 @@
                 return x*a(x-1);
             return 1;
         }
-        print( (a(5)==1*2*3*4*5)?"OK":"NG");
+        finishTest( (a(5)==1*2*3*4*5));
     }
 
-    print("<br>\ntest12 ");
+    startTest("test12");
     {
         // if .. else
         let a = 42;
@@ -88,9 +102,9 @@
             result = 0;
         else
             result = 1;
-        print( (result == 1)?"OK":"NG");
+        finishTest( (result == 1));
     }
-    print("<br>\ntest13 ");
+    startTest("test13");
     {
         // if .. else with blocks
         let a = 42;
@@ -100,9 +114,9 @@
         } else {
             result = 1;
         }
-        print( (result == 1)?"OK":"NG");
+        finishTest( (result == 1));
     }
-    print("<br>\ntest14 ");
+    startTest("test14");
     {
         // Variable creation and scope from http://en.wikipedia.org/wiki/JavaScript_syntax
         x = 0; // A global variable
@@ -117,9 +131,9 @@
         // The value of z is no longer available
         // testing
         let blah = f();
-        print( (blah==0 && z!='foxes' && twenty==20)?"OK":"NG");
+        finishTest( (blah==0 && z!='foxes' && twenty==20));
     }
-    print("<br>\ntest15 ");
+    startTest("test15");
     {
         // Number definition from http://en.wikipedia.org/wiki/JavaScript_syntax
         let a = 345;    // an "integer", although there is only one numeric type in JavaScript
@@ -127,9 +141,9 @@
         let c = 3.45e2; // another floating-point, equivalent to 345
         let d = 0377;   // an octal integer equal to 255
         let e = 0xFF;   // a hexadecimal integer equal to 255, digits represented by the letters A-F may be upper or lowercase
-        print((a==345 && b*10==345 && c==345 && d==255 && e==255)?"OK":"NG");
+        finishTest((a==345 && b*10==345 && c==345 && d==255 && e==255));
     }
-    print("<br>\ntest16 ");
+    startTest("test16");
     {
         // Undefined/null from http://en.wikipedia.org/wiki/JavaScript_syntax
         let testUndefined;        // variable declared but not defined, set to value of undefined
@@ -144,9 +158,9 @@
         if (null != undefined) result = 0;  // unenforced type during check, displays true
         if (null === undefined) result = 0; // enforce type during check, displays false
 
-        print((result == 1)?"OK":"NG");
+        finishTest((result == 1));
     }
-    print("<br>\ntest17 ");
+    startTest("test17");
     {
         // references for arrays
         let a = [];
@@ -156,9 +170,9 @@
         let b = a;
         b[0] = 5;
 
-        print((a[0]==5 && a[1]==22 && b[1]==22)?"OK":"NG");
+        finishTest((a[0]==5 && a[1]==22 && b[1]==22));
     }
-    print("<br>\ntest18 ");
+    startTest("test18");
     {
         // references with functions
         let a = 42;
@@ -175,9 +189,9 @@
 
         foo(b);
         bar(a);
-        print((a==42 && b[0]==44)?"OK":"NG");
+        finishTest((a==42 && b[0]==44));
     }
-    print("<br>\ntest19 ");
+    startTest("test19");
     {
         // built-in functions
         let foo = "foo bar stuff";
@@ -195,9 +209,9 @@
         let obj2 = obj1.clone();
         obj2.food = "kittens";
 
-        print((foo.length==13 && foo.indexOf("bar")==4 && foo.substring(8,13)=="stuff" && parsed==42 && Integer.valueOf(aChar)==65 && obj1.food=="cake" && obj2.desert=="pie")?"OK":"NG");
+        finishTest((foo.length==13 && foo.indexOf("bar")==4 && foo.substring(8,13)=="stuff" && parsed==42 && Integer.valueOf(aChar)==65 && obj1.food=="cake" && obj2.desert=="pie"));
     }
-    print("<br>\ntest20 ");
+    startTest("test20");
     {
         // Test reported by sterowang, Variable attribute defines conflict with function.
         /*
@@ -224,9 +238,9 @@
         let b = {};
         b.a = {};
         a();
-        print((true)?"OK":"NG");
+        finishTest((true));
     }
-    print("<br>\ntest21 ");
+    startTest("test21");
     {
         /* Javascript eval */
         // 42-tiny-js change begin --->
@@ -234,80 +248,80 @@
         // use parentheses or JSON.parse instead
         // myfoo = eval("{ foo: 42 }");
         let myfoo = eval("("+"{ foo: 42 }"+")");
-        print((eval("4*10+2")==42 && myfoo.foo==42)?"OK":"NG");
+        finishTest((eval("4*10+2")==42 && myfoo.foo==42));
     }
-    print("<br>\ntest22 ");
+    startTest("test22");
     {
         // test for array remove
         let a = [1,2,4,5,7];
         a.remove(2);
         a.remove(5);
 
-        print((a.length==3 && a[0]==1 && a[1]==4 && a[2]==7)?"OK":"NG");
+        finishTest((a.length==3 && a[0]==1 && a[1]==4 && a[2]==7));
     }
-    print("<br>\ntest23 ");
+    startTest("test23");
     {
         // mikael.kindborg@mobilesorcery.com - Function symbol is evaluated in bracket-less body of false if-statement
         let foo; // a var is only created automated by assignment
 
         if (foo !== undefined) foo();
 
-        print((true)?"OK":"NG");
+        finishTest((true));
     }
-    print("<br>\ntest24 ");
+    startTest("test24");
     {
         // 省略
-        print((true)?"OK":"NG");
+        finishTest((true));
     }
-    print("<br>\ntest25 ");
+    startTest("test25");
     {
         // Array length test
         myArray = [ 1, 2, 3, 4, 5 ];
         myArray2 = [ 1, 2, 3, 4, 5 ];
         myArray2[8] = 42;
-        print((myArray.length == 5 && myArray2.length == 9)?"OK":"NG");
+        finishTest((myArray.length == 5 && myArray2.length == 9));
     }
-    print("<br>\ntest26 ");
+    startTest("test26");
     {
         // check for undefined-ness
         let a = undefined;
         let b = "foo";
-        print((a==undefined && b!=undefined)?"OK":"NG");
+        finishTest((a==undefined && b!=undefined));
     }
-    print("<br>\ntest27 ");
+    startTest("test27");
     {
         // test for postincrement working as expected
         let foo = 5;
         let bar = 5; 
-        print(((foo++)==5 && (++bar)==6)?"OK":"NG");
+        finishTest(((foo++)==5 && (++bar)==6));
     }
-    print("<br>\ntest28 ");
+    startTest("test28");
     {
         // test for array contains
         let a = [1,2,4,5,7];
         let b = ["bread","cheese","sandwich"];
-        print((a.contains(1) && !a.contains(42) && b.contains("cheese") && !b.contains("eggs"))?"OK":"NG");
+        finishTest((a.contains(1) && !a.contains(42) && b.contains("cheese") && !b.contains("eggs")));
     }
-    print("<br>\ntest29 ");
+    startTest("test29");
     {
         let a = [1,2,4,5,7];
         a.remove(2);
         a.remove(5);
-        print((a.length==3 && a[0]==1 && a[1]==4 && a[2]==7)?"OK":"NG");
+        finishTest((a.length==3 && a[0]==1 && a[1]==4 && a[2]==7));
     }
-    print("<br>\ntest30 ");
+    startTest("test30");
     {
         let a = [1,2,4,5,7];
-        print((a.join(",")=="1,2,4,5,7")?"OK":"NG");
+        finishTest((a.join(",")=="1,2,4,5,7"));
     }
-    print("<br>\ntest31 ");
+    startTest("test31");
     {
         // test for string split
         let b = "1,4,7";
         let a = b.split(",");
-        print((a.length==3 && a[0]==1 && a[1]==4 && a[2]==7)?"OK":"NG");
+        finishTest((a.length==3 && a[0]==1 && a[1]==4 && a[2]==7));
     }
-    print("<br>\ntest32 ");
+    startTest("test32");
     {
         let Foo = {
             value : function() { return this.x + this.y; }
@@ -320,24 +334,24 @@
         let result1 = a.value();
         let result2 = b.value();
 
-        print((result1==3 && result2==5)?"OK":"NG");
+        finishTest((result1==3 && result2==5));
     }
-    print("<br>\ntest33 ");
+    startTest("test33");
     {
         // test for shift
         var a = (2<<2);
         var b = (16>>3);
         var c = (-1 >>> 16);
 
-        print((a==8 && b==2 && c == 0xFFFF)?"OK":"NG");
+        finishTest((a==8 && b==2 && c == 0xFFFF));
     }
-    print("<br>\ntest34 ");
+    startTest("test34");
     {
         // test for ternary
-        print(((true?3:4)==3 && (false?5:6)==6)?"OK":"NG");
+        finishTest(((true?3:4)==3 && (false?5:6)==6));
 
     }
-    print("<br>\ntest35 ");
+    startTest("test35");
     {
         function Person(name) {
           this.name = name;
@@ -346,9 +360,9 @@
         let a = new Person("Kenny");
         a.kill();
 
-        print((a.name == "Kenny is dead")?"OK":"NG");
+        finishTest((a.name == "Kenny is dead"));
     }
-    print("<br>\ntest36 ");
+    startTest("test36");
     {
         // the 'lf' in the printf caused issues writing doubles on some compilers
         var a=5.0/10.0*100.0;
@@ -358,10 +372,10 @@
         b.dump();
         c.dump();
 
-        print((a==50 && b==550 && c==5)?"OK":"NG");
+        finishTest((a==50 && b==550 && c==5));
     }
 
-    print("<br>\ntest37 ");
+    startTest("test37");
     {
         // simple for loop containing initialisation, using +=
         let a = 0;
@@ -374,9 +388,9 @@
            a += i;
         }
 
-        print(( a==45)?"OK":"NG");
+        finishTest(( a==45));
     }
-    print("<br>\ntest38 ");
+    startTest("test38");
     {
         // simple for loop containing initialisation, using +=
         let a = 0;
@@ -389,9 +403,9 @@
             a += i;
             i += 1;
         }
-        print((a==3)?"OK":"NG");
+        finishTest((a==3));
     }
-    print("<br>\ntest39 ");
+    startTest("test39");
     {
         // Test for let block scope
         let test01 = 0;
@@ -414,9 +428,9 @@
             }
         }
 
-        print((test01 == 1 && test02 == 1)?"OK":"NG");
+        finishTest((test01 == 1 && test02 == 1));
     }
-    print("<br>\ntest40 ");
+    startTest("test40");
     {
         // Test for for,while,break,continue
         let sum1 = 0;
@@ -459,9 +473,9 @@
             sum4 += k;
             k += 1;
         }
-        print(((sum1 == 45) && (sum2 == 45) && (sum3 == 45) && (sum4 == 45))?"OK":"NG");
+        finishTest(((sum1 == 45) && (sum2 == 45) && (sum3 == 45) && (sum4 == 45)));
     }
-    print("<br>\ntest41 ");
+    startTest("test41");
     {
         // Test for for,while,break,continue
         let array = ['a','b','c','d','e'];
@@ -491,33 +505,33 @@
 
         array.slice(0,3);
         let result07 = (array.length == 2 && array[0] == 'd');
-        print((result01 && result02 && result03 && result04 && result05 && result06)?"OK":"NG");
+        finishTest((result01 && result02 && result03 && result04 && result05 && result06));
     }
-    print("<br>\ntest42 ");
+    startTest("test42");
     {
         // Test for regex match - basic pattern
         let result = match("/hello/", "hello world");
-        print((result == 1)?"OK":"NG");
+        finishTest((result == 1));
     }
-    print("<br>\ntest43 ");
+    startTest("test43");
     {
         // Test for regex match - no match
         let result = match("/goodbye/", "hello world");
-        print((result == 0)?"OK":"NG");
+        finishTest((result == 0));
     }
-    print("<br>\ntest44 ");
+    startTest("test44");
     {
         // Test for regex match - case insensitive
         let result = match("/HELLO/i", "hello world");
-        print((result == 1)?"OK":"NG");
+        finishTest((result == 1));
     }
-    print("<br>\ntest45 ");
+    startTest("test45");
     {
         // Test for regex match - invalid pattern (should not crash)
         let result = match("invalid", "test");
-        print((result == 0)?"OK":"NG");
+        finishTest((result == 0));
     }
-    print("<br>\ntest46 ");
+    startTest("test46");
     {
         // typeof + NaN/Infinity + isNaN/isFinite
         let u;
@@ -533,48 +547,48 @@
             !isNaN(1) &&
             isFinite(123.5) &&
             !isFinite(Infinity);
-        print((result == 1)?"OK":"NG");
+        finishTest((result == 1));
     }
-    print("<br>\ntest47 ");
+    startTest("test47");
     {
         // instanceof
         let Base = {};
         let Other = {};
         let obj = new Base();
         let result = (obj instanceof Base) && !(obj instanceof Other);
-        print((result == 1)?"OK":"NG");
+        finishTest((result == 1));
     }
-    print("<br>\ntest48 ");
+    startTest("test48");
     {
         // Test for regex replace - basic
         var result = replace("hello world", "/world/", "universe");
-        print((result == "hello universe")?"OK":"NG");
+        finishTest((result == "hello universe"));
     }
-    print("<br>\ntest49 ");
+    startTest("test49");
     {
         // Test for regex replace - multiple patterns
         var result = replace("hello world", ["/hello/", "/world/"], ["hi", "earth"]);
-        print((result == "hi earth")?"OK":"NG");
+        finishTest((result == "hi earth"));
     }
-    print("<br>\ntest50 ");
+    startTest("test50");
     {
         // Test for regex replace - case insensitive
         var result = replace("HELLO world", "/hello/i", "hi");
-        print((result == "hi world")?"OK":"NG");
+        finishTest((result == "hi world"));
     }
-    print("<br>\ntest51 ");
+    startTest("test51");
     {
         // Test for regex replace - invalid pattern (should return original)
         var result = replace("hello world", "invalid", "replacement");
-        print((result == "hello world")?"OK":"NG");
+        finishTest((result == "hello world"));
     }
-    print("<br>\ntest52 ");
+    startTest("test52");
     {
         // Test for regex - complex pattern with special chars
         let result = match("/[a-z]+/", "abc");
-        print((result == 1)?"OK":"NG");
+        finishTest((result == 1));
     }
-    print("<br>\ntest53 ");
+    startTest("test53");
     {
         // compound assignment operators
         let a = 6;
@@ -592,9 +606,9 @@
         c |= 8;
         c ^= 3;
 
-        print((a == 4 && b == 5 && c == 9)?"OK":"NG");
+        finishTest((a == 4 && b == 5 && c == 9));
     }
-    print("<br>\ntest54 ");
+    startTest("test54");
     {
         // typeof + isNaN/isFinite
         let u;
@@ -614,23 +628,32 @@
             !isNaN(1) &&
             isFinite(123.5) &&
             !isFinite(vNaN);
-        print(result?"OK":"NG");
+        finishTest(result);
     }
-    print("<br>\ntest55 ");
+    startTest("test55");
     {
         // instanceof
         let Base = {};
         let Other = {};
         let obj = new Base();
-        print(((obj instanceof Base) && !(obj instanceof Other))?"OK":"NG");
+        finishTest(((obj instanceof Base) && !(obj instanceof Other)));
     }
-    print("<br>\ntest56 ");
+    startTest("test56");
     {
         // bitwise not
         let a = ~0;
         let b = ~5;
-        print((a == -1 && b == -6)?"OK":"NG");
+        finishTest((a == -1 && b == -6));
+    }
+    print("<section class='summary'><h2>テスト結果</h2><p>合計: " + totalTests + "　成功: <span class='status-pass'>" + passedTests + "</span>　失敗: <span class='status-fail'>" + (totalTests - passedTests) + "</span></p>");
+    if (passedTests == totalTests) {
+        print("<p class='test-status status-pass'>すべて成功</p></section>");
+    } else {
+        print("<p class='test-status status-fail'>失敗したテストがあります</p></section>");
     }
 ?>
+    </section>
+    <a class="menu-link" href="/sample/tests/?">ファイルメニューに戻る</a>
+</main>
 </body>
 </html>

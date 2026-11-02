@@ -1,3 +1,15 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TinyJS 数学関数テスト</title>
+    <link rel="stylesheet" href="/sample/tests/test-results.css">
+</head>
+<body>
+<main class="test-page">
+    <h1>TinyJS 数学関数テスト</h1>
+    <section class="test-results">
 <?
 var total = 0;
 var pass = 0;
@@ -8,11 +20,9 @@ function near(a, b, eps) {
 
 function t(label, ok) {
     total++;
-    print("<br>\n" + label + " " + (ok ? "OK" : "NG"));
+    print("<div class='test-result'><span class='test-name'>" + label + "</span><span class='test-status " + (ok ? "status-pass" : "status-fail") + "'>" + (ok ? "PASS" : "FAIL") + "</span></div>\n");
     if (ok) pass++;
 }
-
-print("<h2>TinyJS Math Function Tests</h2>");
 
 t("Math.abs", Math.abs(-5) == 5);
 t("Math.round", Math.round(3.7) == 4);
@@ -58,5 +68,10 @@ t("Math.randInt range", ri >= 1 && ri <= 10);
 t("isNaN(sqrt(-1))", isNaN(Math.sqrt(-1)) == 1);
 t("isFinite(1.23)", isFinite(1.23) == 1);
 
-print("<br>\n<br>\nTotal: " + total + " Passed: " + pass + " Failed: " + (total-pass));
+print("<section class='summary'><h2>テスト結果</h2><p>合計: " + total + "　成功: <span class='status-pass'>" + pass + "</span>　失敗: <span class='status-fail'>" + (total-pass) + "</span></p></section>");
 ?>
+</section>
+<a class="menu-link" href="/sample/tests/?">ファイルメニューに戻る</a>
+</main>
+</body>
+</html>

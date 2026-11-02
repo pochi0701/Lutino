@@ -10,6 +10,7 @@ Lutino に組み込まれている TinyJS のネイティブ関数一覧です�
 - 真偽値は多くの関数で **`1` = true / `0` = false** の整数で返ります。
 - いくつかの関数は **JSON 文字列** を返します。TinyJS には `JSON.parse` がないため、必要なら `eval(...)` で扱います。**信頼できる入力だけ**に使ってください。
 - `Math.PI` と `Math.E` は定数ではなく **関数**です。`Math.PI()` / `Math.E()` と呼びます。
+- 接続先や認証情報の例は説明用です。実際の接続先・API キー・セッション情報を公開文書やログに含めないでください。
 
 ## 実装上の注意
 
@@ -18,7 +19,7 @@ Lutino に組み込まれている TinyJS のネイティブ関数一覧です�
 - `String.split(separator)` は末尾が空要素になるケースで、最後の空文字を返しません。
 - `Array.splice(start, deleteCount)` と登録されていますが、実装上は **`Array.splice(start, deleteCount, ...items)`** に対応しています。
 - `Math.atanh(a)` は、現状の実装では `atanh` ではなく **`atan` を呼んでいます**。
-- `randomUUID()` は UUID v4 風の文字列を返しますが、実装上 `y` 桁は常に `9` になります。
+- `randomUUID()` は UUID 形式の識別子を返しますが、セキュリティ用途の乱数としての安全性は保証しません。認証情報や秘密トークンの生成には使用しないでください。
 
 ## グローバル関数
 
@@ -64,10 +65,47 @@ Lutino に組み込まれている TinyJS のネイティブ関数一覧です�
 | `shutdown(password)` | なし | システムパスワードが一致した場合、Lutino の終了処理を開始します。 |
 | `change_config(key,value,password)` | `int` | システムパスワードが一致した場合、実行中プロセスの設定値をメモリ上で直接書き換えます(再起動不要)。現状は `key` が `"skin_name"` の場合のみ対応しており、それ以外の `key` は失敗として `0` を返します。成功時 `1`。 |
 | `ssdp()` | `string` | SSDP 検索結果を文字列で返します。 |
-| `restful(method,url,send)` | `string` | HTTP REST 呼び出しを行い、応答文字列を返します。 |
+| `restful(method,url,send,headers)` | `string` / object | HTTP REST 呼び出しを行います。3引数の既存呼び出しは応答文字列、第4引数にヘッダーオブジェクトを指定すると構造化レスポンスを返します。 |
 | `randomUUID()` | `string` | UUID v4 風の文字列を返します。 |
 | `biosUUID()` | `string` | BIOS UUID を返します。 |
 | `die(msg)` | 例外 | `CScriptException` を投げて処理を中断します。 |
+
+### REST API 呼び出し
+
+`restful(method,url,send)` は従来どおり、2xx 応答の本文を文字列で返し、通信失敗・非2xx応答は例外になります。第4引数に文字列値のヘッダーオブジェクトを渡すと、HTTP ステータスにかかわらず構造化レスポンスを返します。追加ヘッダーが不要な場合は `{}` を渡します。第4引数の省略・`undefined`・`null` は従来の文字列を返す動作です。
+
+```javascript
+// apiKey は公開しない設定などから取得してください。
+var response = restful(
+  "POST",
+  "https://api.example.com/v1/items/search",
+  "{\"limit\":1,\"offset\":0}",
+  {"API-Key": apiKey, "Accept-Language": "ja", "Content-Type": "application/json"}
+);
+if (response.ok && response.status == 200) {
+  print(response.body);
+}
+```
+
+`headers` は `{"Header-Name":"value"}` 形式です。`Host`、`Content-Length`、`Connection` は内部で設定されます。非GET要求の `Content-Type` は省略時 `text/plain;charset=UTF-8` です。URL とヘッダー名・値に CR / LF / NUL がある場合、または不正なヘッダー名の場合は拒否します。
+
+headers オブジェクト指定時の戻り値は次のプロパティを持つオブジェクトです。
+
+| プロパティ | 内容 |
+| --- | --- |
+| `ok` | 通信・応答解析に成功したとき `1`。HTTP ステータスの成否とは独立します。 |
+| `status` / `statusText` | HTTP ステータスコードと理由句。通信失敗時の `status` は `0`。 |
+| `headers` / `contentType` | 小文字化した応答ヘッダーのオブジェクトと `content-type`。同名ヘッダーは `, ` で連結します。 |
+| `length` | 応答本文のバイト数。 |
+| `head` / `tail` | 本文の先頭・末尾各16バイトまでの小文字hex。 |
+| `body` | 応答本文。大きな本文も全量返します。 |
+| `error` | 通信失敗時の理由。正常に応答を受け取った場合は空文字です。 |
+
+通信はブロッキングモードで行い、アプリケーション独自のタイムアウトは設定しません。相手が応答しない場合、OSが通信エラーを返すか接続が終了するまで待機し得ます。第5引数 `options` と `timeoutSec` は廃止しました。以前の「headers のみ指定して本文文字列を返す」動作からは変更されています。headers オブジェクト指定時は400 / 401 / 503なども `status` と `body` で確認でき、通信・応答解析失敗は `ok: 0 / status: 0 / error` として返ります。headersの型・値などの引数不正は例外になります。
+
+HTTPS クライアントは開発用途であり、接続先の真正性を含む安全性は保証されません。本番環境や機密情報を扱う通信には使用せず、利用前に証明書検証などの要件を確認してください。診断ログには環境情報が含まれる場合があるため、公開前に内容を確認してください。
+
+要求は HTTP/1.0 です。`Content-Length` がある応答はその長さまで受信し、途中切断をエラーにします。本文長のない応答は切断まで受信するため、本文の完全性に注意が必要です。HEAD / 204 / 304 は本文を待ちません。chunked 転送には対応していません。
 
 ## Object / JSON / Integer
 
@@ -258,4 +296,3 @@ if (db != "") {
 
 - `JSON.parse` は登録されていません。
 - この文書にない JavaScript 標準 API は、TinyJS 本体では使えない可能性があります。
-

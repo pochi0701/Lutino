@@ -1072,22 +1072,88 @@ void scSSDP(CScriptVar* c, void* userdata)
 	}
 }
 //ファイル内容取得
+static wString http_body_hex(const wString& body, unsigned int start, unsigned int count)
+{
+	static const char digits[] = "0123456789abcdef";
+	wString hex;
+	for (unsigned int i = 0; i < count; ++i) {
+		unsigned char byte = static_cast<unsigned char>(body[start + i]);
+		hex += digits[byte >> 4];
+		hex += digits[byte & 0x0f];
+	}
+	return hex;
+}
+
+static CScriptVar* create_restful_response_var(const HttpRestResponse& response)
+{
+	auto result = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_OBJECT);
+	result->addChild("ok", new CScriptVar(response.ok ? 1 : 0));
+	result->addChild("status", new CScriptVar(response.status));
+	result->addChild("statusText", new CScriptVar(response.statusText));
+	auto headers = new CScriptVar(TINYJS_BLANK_DATA, SCRIPTVAR_FLAGS::SCRIPTVAR_OBJECT);
+	wString content_type;
+	for (const auto& header : response.headers) {
+		headers->addChild(header.name, new CScriptVar(header.value));
+		if (header.name == "content-type") {
+			content_type = header.value;
+		}
+	}
+	result->addChild("headers", headers);
+	result->addChild("contentType", new CScriptVar(content_type));
+	auto body_length = response.body.length();
+	result->addChild("length", new CScriptVar(static_cast<double>(body_length)));
+	auto head_length = body_length < 16 ? body_length : 16;
+	auto tail_length = body_length < 16 ? body_length : 16;
+	result->addChild("head", new CScriptVar(http_body_hex(response.body, 0, head_length)));
+	result->addChild("tail", new CScriptVar(http_body_hex(response.body, body_length - tail_length, tail_length)));
+	result->addChild("body", new CScriptVar(response.body));
+	result->addChild("error", new CScriptVar(response.error));
+	return result;
+}
+
 void scRestful(CScriptVar* c, void* userdata)
 {
 	IGNORE_PARAMETER(userdata);
 	wString method = c->getParameter("method")->getString();
 	wString url = c->getParameter("url")->getString();
 	wString send = c->getParameter("send")->getString();
-	wString data;
-	//実際にやってみると、http_getはGETしかできないから、http_restを作った？
-	//data = wString::http_get(url, 0);
+	auto headers_var = c->getParameter("headers");
+	bool headers_supplied = !headers_var->isUndefined() && !headers_var->isNull();
+	if (headers_supplied && !headers_var->isObject()) {
+		throw new CScriptException("restful headers must be an object");
+	}
+	std::vector<HttpRestHeader> headers;
+	if (headers_supplied) {
+		for (auto link = headers_var->firstChild; link; link = link->nextSibling) {
+			if (!link->var->isString()) {
+				throw new CScriptException("restful header values must be strings");
+			}
+			const auto& name = link->name;
+			const auto& value = link->var->getString();
+			headers.push_back({ name, value });
+		}
+	}
+
+	HttpRestResponse response;
 	try {
-		data = wString::http_rest(method, url, send);
+		response = wString::http_rest(method, url, send, headers);
 	}
 	catch (const HttpRequestException& e) {
-		throw new CScriptException(e.what());
+		if (!headers_supplied) {
+			throw new CScriptException(e.what());
+		}
+		response.ok = false;
+		response.status = 0;
+		response.error = e.what();
 	}
-	c->getReturnVar()->setString(data);
+	if (headers_supplied) {
+		c->setReturnVar(create_restful_response_var(response));
+		return;
+	}
+	if (response.status < 200 || response.status >= 300) {
+		throw new CScriptException("HTTP server returned an unsuccessful status");
+	}
+	c->getReturnVar()->setString(response.body);
 }
 char randhex()
 {
@@ -1375,7 +1441,7 @@ void registerFunctions(CTinyJS* tinyJS)
 	tinyJS->addNative("function shutdown(password)", scShutDown, 0);
 	tinyJS->addNative("function change_config(key,value,password)", scChangeConfig, 0);
 	tinyJS->addNative("function ssdp()", scSSDP, 0);
-	tinyJS->addNative("function restful(method,url,send)", scRestful, 0);
+	tinyJS->addNative("function restful(method,url,send,headers)", scRestful, 0);
 	tinyJS->addNative("function randomUUID()", scRandomUUID, 0);
 	tinyJS->addNative("function biosUUID()", scBiosUUID, 0);
 	tinyJS->addNative("function Array.push(val)", scArrayPush, 0);

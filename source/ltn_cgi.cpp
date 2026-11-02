@@ -235,7 +235,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, wString& script_filename, char* q
 			split(";", script1, script3);
 			script1 = script1.ltrim();
 			split("=", script2, script1);
-			script4 += "var _COOKIE." + script2 + const_cast<char*>("=\"") + wString::escape(script1.uri_decode()) + const_cast<char*>("\";");
+			script4 += const_cast<char*>("_COOKIE[\"") + wString::escape(script2) + const_cast<char*>("\"]=\"") + wString::escape(script1.uri_decode()) + const_cast<char*>("\";");
 			//SESSIONIDの設定
 			if (script2 == "sid") {
 				script4 += const_cast<char*>("var JSSESSID=\"") + wString::escape(script1.uri_decode()) + const_cast<char*>("\";");
@@ -364,7 +364,7 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, wString& script_filename, char* q
 		headerCheckPrint(accept_socket, &javaScriptThread.printed, javaScriptThread.headerBuf, 1);
 		debug_log_output("SCRIPT ERROR: %s\n", e->text.c_str());
 		wString tmp;
-		tmp.sprintf("SCRIPT ERROR: %s\n", e->text.c_str());
+		tmp.sprintf("SCRIPT ERROR: %s: %s\n", wString::extract_file_name(script_filename).c_str(), e->text.c_str());
 		transport_send(accept_socket, tmp.c_str(), tmp.length(), 0);
 		delete e;
 		e = nullptr;

@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <vector>
 #include <algorithm>
+#include <limits>
 #ifdef __linux__
 #include <dirent.h>
 #include <unistd.h>
@@ -131,23 +132,144 @@ public:
 	}
 };
 
-bool read_http_response(SOCKET socket, wString& response)
+bool is_http_header_name(const wString& name);
+wString trim_http_whitespace(const wString& value);
+
+bool read_http_response(SOCKET socket, wString& response, bool head_request = false, bool framed_response = false)
 {
 	char buffer[4096];
 	response.clear();
+	if (!framed_response) {
+		while (loop_flag) {
+			auto recv_len = transport_recv(socket, buffer, sizeof(buffer), 0);
+			if (recv_len > 0) {
+				response.set_binary(buffer, recv_len);
+			}
+			else if (recv_len == 0) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		return response.length() > 0;
+	}
+
+	bool headers_received = false;
+	bool has_content_length = false;
+	size_t content_length = 0;
+	size_t header_length = 0;
 	while (loop_flag) {
 		auto recv_len = transport_recv(socket, buffer, sizeof(buffer), 0);
 		if (recv_len > 0) {
 			response.set_binary(buffer, recv_len);
+			if (!headers_received) {
+				auto delimiter = response.Pos(HTTP_DELIMITER);
+				if (delimiter < 0) continue;
+				header_length = static_cast<size_t>(delimiter) + 4;
+				auto headers = response.substr(0, delimiter + 4);
+				auto line_end = headers.find("\r\n");
+				auto status_line = headers.substr(0, line_end);
+				if (!status_line.starts_with("HTTP/")) return false;
+				auto status_pos = status_line.find(' ');
+				if (status_pos == wString::npos) return false;
+				int status = atoi(status_line.c_str() + status_pos + 1);
+				if (head_request || status == 204 || status == 304) return true;
+				auto line_start = line_end + 2;
+				while (line_start < delimiter) {
+					line_end = headers.find("\r\n", line_start);
+					auto colon = headers.find(':', line_start);
+					if (colon == wString::npos || colon >= line_end) return false;
+					auto name = headers.substr(line_start, colon - line_start);
+					if (!is_http_header_name(name)) return false;
+					name = name.ToLower();
+					auto value = trim_http_whitespace(headers.substr(colon + 1, line_end - colon - 1));
+					if (name == "transfer-encoding") return false;
+					if (name == "content-length") {
+						if (value.empty()) return false;
+						size_t length = 0;
+						for (unsigned int i = 0; i < value.length(); ++i) {
+							char digit = value[i];
+							if (digit < '0' || digit > '9'
+								|| length > ((std::numeric_limits<size_t>::max)() - (digit - '0')) / 10) return false;
+							length = length * 10 + (digit - '0');
+						}
+						if (has_content_length && length != content_length) return false;
+						content_length = length;
+						has_content_length = true;
+					}
+					line_start = line_end + 2;
+				}
+				headers_received = true;
+			}
+			if (has_content_length && response.length() - header_length >= content_length) {
+				return response.length() - header_length == content_length;
+			}
 		}
 		else if (recv_len == 0) {
-			return true;
+			return headers_received && !has_content_length;
 		}
 		else {
+			// HTTP/1.0 peers may delimit the body with TCP EOF without TLS close_notify.
+			if (headers_received && !has_content_length && transport_peer_closed(socket)) {
+				debug_log_output("HTTP close-delimited response ended without TLS close_notify.");
+				return true;
+			}
 			return false;
 		}
 	}
-	return response.length() > 0;
+	return false;
+}
+
+bool contains_http_control(const wString& value)
+{
+	for (unsigned int i = 0; i < value.length(); ++i) {
+		if (value[i] == '\r' || value[i] == '\n' || value[i] == '\0') {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool is_http_token_char(unsigned char ch)
+{
+	return (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')
+		|| ch == '!' || ch == '#' || ch == '$' || ch == '%' || ch == '&' || ch == '\''
+		|| ch == '*' || ch == '+' || ch == '-' || ch == '.' || ch == '^' || ch == '_'
+		|| ch == '`' || ch == '|' || ch == '~';
+}
+
+wString trim_http_whitespace(const wString& value)
+{
+	unsigned int first = 0;
+	unsigned int end = value.length();
+	while (first < end && (value[first] == ' ' || value[first] == '\t')) {
+		++first;
+	}
+	while (end > first && (value[end - 1] == ' ' || value[end - 1] == '\t')) {
+		--end;
+	}
+	return value.substr(first, end - first);
+}
+
+bool is_http_header_name(const wString& name)
+{
+	if (name.empty()) {
+		return false;
+	}
+	for (unsigned int i = 0; i < name.length(); ++i) {
+		unsigned char ch = static_cast<unsigned char>(name[i]);
+		if (!is_http_token_char(ch)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool is_reserved_request_header(const wString& name)
+{
+	auto lowercase = name.ToLower();
+	return lowercase == "host" || lowercase == "content-length" || lowercase == "connection";
 }
 
 int get_http_status_code(const wString& response)
@@ -166,6 +288,68 @@ bool split_http_response(const wString& response, wString& body)
 		return false;
 	}
 	body = response.substr(pos + 4);
+	return true;
+}
+
+bool parse_http_response(const wString& response, HttpRestResponse& parsed)
+{
+	auto delimiter = response.Pos(HTTP_DELIMITER);
+	if (delimiter == wString::npos) {
+		return false;
+	}
+	auto status_end = response.Pos("\r\n");
+	if (status_end < 0 || status_end > delimiter) {
+		return false;
+	}
+	auto status_line = response.substr(0, status_end);
+	auto first_space = status_line.Pos(" ");
+	auto second_space = first_space < 0 ? -1 : status_line.Pos(" ", first_space + 1);
+	if (first_space < 0 || !status_line.starts_with("HTTP/")) {
+		return false;
+	}
+	auto status_code = status_line.substr(first_space + 1,
+		(second_space < 0 ? status_line.length() : static_cast<unsigned int>(second_space)) - first_space - 1);
+	if (status_code.length() != 3 || status_code[0] < '0' || status_code[0] > '9'
+		|| status_code[1] < '0' || status_code[1] > '9'
+		|| status_code[2] < '0' || status_code[2] > '9') {
+		return false;
+	}
+	parsed.status = atoi(status_code.c_str());
+	if (second_space >= 0) {
+		parsed.statusText = status_line.substr(second_space + 1);
+	}
+
+	int line_start = status_end + 2;
+	while (line_start < delimiter) {
+		int line_end = response.Pos("\r\n", line_start);
+		if (line_end < 0 || line_end > delimiter) {
+			return false;
+		}
+		auto line = response.substr(line_start, line_end - line_start);
+		int colon = line.Pos(":");
+		if (colon <= 0) {
+			return false;
+		}
+		auto name = line.substr(0, colon);
+		if (!is_http_header_name(name)) {
+			return false;
+		}
+		auto value = line.substr(colon + 1);
+		auto normalized_name = name.ToLower();
+		auto normalized_value = trim_http_whitespace(value);
+		auto existing = std::find_if(parsed.headers.begin(), parsed.headers.end(),
+			[&normalized_name](const HttpRestHeader& header) { return header.name == normalized_name; });
+		if (existing == parsed.headers.end()) {
+			parsed.headers.push_back({ normalized_name, normalized_value });
+		}
+		else {
+			existing->value += ", ";
+			existing->value += normalized_value;
+		}
+		line_start = line_end + 2;
+	}
+	parsed.body = response.substr(delimiter + 4);
+	parsed.ok = true;
 	return true;
 }
 }
@@ -2885,71 +3069,106 @@ wString wString::http_get (const wString& url, off_t offset)
 	return body;
 }
 ///---------------------------------------------------------------------------
-/// <summary>
-/// HTTPよりRESTメソッドを指定し文字列データを取得
-/// </summary>
-/// <param name="methods">HEAD,GET,POST,PUT,DELETE</param>
-/// <param name="url"></param>
-/// <param name="data">送出データ</param>
-/// <returns>HTTP応答本文。空本文も正常な応答として返る。</returns>
-/// <exception cref="HttpRequestException">URL、接続、送受信、HTTP応答のいずれかに失敗した場合。</exception>
-wString wString::http_rest (const wString& methods, const wString& url, const wString& data)
+HttpRestResponse wString::http_rest(const wString& methods, const wString& url, const wString& data,
+	const std::vector<HttpRestHeader>& headers)
 {
-	wString     buf;
-	wString     ptr;
+	if (contains_http_control(url)) {
+		throw HttpRequestException("HTTP URL contains a forbidden control character");
+	}
+	if (!is_http_header_name(methods)) {
+		throw HttpRequestException("Invalid HTTP method");
+	}
+
+	bool has_accept = false;
+	bool has_user_agent = false;
+	bool has_content_type = false;
+	for (const auto& header : headers) {
+		if (!is_http_header_name(header.name)) {
+			throw HttpRequestException("Invalid HTTP header name");
+		}
+		if (is_reserved_request_header(header.name)) {
+			throw HttpRequestException("HTTP header is managed internally");
+		}
+		if (contains_http_control(header.value)) {
+			throw HttpRequestException("HTTP header value contains a forbidden control character");
+		}
+		auto lowercase_name = header.name.ToLower();
+		has_accept = has_accept || lowercase_name == "accept";
+		has_user_agent = has_user_agent || lowercase_name == "user-agent";
+		has_content_type = has_content_type || lowercase_name == "content-type";
+	}
+
 	HttpUrlParts target_info;
-	SOCKET      server_socket;                  //サーバーソケット
 	if (!parse_http_url(url, target_info)) {
 		throw HttpRequestException("Invalid HTTP URL");
 	}
-	server_socket = open_http_socket(target_info);
+	auto server_socket = open_http_socket(target_info);
 	if (SERROR(server_socket)) {
 		throw HttpRequestException("Unable to connect to HTTP server");
 	}
 	HttpSocketGuard socket_guard(server_socket);
 
-	if (methods == "GET") {
-		ptr.sprintf("%s %s HTTP/1.0\r\n"
-					"Accept: */*\r\n"
-					"User-Agent: %s%s\r\n"
-					"Host: %s\r\n"
-					"Connection: close\r\n\r\n",
-					methods.c_str(),
-					target_info.target.c_str(),
-					USERAGENT,
-					MACADDR,
-					target_info.host.c_str());
+	wString request;
+	request.sprintf("%s %s HTTP/1.0\r\n", methods.c_str(), target_info.target.c_str());
+	if (!has_accept) {
+		request += "Accept: */*\r\n";
 	}
-	else {
-		ptr.sprintf("%s %s HTTP/1.0\r\n"
-					"Accept: */*\r\n"
-					"User-Agent: %s%s\r\n"
-					"Host: %s\r\n"
-					"Content-Length: %d\r\n"
-					"Content-Type: text/plain;charset=UTF-8\r\n"
-					"Connection: close\r\n\r\n",
-					methods.c_str(),
-					target_info.target.c_str(),
-					USERAGENT,
-					MACADDR,
-					target_info.host.c_str(),
-					data.length());
-		ptr += data;
+	if (!has_user_agent) {
+		request += "User-Agent: ";
+		request += USERAGENT;
+		request += MACADDR;
+		request += "\r\n";
 	}
-	if (transport_send(socket_guard.get(), ptr.c_str(), ptr.length(), 0) == SOCKET_ERROR) {
-		throw HttpRequestException("Failed to send HTTP request");
+	request += "Host: ";
+	request += target_info.host;
+	if ((target_info.use_tls && target_info.port != 443)
+		|| (!target_info.use_tls && target_info.port != HTTP_SERVER_PORT)) {
+		request += ":";
+		wString port;
+		port.sprintf("%d", target_info.port);
+		request += port;
 	}
-	if (!read_http_response(socket_guard.get(), buf)) {
+	request += "\r\n";
+	for (const auto& header : headers) {
+		request += header.name;
+		request += ": ";
+		request += header.value;
+		request += "\r\n";
+	}
+	if (methods != "GET") {
+		request += "Content-Length: ";
+		wString content_length;
+		content_length.sprintf("%u", data.length());
+		request += content_length;
+		request += "\r\n";
+		if (!has_content_type) {
+			request += "Content-Type: text/plain;charset=UTF-8\r\n";
+		}
+	}
+	request += "Connection: close\r\n\r\n";
+	if (methods != "GET") {
+		request += data;
+	}
+
+	unsigned int sent_total = 0;
+	while (sent_total < request.length()) {
+		auto sent = transport_send(socket_guard.get(), request.c_str() + sent_total,
+			request.length() - sent_total, 0);
+		if (sent <= 0) {
+			throw HttpRequestException("Failed to send HTTP request");
+		}
+		sent_total += static_cast<unsigned int>(sent);
+	}
+
+	wString raw_response;
+	if (!read_http_response(socket_guard.get(), raw_response, methods == "HEAD", true)) {
 		throw HttpRequestException("Failed to receive HTTP response");
 	}
-	auto status = get_http_status_code(buf);
-	if (status < 200 || 300 <= status) {
-		throw HttpRequestException("HTTP server returned an unsuccessful status");
-	}
-	if (!split_http_response(buf, ptr)) {
+	HttpRestResponse parsed;
+	if (!parse_http_response(raw_response, parsed)) {
 		throw HttpRequestException("Malformed HTTP response");
 	}
-	return ptr;
+	return parsed;
 }
 ///---------------------------------------------------------------------------
 /// <summary>

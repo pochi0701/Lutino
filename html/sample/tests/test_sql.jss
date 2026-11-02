@@ -1,11 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="utf-8">
-    <title>SQLテスト</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SQLテスト</title>
+    <link rel="stylesheet" href="/sample/tests/test-results.css">
 </head>
 <body>
+<main class="test-page">
+    <h1>SQLテスト</h1>
+    <section class="test-results">
 <?
     // Database SQL Test Suite
     // Simplified based on initSQL.jss pattern to avoid memory leaks
@@ -24,38 +28,30 @@
     database.SQL("drop table t_right_r;");
     database.SQL("drop table t_sort;");
     
-    // Test helper - check if result contains "OK"
+    function renderResult(label, passed) {
+        print("<div class='test-result'><span class='test-name'>" + label + "</span><span class='test-status " + (passed ? "status-pass" : "status-fail") + "'>" + (passed ? "PASS" : "FAIL") + "</span></div>\n");
+    }
+
     function testDDL(label, sql) {
         test_count++;
-        print("<br>" + label + " ");
         var ret = database.SQL(sql);
-        if (ret.indexOf("OK") >= 0) {
-            print("OK");
-            pass_count++;
-            return true;
-        } else {
-            print("NG");
-            return false;
-        }
+        var passed = ret.indexOf("OK") >= 0;
+        if (passed) pass_count++;
+        renderResult(label, passed);
+        return passed;
     }
     
-    // Test helper - check if SELECT result is valid JSON
     function testSelect(label, sql, fragment) {
         test_count++;
-        print("<br>" + label + " ");
         var ret = database.SQL(sql);
+        var passed = false;
         if (ret.indexOf("[") === 0 || ret.indexOf("{") === 0) {
-            if (ret.indexOf(fragment) >= 0) {
-                print("OK");
-                pass_count++;
-                return true;
-            }
+            passed = ret.indexOf(fragment) >= 0;
         }
-        print("NG");
-        return false;
+        if (passed) pass_count++;
+        renderResult(label, passed);
+        return passed;
     }
-    
-    print("<h2>SQL Database Test Suite</h2>");
     
     // ============= Table Creation Tests =============
     print("<h3>1. Table Creation</h3>");
@@ -110,15 +106,12 @@
     testSelect("order desc", "select id from t_sort order by id desc;", "1");
     
     // ============= Test Summary =============
-    print("<h3>Test Summary</h3>");
-    print("<br>Total: " + test_count + "<br>");
-    print("Passed: " + pass_count + "<br>");
-    print("Failed: " + (test_count - pass_count) + "<br>");
+    print("<section class='summary'><h2>テスト結果</h2><p>合計: " + test_count + "　成功: <span class='status-pass'>" + pass_count + "</span>　失敗: <span class='status-fail'>" + (test_count - pass_count) + "</span></p>");
     
     if (pass_count === test_count) {
-        print("<br><span style='color:green;font-weight:bold;'>ALL TESTS PASSED</span><br>");
+        print("<p class='test-status status-pass'>すべて成功</p></section>");
     } else {
-        print("<br><span style='color:red;font-weight:bold;'>SOME TESTS FAILED</span><br>");
+        print("<p class='test-status status-fail'>失敗したテストがあります</p></section>");
     }
     
     // Cleanup from previous runs (ignore errors if table does not exist)
@@ -133,5 +126,8 @@
     // Close database connection
     database.DBDisConnect();
 ?>
+    </section>
+    <a class="menu-link" href="/sample/tests/?">ファイルメニューに戻る</a>
+</main>
 </body>
 </html>

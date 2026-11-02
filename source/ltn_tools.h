@@ -60,6 +60,7 @@ extern bool     transport_attach_tls_client(SOCKET socket, const char* server_na
 extern void     transport_shutdown_all(void);
 extern int      transport_send(SOCKET socket, const char* buffer, unsigned int length, int mode);
 extern int      transport_recv(SOCKET socket, char* buffer, unsigned int length, int mode);
+extern bool     transport_peer_closed(SOCKET socket);
 extern int      transport_close(SOCKET& socket);
 extern wString  GetAuthorization(const wString& AuthorizedString);
 

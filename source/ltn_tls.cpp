@@ -2,9 +2,11 @@
  * ltn_tls.cpp  –  BearSSL-based TLS transport for Lutino
  */
 #include "ltn_tls.h"
+#include "ltn_tools.h"
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -19,7 +21,10 @@
 namespace {
 struct x509_noanchor_context {
     const br_x509_class *vtable;
-    br_x509_minimal_context inner;
+    br_x509_decoder_context decoder;
+    unsigned cert_count;
+    uint32_t remaining;
+    unsigned error;
 };
 
 class TlsConn {
@@ -35,6 +40,7 @@ public:
     int read(void *buf, size_t len);
     int write(const void *buf, size_t len);
     int flush();
+    bool peer_closed() { return socket_eof_ && engine() && br_ssl_engine_last_error(engine()) == BR_ERR_IO; }
     void close();
 
 private:
@@ -55,6 +61,7 @@ private:
     static void x509NoanchorInit(x509_noanchor_context *xc);
 
     br_ssl_engine_context* engine();
+    void log_error(const char* operation);
 
     static const br_x509_class noanchor_vtable_;
 
@@ -68,7 +75,9 @@ private:
     unsigned char iobuf_[BR_SSL_BUFSIZE_BIDI];
     br_x509_certificate chain_;
     br_rsa_private_key sk_;
-    std::string server_name_;
+    wString server_name_;
+    int socket_error_ = 0;
+    bool socket_eof_ = false;
 };
 
 std::unordered_map<SOCKET, std::shared_ptr<TlsConn>> g_tls_connections;
@@ -225,70 +234,108 @@ const br_x509_class TlsConn::noanchor_vtable_ = {
 int
 TlsConn::sockRead(void *ctx, unsigned char *buf, size_t len)
 {
-    SOCKET fd = *(SOCKET *)ctx;
+    TlsConn* conn = static_cast<TlsConn*>(ctx);
+    SOCKET fd = conn->sock_;
     if (len > 16384) len = 16384;
     int rlen = ::recv(fd, (char *)buf, (int)len, 0);
-    if (rlen <= 0) return -1;
+    if (rlen <= 0) {
+        conn->socket_eof_ = rlen == 0;
+#ifdef __linux__
+        conn->socket_error_ = rlen < 0 ? errno : 0;
+#else
+        conn->socket_error_ = rlen < 0 ? WSAGetLastError() : 0;
+#endif
+        return -1;
+    }
     return rlen;
 }
 
 int
 TlsConn::sockWrite(void *ctx, const unsigned char *buf, size_t len)
 {
-    SOCKET fd = *(SOCKET *)ctx;
+    TlsConn* conn = static_cast<TlsConn*>(ctx);
+    SOCKET fd = conn->sock_;
     if (len > 16384) len = 16384;
     int wlen = ::send(fd, (const char *)buf, (int)len, 0);
-    if (wlen <= 0) return -1;
+    if (wlen <= 0) {
+#ifdef __linux__
+        conn->socket_error_ = wlen < 0 ? errno : 0;
+#else
+        conn->socket_error_ = wlen < 0 ? WSAGetLastError() : 0;
+#endif
+        return -1;
+    }
     return wlen;
 }
 
 void
 TlsConn::naStartChain(const br_x509_class **ctx, const char *server_name)
 {
+    (void)server_name;
     x509_noanchor_context *xc = (x509_noanchor_context *)ctx;
-    xc->inner.vtable->start_chain(&xc->inner.vtable, server_name);
+    xc->cert_count = 0;
+    xc->remaining = 0;
+    xc->error = 0;
+    // Development client: decode the leaf key without authenticating the peer.
+    br_x509_decoder_init(&xc->decoder, nullptr, nullptr);
 }
 
 void
 TlsConn::naStartCert(const br_x509_class **ctx, uint32_t length)
 {
     x509_noanchor_context *xc = (x509_noanchor_context *)ctx;
-    xc->inner.vtable->start_cert(&xc->inner.vtable, length);
+    xc->remaining = length;
+    ++xc->cert_count;
 }
 
 void
 TlsConn::naAppend(const br_x509_class **ctx, const unsigned char *buf, size_t len)
 {
     x509_noanchor_context *xc = (x509_noanchor_context *)ctx;
-    xc->inner.vtable->append(&xc->inner.vtable, buf, len);
+    if (len > xc->remaining) {
+        xc->error = BR_ERR_X509_EXTRA_ELEMENT;
+        return;
+    }
+    xc->remaining -= static_cast<uint32_t>(len);
+    if (xc->cert_count == 1) {
+        br_x509_decoder_push(&xc->decoder, buf, len);
+    }
 }
 
 void
 TlsConn::naEndCert(const br_x509_class **ctx)
 {
     x509_noanchor_context *xc = (x509_noanchor_context *)ctx;
-    xc->inner.vtable->end_cert(&xc->inner.vtable);
+    if (xc->remaining != 0) {
+        xc->error = BR_ERR_X509_TRUNCATED;
+    }
 }
 
 unsigned
 TlsConn::naEndChain(const br_x509_class **ctx)
 {
     x509_noanchor_context *xc = (x509_noanchor_context *)ctx;
-    xc->inner.vtable->end_chain(&xc->inner.vtable);
-    return 0;
+    if (xc->cert_count == 0) {
+        return xc->error = BR_ERR_X509_EMPTY_CHAIN;
+    }
+    if (xc->error == 0) {
+        xc->error = br_x509_decoder_last_error(&xc->decoder);
+    }
+    return xc->error;
 }
 
 const br_x509_pkey *
 TlsConn::naGetPkey(const br_x509_class *const *ctx, unsigned *usages)
 {
     x509_noanchor_context *xc = (x509_noanchor_context *)(void *)ctx;
-    return xc->inner.vtable->get_pkey(&xc->inner.vtable, usages);
+    if (xc->error != 0) return nullptr;
+    if (usages) *usages = BR_KEYTYPE_KEYX | BR_KEYTYPE_SIGN;
+    return br_x509_decoder_get_pkey(&xc->decoder);
 }
 
 void
 TlsConn::x509NoanchorInit(x509_noanchor_context *xc)
 {
-    br_x509_minimal_init_full(&xc->inner, NULL, 0);
     xc->vtable = &noanchor_vtable_;
 }
 
@@ -339,7 +386,7 @@ TlsConn::open_server(SOCKET sock,
         iobuf_, BR_SSL_BUFSIZE_INPUT,
         iobuf_ + BR_SSL_BUFSIZE_INPUT, BR_SSL_BUFSIZE_OUTPUT);
     br_ssl_server_reset(&server_sc_);
-    br_sslio_init(&ioc_, &server_sc_.eng, sockRead, &sock_, sockWrite, &sock_);
+    br_sslio_init(&ioc_, &server_sc_.eng, sockRead, this, sockWrite, this);
     active_ = true;
     return true;
 }
@@ -360,11 +407,12 @@ TlsConn::open_client(SOCKET sock, const char* server_name)
         iobuf_, BR_SSL_BUFSIZE_INPUT,
         iobuf_ + BR_SSL_BUFSIZE_INPUT, BR_SSL_BUFSIZE_OUTPUT);
     if (!br_ssl_client_reset(&client_sc_, server_name_.c_str(), 0)) {
+        log_error("reset");
         mode_ = Mode::None;
         sock_ = INVALID_SOCKET;
         return false;
     }
-    br_sslio_init(&ioc_, &client_sc_.eng, sockRead, &sock_, sockWrite, &sock_);
+    br_sslio_init(&ioc_, &client_sc_.eng, sockRead, this, sockWrite, this);
     active_ = true;
     return true;
 }
@@ -374,10 +422,11 @@ TlsConn::read(void *buf, size_t len)
 {
     if (!active_) return -1;
     int result = br_sslio_read(&ioc_, buf, len);
-    if (result < 0 && br_ssl_engine_current_state(engine()) == BR_SSL_CLOSED &&
-        br_ssl_engine_last_error(engine()) == BR_ERR_OK) {
+    if (result < 0 && br_ssl_engine_last_error(engine()) == 0
+        && br_ssl_engine_current_state(engine()) == BR_SSL_CLOSED) {
         return 0;
     }
+    if (result < 0) log_error("read");
     return result;
 }
 
@@ -385,15 +434,32 @@ int
 TlsConn::write(const void *buf, size_t len)
 {
     if (!active_) return -1;
-    return br_sslio_write_all(&ioc_, buf, len);
+    int result = br_sslio_write_all(&ioc_, buf, len);
+    if (result < 0) log_error("write");
+    return result;
 }
 
 int
 TlsConn::flush()
 {
     if (!active_) return -1;
-    br_sslio_flush(&ioc_);
-    return 0;
+    int result = br_sslio_flush(&ioc_);
+    if (result < 0) log_error("flush");
+    return result;
+}
+
+void
+TlsConn::log_error(const char* operation)
+{
+    auto eng = engine();
+    debug_log_output("TLS %s failed: engine=%d x509=%d socket=%d",
+        operation, eng ? br_ssl_engine_last_error(eng) : 0,
+        mode_ == Mode::Client ? client_xc_.error : 0, socket_error_);
+#ifdef __linux__
+    errno = socket_error_;
+#else
+    WSASetLastError(socket_error_);
+#endif
 }
 
 void
@@ -469,6 +535,13 @@ ltn_tls_recv(SOCKET socket, char* buffer, size_t length)
         return -1;
     }
     return conn->read(buffer, length);
+}
+
+bool
+ltn_tls_peer_closed(SOCKET socket)
+{
+    auto conn = find_connection(socket);
+    return conn && conn->peer_closed();
 }
 
 int

@@ -5,6 +5,7 @@
 #include <malloc.h>
 #include <fcntl.h>
 #include <stdexcept>
+#include <vector>
 //#include <dirent.h>
 #include <assert.h>
 #include "const.h"
@@ -18,6 +19,9 @@ public:
 	{
 	}
 };
+
+struct HttpRestHeader;
+struct HttpRestResponse;
 
 class wString
 {
@@ -195,11 +199,28 @@ public:
 	static SOCKET   sock_connect(const char* host, const int port);
 	// Throws HttpRequestException on request or response failures; empty bodies are valid.
 	static wString  http_get(const wString& url, const off_t offset = 0);
-	// Throws HttpRequestException on request or response failures; empty bodies are valid.
-	static wString  http_rest(const wString& methods, const wString& url, const wString& data);
+	static HttpRestResponse http_rest(const wString& methods, const wString& url, const wString& data,
+		const std::vector<HttpRestHeader>& headers);
 	static wString  get_local_address(void);
 	static int      get_local_port (void);
 	static bool     set_skin_name(char* str);
 };
+
+struct HttpRestHeader
+{
+	wString name;
+	wString value;
+};
+
+struct HttpRestResponse
+{
+	bool ok = false;
+	int status = 0;
+	wString statusText;
+	std::vector<HttpRestHeader> headers;
+	wString body;
+	wString error;
+};
+
 extern wString current_dir;
 #endif
