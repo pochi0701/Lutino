@@ -200,16 +200,11 @@ void GLOBAL_PARAM_T::config_file_read(void)
 	while (1) {
 		// １行読む。
 		int ret = config_file_read_line(fd, line_buf, sizeof(line_buf));
-		if (ret < 0) {
-#ifdef __linux__
-			printf("EOF Detect.\n");
-#endif
-			break;
-		}
-		// 読んだ行を整理する。
-		line_buffer_sanitize(line_buf);
-		if (strlen(line_buf) > 0) // 値が入ってた。
+		if (*line_buf) // 値が入ってた。
 		{
+			// 読んだ行を整理する。
+			line_buffer_sanitize(line_buf);
+
 			// ' 'で、前後に分ける
 			sentence_split(line_buf, ' ', key, value);
 #ifdef __linux__
@@ -411,6 +406,12 @@ void GLOBAL_PARAM_T::config_file_read(void)
 #endif
 			}
 		}
+		if (ret < 0) {
+#ifdef __linux__
+			printf("EOF Detect.\n");
+#endif
+			break;
+		}
 	}
 	close(fd);
 	try {
@@ -457,6 +458,7 @@ int GLOBAL_PARAM_T::config_file_read_line(int fd, char* line_buf, int line_buf_s
 			// 2005/04/19 Maida EDIT START
 			// ここでreturnを行うと最後の行が改行されていない場合読み込まれない。
 			// そのためbreakを返す。
+			*p = 0;
 			return (-1);
 		}
 		else if (read_char == '\r') {
@@ -516,6 +518,9 @@ int GLOBAL_PARAM_T::config_file_open(void)
 /// <param name="line_buf">読み込みバッファ</param>
 void GLOBAL_PARAM_T::line_buffer_sanitize(char* line_buf)
 {
+	if (*line_buf == 0) {
+		return;
+	}
 	// '#'より後ろを削除。
 	cut_after_character(line_buf, '#');
 	// '\t'を' 'に置換

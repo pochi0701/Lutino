@@ -125,6 +125,15 @@
     <ClCompile Include="source\ltn_String.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="source\ltn_String_file.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ltn_String_http.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ltn_String_web.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="source\ltn_tls.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>

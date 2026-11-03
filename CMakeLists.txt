@@ -28,6 +28,9 @@ set(LUTINO_CORE_SOURCES
   source/ltn_tools.cpp
   source/ltn_script.cpp
   source/ltn_String.cpp
+  source/ltn_String_file.cpp
+  source/ltn_String_http.cpp
+  source/ltn_String_web.cpp
   source/ltn_transport.cpp
   source/ltn_tls.cpp
   source/ssdp.cpp

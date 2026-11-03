@@ -185,6 +185,9 @@
     <ClCompile Include="source\ltn_script.cpp" />
     <ClCompile Include="source\ltn_send_file.cpp" />
     <ClCompile Include="source\ltn_String.cpp" />
+    <ClCompile Include="source\ltn_String_file.cpp" />
+    <ClCompile Include="source\ltn_String_http.cpp" />
+    <ClCompile Include="source\ltn_String_web.cpp" />
     <ClCompile Include="source\ltn_tls.cpp" />
     <ClCompile Include="source\ltn_transport.cpp" />
     <ClCompile Include="source\ltn_tools.cpp" />
