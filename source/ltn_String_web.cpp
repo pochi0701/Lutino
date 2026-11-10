@@ -20,6 +20,8 @@
 #include <vector>
 #include <algorithm>
 #include <limits>
+#include <time.h>
+#include <fstream>
 #ifdef __linux__
 #include <dirent.h>
 #include <unistd.h>
@@ -42,9 +44,7 @@
 #include "ltn_String.h"
 #include "ltn.h"
 #include "ltn_tools.h"
-#include <time.h>
 #include "define.h"
-#include <fstream>
 #include "libnkf.hpp"
 #ifndef __linux__
 #include <ipmib.h>

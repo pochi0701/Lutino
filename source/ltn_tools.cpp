@@ -30,7 +30,6 @@
 #include  <netdb.h>
 #include  <pthread.h>
 #else
-#include  <errno.h>
 #include  <io.h>
 #include  <process.h>
 #endif
@@ -1372,4 +1371,3 @@ int  mp3::mp3_id3v2_tag_read(const char* mp3_filename)
 //unsigned char   mp3::mp3_id3v1_artist[128];  // MP3 アーティスト
 //unsigned char   mp3::mp3_id3v1_year[128];    // MP3 制作年度
 //unsigned char   mp3::mp3_id3v1_comment[128]; // MP3 コメント
-

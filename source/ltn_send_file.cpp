@@ -16,11 +16,11 @@
 #include <string.h>
 #include <memory.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #ifdef __linux__
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/socket.h>
-#include <unistd.h>
 #include <netinet/in.h>
 #include <error.h>
 #include <cerrno>
@@ -33,8 +33,6 @@
 #include <process.h>
 #include <signal.h>
 #endif
-#include <sys/stat.h>
-#include <fcntl.h>
 //#include <dirent.h>
 
 

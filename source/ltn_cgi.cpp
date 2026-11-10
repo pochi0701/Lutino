@@ -12,7 +12,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <sys/types.h>
+#include <vector>
 #ifdef __linux__
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -22,21 +25,16 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <sstream>
-#include <stdio.h>
 #else
 #include <io.h>
 #include <process.h>
 //#include <dir.h>
 #endif
-#include <errno.h>
-#include <fcntl.h>
-#include <vector>
 #include "ltn.h"
 #include "TinyJS.h"
 #include "TinyJS_Functions.h"
 #include "TinyJS_MathFunctions.h"
 #include "define.h"
-#include "TinyJS.h"
 //multipart
 vector<multipart*> mp;
 bool split(const char* cut_char, wString& split1, wString& split2);
@@ -386,4 +384,3 @@ void HTTP_RECV_INFO::jss(SOCKET accept_socket, wString& script_filename, char* q
 	//debug_log_output("Script was %s\n", script_filename);
 	return;
 }
-

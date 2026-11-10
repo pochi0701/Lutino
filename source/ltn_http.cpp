@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <memory.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #ifdef __linux__
 #include <unistd.h>
@@ -25,7 +26,6 @@
 #else
 #include <io.h>
 #endif
-#include <sys/stat.h>
 //#include <dirent.h>
 #include "ltn.h"
 #include "ltn_tools.h"

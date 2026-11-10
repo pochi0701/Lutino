@@ -17,6 +17,9 @@
 #include <memory.h>
 //#include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 #ifdef __linux__
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -26,9 +29,6 @@
 #else
 #include <io.h>
 #endif
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
 //#include <dirent.h>
 #include "ltn.h"
 #include "ltn_tools.h"
@@ -493,4 +493,3 @@ int cirtUserAgent (char* ip, char* agents)
 	sprintf (agents, "CB[%d.%u.%u]", n, x, y);
 	return 1;
 }
-
