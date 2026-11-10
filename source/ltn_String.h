@@ -37,7 +37,7 @@ private:
 	//int tsprintf_string(wString& str);
 	int tsprintf_char(int ch);
 	int tsprintf_decimal(signed long val, int zerof, int width);
-	int tsprintf_decimalu(unsigned long val, int zerof, int width);
+	int tsprintf_decimalu(unsigned long long val, int zerof, int width);
 	int tsprintf_octadecimal(unsigned long val, int zerof, int width);
 	int tsprintf_hexadecimal(unsigned long val, int capital, int zerof, int width);
 	int vtsprintf(const char* fmt, va_list arg);
@@ -107,6 +107,7 @@ public:
 	void            rtrim_chr (const unsigned char cut_char);
 	wString         ltrim_chr (const unsigned char cut_char) const;
 	static void     rtrim_chr (char* sentence, const unsigned char cut_char = ' ');
+	static void     trim_chr(char* sentence, unsigned char* cut_char);
 	int             sprintf(const char* format, ...);
 	int             cat_sprintf(const char* format, ...);
 	int             last_delimiter(const char* delim) const;

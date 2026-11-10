@@ -35,7 +35,6 @@
 #else
 #include <process.h>
 #include "dirent.h"
-//#include <dir.h>
 #include <direct.h>
 #include <io.h>
 #endif
@@ -164,8 +163,6 @@ void wString::load_from_csv (const char* str)
 {
 	load_from_csv (wString (str));
 }
-
-
 
 /// <summary>
 /// CSVファイル読み込み

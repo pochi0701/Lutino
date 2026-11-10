@@ -957,6 +957,48 @@ void wString::rtrim_chr (char* sentence, unsigned char cut_char)
 	}
 	return;
 }
+/// <summary>
+/// 複数文字列のtrim実装
+/// </summary>
+/// <param name="sentence"></param>
+/// <param name="cut_char"></param>
+void wString::trim_chr(char* sentence, unsigned char* cut_char)
+{
+	if (sentence == NULL || *sentence == '\0' || cut_char == NULL || *cut_char == '\0') return;
+
+	unsigned char* s = reinterpret_cast<unsigned char*>(sentence);
+	const int cut_len = static_cast<int>(strlen(reinterpret_cast<const char*>(cut_char)));
+	int slength = static_cast<int>(strlen(sentence));
+
+	// 先頭トリム
+	bool changed = true;
+	while (*s != '\0' && changed) {
+		changed = false;
+		for (int j = 0; j < cut_len; ++j) {
+			if (s[0] == cut_char[j]) {
+				memmove(s, s + 1, static_cast<size_t>(slength));
+				--slength;
+				changed = true;
+				break;
+			}
+		}
+	}
+
+	// 末尾トリム
+	changed = true;
+	while (slength > 0 && changed) {
+		changed = false;
+		unsigned char* p = s + slength - 1;
+		for (int j = 0; j < cut_len; ++j) {
+			if (*p == cut_char[j]) {
+				*p = '\0';
+				--slength;
+				changed = true;
+				break;
+			}
+		}
+	}
+}
 ///---------------------------------------------------------------------------
 /// <summary>
 /// 文字列の行末に、cut_charがあったとき、削除
@@ -1144,11 +1186,13 @@ int wString::vtsprintf (const char* fmt, va_list arg)
 	int vlen = 0;
 	int vsize = 0;
 	int zeroflag, width;
+	bool long_long;
 
 
 	while (*fmt) {
 		if (*fmt == '%') {        /* % に関する処理 */
 			zeroflag = width = 0;
+			long_long = false;
 			fmt++;
 			if (*fmt == '0') {
 				fmt++;
@@ -1163,7 +1207,13 @@ int wString::vtsprintf (const char* fmt, va_list arg)
 
 			//lluもluもuも同じ
 			while (*fmt == 'l' || *fmt == 'z') {
+				if (*fmt == 'l' && fmt[1] == 'l') {
+					long_long = true;
+					fmt += 2;
+				}
+				else {
 				fmt++;
+			}
 			}
 
 			switch (*fmt) {
@@ -1171,7 +1221,12 @@ int wString::vtsprintf (const char* fmt, va_list arg)
 				vsize = tsprintf_decimal (va_arg (arg, signed long), zeroflag, width);
 				break;
 			case 'u':        /* 10進数 */
+				if (long_long) {
+					vsize = tsprintf_decimalu(va_arg(arg, unsigned long long), zeroflag, width);
+				}
+				else {
 				vsize = tsprintf_decimalu (va_arg (arg, unsigned long), zeroflag, width);
+				}
 				break;
 			case 'o':        /* 8進数 */
 				vsize = tsprintf_octadecimal (va_arg (arg, unsigned long), zeroflag, width);
@@ -1279,7 +1334,7 @@ int wString::tsprintf_decimal (signed long val, int zerof, int width)
 /// <param name="zerof">先頭がゼロサプレスなら1</param>
 /// <param name="width"></param>
 /// <returns></returns>
-int wString::tsprintf_decimalu (unsigned long val, int zerof, int width)
+int wString::tsprintf_decimalu (unsigned long long val, int zerof, int width)
 {
 	char tmp[22] = {};
 	char* ptmp = tmp + 20;
@@ -1294,7 +1349,7 @@ int wString::tsprintf_decimalu (unsigned long val, int zerof, int width)
 	else {
 		while (val) {
 			/* バッファアンダーフロー対策 */
-			if (vlen >= 19) {
+			if (vlen >= 20) {
 				break;
 			}
 
@@ -1706,14 +1761,16 @@ wString wString::uri_decode ()
 	return dst;
 }
 #ifdef WEB
-/********************************************************************************/
-// 日本語文字コード変換。
-// (libnkfのラッパー関数)
-//
-//      サポートされている形式は以下の通り。
-//      in:S:SJIS E:EUC W:UTF-8
-//      out:s:SJIS w:UTF-8
-/********************************************************************************/
+
+/// <summary>
+/// 日本語文字コード変換
+/// (libnkfのラッパー関数)
+/// サポートされている形式は以下の通り。
+///      in :S:SJIS E:EUC W:UTF-8
+///      out:s:SJIS w:UTF-8
+/// </summary>
+/// <param name="option"></param>
+/// <returns></returns>
 wString wString::nkfcnv (const wString& option)
 {
 	auto ptr2 = 0U;
@@ -1943,7 +2000,7 @@ wString& wString::replace (int index, unsigned int slen, const wString& repstr)
 	return *this;
 }
 
-#define ToBase64tbl "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+constexpr auto ToBase64tbl = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 /// <summary>
 /// BASE64エンコード
 /// </summary>
@@ -2130,10 +2187,13 @@ bool wString::cut_after_character (const char cut_char)
 	len = ptr;
 	return true;
 }
-//************************************************************************
-// sentence文字列の、cut_charが最後に出てきた所から後ろをCUT
-// もし、cut_charがsentence文字列に入っていなかった場合、文字列全部削除。
-//************************************************************************
+
+/// <summary>
+///  sentence文字列の、cut_charが最後に出てきた所から後ろをCUT
+/// もし、cut_charがsentence文字列に入っていなかった場合、文字列全部削除。
+/// </summary>
+/// <param name="cut_char"></param>
+/// <returns></returns>
 bool wString::cut_after_last_character(const char cut_char)
 {
 	int ptr = rfind(cut_char);
@@ -2192,14 +2252,6 @@ bool wString::sentence_split(char cut_char, wString& split1, wString& split2)
 	}
 	return 0; // 正常終了。
 }
-
-
-
-
-
-
-
-
 
 //////////////////////////////////////////////////////////////////////////
 /// <summary>
