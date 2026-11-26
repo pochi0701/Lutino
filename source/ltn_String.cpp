@@ -2000,7 +2000,7 @@ wString& wString::replace (int index, unsigned int slen, const wString& repstr)
 	return *this;
 }
 
-constexpr auto ToBase64tbl = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+constexpr char ToBase64tbl[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 /// <summary>
 /// BASE64エンコード
 /// </summary>
@@ -2052,7 +2052,6 @@ wString wString::base64 (void)
 	//tmpout += '\0';
 	return tmpout;
 }
-// TODO range chack
 /// <summary>
 /// BASE64デコード
 /// </summary>
@@ -2064,9 +2063,9 @@ wString wString::unbase64 (void)
 
 	char FromBase64tbl[256] = {};
 	wString tmpout;
-	tmpout.clear ();
+	tmpout.clear();
 	//逆テーブルの作成,=も０になる
-	for (unsigned int i = 0; i < sizeof (ToBase64tbl); i++) {
+	for (unsigned int i = 0; i < sizeof(ToBase64tbl); i++) {
 		FromBase64tbl[(int)ToBase64tbl[i]] = (unsigned char)i;
 	}
 
@@ -2078,20 +2077,20 @@ wString wString::unbase64 (void)
 	int ll = len;
 	while (ll > 0) {
 		int s1 = FromBase64tbl[*instr++];
-		int s2 = FromBase64tbl[*instr++];
+		int s2 = (ll>1)?FromBase64tbl[*instr++]:0;
 		char ch = (char)((s1 << 2) | (s2 >> 4));
 		if (ch) {
-			int s3 = FromBase64tbl[*instr++];
+			int s3 = (ll>2)?FromBase64tbl[*instr++]:0;
 			tmpout += ch;
 			ch = (char)(((s2 & 0x0f) << 4) | (s3 >> 2));
 			if (ch) {
-				int s4 = FromBase64tbl[*instr++];
+				int s4 = (ll>3)?FromBase64tbl[*instr++]:0;
 				tmpout += ch;
 				ch = (char)(((s3 & 0x03) << 6) | s4);
 				if (ch) {
 					tmpout += ch;
 				}
-			}
+		}
 		}
 		ll -= 4;
 	}
