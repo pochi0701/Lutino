@@ -14,7 +14,7 @@ CPPFLAGS += -DBR_AES_X86NI=0 \
 	-DBR_RDRAND=0 \
 	-DBR_POWER8=0
 CXXFLAGS ?= -g -O3
-CXXFLAGS += -Wall -pthread -std=c++11
+CXXFLAGS += -Wall -pthread -std=c++17
 LDLIBS += -pthread
 
 CORE_SOURCES := \
@@ -28,6 +28,9 @@ CORE_SOURCES := \
 	ltn_tools.cpp \
 	ltn_script.cpp \
 	ltn_String.cpp \
+	ltn_String_file.cpp \
+	ltn_String_http.cpp \
+	ltn_String_web.cpp \
 	ltn_transport.cpp \
 	ltn_tls.cpp \
 	ssdp.cpp \
