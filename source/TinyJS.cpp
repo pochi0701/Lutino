@@ -544,6 +544,7 @@ wString CScriptLex::getTokenStr(LEX_TYPES token)
 	case LEX_TYPES::LEX_INT: return "INT";
 	case LEX_TYPES::LEX_FLOAT: return "FLOAT";
 	case LEX_TYPES::LEX_STR: return "STRING";
+	case LEX_TYPES::LEX_INVALID_EXPONENT: return "Invalid numeric exponent";
 	case LEX_TYPES::LEX_EQUAL: return "==";
 	case LEX_TYPES::LEX_TYPEEQUAL: return "===";
 	case LEX_TYPES::LEX_NEQUAL: return "!=";
@@ -748,9 +749,12 @@ void CScriptLex::getNextToken()
 			tk = LEX_TYPES::LEX_FLOAT;
 			tkStr += static_cast<unsigned char>(currCh);
 			getNextCh();
-			if (currCh == LEX_TYPES::LEX_MINUS) {
+			if (currCh == LEX_TYPES::LEX_PLUS || currCh == LEX_TYPES::LEX_MINUS) {
 				tkStr += static_cast<unsigned char>(currCh);
 				getNextCh();
+			}
+			if (!isNumeric(static_cast<unsigned char>(currCh))) {
+				tk = LEX_TYPES::LEX_INVALID_EXPONENT;
 			}
 			while (isNumeric(static_cast<unsigned char>(currCh))) {
 				tkStr += static_cast<unsigned char>(currCh);
